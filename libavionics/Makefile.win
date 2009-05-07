@@ -1,0 +1,21 @@
+TARGET=libxavionics.a
+HEADERS=$(wildcard *.h)
+SOURCES=$(wildcard *.cpp)
+OBJECTS=$(SOURCES:.cpp=.o)
+
+CXXFLAGS=-Wall -I/usr/include/lua5.1 -m32 -DWINDOWS #-Ic:/mingw/sdk/inc
+LNFLAGS=-shared -rdynamic -nodefaultlibs -fPIC -m32 -Lc:/ming/sdk/lib
+LIBS=-llua -lm -lIL -lILU -lILUT
+
+all: $(TARGET)
+
+.cpp.o:
+	$(CXX) $(CXXFLAGS) -c $<
+	
+$(TARGET): $(OBJECTS)
+	ar r $(TARGET) $(OBJECTS)
+
+clean:
+	rm -f $(OBJECTS) $(TARGET)
+
+

@@ -1,0 +1,5 @@
+EXPORT_NAME __Tupolev
+
+
+OBJECT __Tupolev:T104:T104.obj
+TEXTURE __Tupolev:T104:104_afl.pngHASGEAR YESICAO T104

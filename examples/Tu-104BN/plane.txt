@@ -1,0 +1,22 @@
+#GoodWay v3.2.6
+#Fri May 02 17:07:17 MSD 2008
+cruise_speed=430
+descent_rate=1968
+descent_speed=405
+plane_constructor=Tupolev
+xplane_certified=9.30
+author=Boris Ishenko
+cruise_altitude=30000
+plane_type=Tu-104B
+max_seats=115
+plane_full_name=Tupolev Tu-104B
+release_date=02.05.2008
+fuel_max_onboard=9742
+climb_speed=386
+plane_compagny=Camel
+release=2.0.5
+fuel_max_consumption_hour=2000
+author_web=http://code.google.com/p/sasl/
+maximum_range=1457
+climb_rate=1150
+
