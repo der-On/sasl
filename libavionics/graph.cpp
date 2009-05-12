@@ -118,6 +118,22 @@ static void drawTexture(Avionics *avionics, TexturePart *tex,
 }
 
 
+/// Read rgba from Lua call arguments
+/// If rgb is not specified does nothinf
+/// if alpha component is not specified it keep default
+static void rgbaFromLua(lua_State *L, int base, float &r, float &g,
+        float &b, float &a)
+{
+    if (base + 2 <= lua_gettop(L)) {
+        r = lua_tonumber(L, base);
+        g = lua_tonumber(L, base + 1);
+        b = lua_tonumber(L, base + 2);
+        if (base + 3 <= lua_gettop(L))
+            a = lua_tonumber(L, base + 3);
+    }
+}
+
+
 /// Lua wrapper for drawTexture
 static int luaDrawTexture(lua_State *L)
 {
@@ -128,11 +144,7 @@ static int luaDrawTexture(lua_State *L)
 
     float r, g, b, a;
     getAvionics(L)->getBackgroundColor(r, g, b, a);
-    if (8 == lua_gettop(L)) {
-        r = lua_tonumber(L, 6);
-        g = lua_tonumber(L, 7);
-        b = lua_tonumber(L, 8);
-    }
+    rgbaFromLua(L, 6, r, g, b, a);
 
     drawTexture(getAvionics(L), tex, lua_tonumber(L, 2), lua_tonumber(L, 3), 
             lua_tonumber(L, 4), lua_tonumber(L, 5), r, g, b, a);
@@ -179,11 +191,7 @@ static int luaDrawTexturePart(lua_State *L)
     
     float r, g, b, a;
     getAvionics(L)->getBackgroundColor(r, g, b, a);
-    if (12 == lua_gettop(L)) {
-        r = lua_tonumber(L, 10);
-        g = lua_tonumber(L, 11);
-        b = lua_tonumber(L, 12);
-    }
+    rgbaFromLua(L, 10, r, g, b, a);
 
     drawTexturePart(getAvionics(L), tex, lua_tonumber(L, 2), lua_tonumber(L, 3), 
             lua_tonumber(L, 4), lua_tonumber(L, 5),
@@ -222,11 +230,7 @@ static int luaDrawRotatedTexture(lua_State *L)
     
     float r, g, b, a;
     getAvionics(L)->getBackgroundColor(r, g, b, a);
-    if (9 == lua_gettop(L)) {
-        r = lua_tonumber(L, 7);
-        g = lua_tonumber(L, 8);
-        b = lua_tonumber(L, 9);
-    }
+    rgbaFromLua(L, 7, r, g, b, a);
 
     drawRotatedTexture(getAvionics(L), tex, lua_tonumber(L, 2), 
             lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), 
@@ -265,11 +269,7 @@ static int luaDrawRotatedTexturePart(lua_State *L)
     
     float r, g, b, a;
     getAvionics(L)->getBackgroundColor(r, g, b, a);
-    if (13 == lua_gettop(L)) {
-        r = lua_tonumber(L, 11);
-        g = lua_tonumber(L, 12);
-        b = lua_tonumber(L, 13);
-    }
+    rgbaFromLua(L, 11, r, g, b, a);
 
     drawRotatedTexturePart(getAvionics(L), tex, lua_tonumber(L, 2), 
             lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), 

@@ -29,6 +29,10 @@ function createProperty(value)
 end
 
 
+-- component grabbed mouse focus (after mouse pressed)
+focusedComponent = nil
+
+
 -- component currently dragging
 draggableComponent = nil
 
@@ -286,15 +290,34 @@ function isFileExists(fileName)
     end
 end
 
+
+-- remove extension from file name
+function extractFileName(filePath)
+    for v = string.len(filePath), -1, 1 do
+        if string.sub(filePath, i, i) == '.' then
+            return string.sub(filePath, 1, i-1)
+        end
+    end
+    return filePath
+end
+
+
 -- try to find file on search paths
 function openFile(fileName)
+    local name = extractFileName(fileName)
+
     for _, v in ipairs(searchPath) do
         local fullName
+        local subdir
         if 0 < string.len(v) then
             fullName = v .. '/' .. fileName
+            subdir = v .. '/' .. name
         else
             fullName = fileName
+            subdir = name
         end
+
+        -- check if it is available at current path
         if isFileExists(fullName) then
             local f, errorMsg = loadfile(fullName)
             if f then
@@ -303,7 +326,19 @@ function openFile(fileName)
                 print(errorMsg)
             end
         end
+
+        -- check subdir
+        local subFullName = subdir .. '/' .. fileName
+        if isFileExists(subFullName) then
+            local f, errorMsg = loadfile(subFullName)
+            if f then
+                return f, subdir
+            else
+                print(errorMsg)
+            end
+        end
     end
+
     print("component not found", fileName)
     return nil
 end
@@ -345,17 +380,23 @@ function loadComponent(name, fileName)
         fileName = name .. ".lua"
     end
 
-    local f = openFile(fileName)
+    local f, subdir = openFile(fileName)
     if not f then
         print("can't load component", name)
         return nil
     end
 
     local constr = function(args)
+        if subdir then
+            addSearchPath(subdir)
+        end
         local t = createComponent(name)
         setupComponent(t, args)
         setfenv(f, t)
         f()
+        if subdir then
+            popSearchPath()
+        end
         return t
     end
 
@@ -398,6 +439,12 @@ end
 function addSearchPath(path)
     table.insert(searchPath, 1, path)
     table.insert(searchImagePath, 1, path)
+end
+
+
+function popSearchPath()
+    table.remove(searchPath, 1)
+    table.remove(searchImagePath, 1)
 end
 
 
@@ -475,9 +522,19 @@ function isInRect(rect, x, y)
     return (x1 <= x) and (x2 > x) and (y1 <= y) and (y2 > y)
 end
 
+-- run handler of component
+function runComponentHandler(component, name, mx, my, button, x, y)
+    local handler = rawget(component, name)
+    if handler then
+        return handler(component, mx, my, button, x, y)
+    else
+        return false
+    end
+end
+
 
 -- traverse components and finds best handler with specified name
-function runHandler(component, name, x, y, button)
+function runHandler(component, name, x, y, button, path)
     local position = get(component.position)
     local size = component.size
     if (not (position and size)) then
@@ -487,29 +544,55 @@ function runHandler(component, name, x, y, button)
     local my = (y - position[2]) * size[2] / position[4]
     for _, v in pairs(component.components) do
         if get(v.visible) and isInRect(get(v.position), mx, my) then
-            local res = runHandler(v, name, mx, my, button)
+            local res = runHandler(v, name, mx, my, button, path)
             if res then
-                return res
+                if path then
+                    table.insert(path, component)
+                end
+                return true
             end
         end
     end
-    local handler = rawget(component, name)
-    if handler then
-        return handler(component, mx, my, button, x, y)
-    else
-        return false
+    local res = runComponentHandler(component, name, mx, my, button, x, y)
+    if res then
+        if path then
+            table.insert(path, component)
+        end
     end
+    return res
 end
+
+
+-- run handler of focused component
+function runFocusedHandler(path, name, x, y, button)
+    local mx = x
+    local my = y
+    local px = x
+    local py = y
+    for i = #path, 1, -1 do
+        local c = path[i]
+        px = mx
+        py = my
+        local position = get(c.position)
+        local size = get(c.size)
+        mx = (mx - position[1]) * c.size[1] / position[3]
+        my = (my - position[2]) * c.size[2] / position[4]
+    end
+    return runComponentHandler(path[1], name, mx, my, button, px, py)
+end
+
 
 -- traverse components and finds best handler with specified name
 function runTopHandler(layer, name, x, y, button)
+    local path = { }
     if (1 == layer) or (3 == layer) then
-        if runHandler(popups, name, x, y, button) then
-            return true
+        local res = runHandler(popups, name, x, y, button, path)
+        if res then
+            return true, path
         end
     end
     if (2 == layer) or (3 == layer) then
-        return runHandler(panel, name, x, y, button)
+        return runHandler(panel, name, x, y, button, path), path
     end
 end
 
@@ -561,7 +644,8 @@ function drawCursor()
     if cursor.shape and cursor.shape.shape then
         drawTexture(cursor.shape.shape, 
                 cursor.shape.x + cursor.x, cursor.y - cursor.shape.y,
-                cursor.shape.width, cursor.shape.height)
+                cursor.shape.width, cursor.shape.height,
+                1, 1, 1, 1)
     end
 end
 
@@ -573,27 +657,50 @@ local pressedButton = 0
 -- Called when mouse button was pressed
 function onMouseDown(x, y, button, layer)
     pressedButton = button
-    return runTopHandler(layer, "onMouseDown", x, y, button)
+    local handled, path = runTopHandler(layer, "onMouseDown", x, y, button)
+    if handled then
+        focusedComponentPath = path
+    end
+    return handled
 end
 
 
 -- Called when mouse button was released
 function onMouseUp(x, y, button, layer)
-    pressedButton = 0
-    return runTopHandler(layer, "onMouseUp", x, y, button)
+    if focusedComponentPath then
+        local res = runFocusedHandler(focusedComponentPath, "onMouseUp", 
+                x, y, button)
+        pressedButton = 0
+        focusedComponent = nil
+        focusedComponentPath = nil
+        return res
+    else
+        return runTopHandler(layer, "onMouseUp", x, y, button)
+    end
 end
 
 -- Called when mouse click event was processed
 function onMouseClick(x, y, button, layer)
-    return runTopHandler(layer, "onMouseClick", x, y, button)
+    pressedButton = button
+    local handled, path = runTopHandler(layer, "onMouseClick", x, y, button)
+    if handled then
+        focusedComponentPath = path
+    end
+    return handled
 end
 
 -- Called when mouse motion event was processed
 function onMouseMove(x, y, layer)
-    local cursor = getTopCursorShape(layer, x, y)
-    setCursor(x, y, cursor, layer)
-    local res = runTopHandler(layer, "onMouseMove", x, y, pressedButton)
-    return res or cursor
+    if focusedComponentPath then
+        local res = runFocusedHandler(focusedComponentPath, "onMouseMove", 
+                x, y, pressedButton)
+        return res
+    else
+        local cursor = getTopCursorShape(layer, x, y)
+        setCursor(x, y, cursor, layer)
+        local res = runTopHandler(layer, "onMouseMove", x, y, pressedButton)
+        return res or cursor
+    end
 end
 
 
