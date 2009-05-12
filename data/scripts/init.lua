@@ -293,7 +293,7 @@ end
 
 -- remove extension from file name
 function extractFileName(filePath)
-    for v = string.len(filePath), -1, 1 do
+    for i = string.len(filePath), 1, -1 do
         if string.sub(filePath, i, i) == '.' then
             return string.sub(filePath, 1, i-1)
         end
