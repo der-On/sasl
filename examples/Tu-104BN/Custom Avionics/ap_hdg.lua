@@ -14,6 +14,15 @@ components = {
         position = { 74, 0, 56, 56 };
         image = loadImage("rotary.png");
         value = autoHdg;
+        adjuster = function(value)
+            if 360 >= value then
+                value = value - 360
+            end
+            if 0 > value then
+                value = value + 360
+            end
+            return value
+        end
     };
 
     texture { 

@@ -24,9 +24,13 @@ components = {
         image = altBackgroundImage;
     };
 
-    ap_alt_display { 
+    digitstape {
         position = { 0, 17, 80, 25 };
         image = digitsImage;
+        digits = 5;
+        value = function()
+            return math.floor(get(auto_alt) * 0.3048 / 10 + 0.5) * 10;
+        end;
     };
 }
 
