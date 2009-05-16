@@ -29,21 +29,6 @@ function createProperty(value)
 end
 
 
--- component currently dragging
-draggableComponent = nil
-
-
--- start component dragging
-function dragStart(comp)
-    draggableComponent = comp
-end
-
--- stop component dragging
-function dragStop(comp)
-    draggableComponent = nil
-end
-
-
 -- default mouse click handler
 function defaultOnMouseClick(comp, x, y, button, parentX, parentY)
     if (1 == button) and get(comp.movable) and (1 == comp.dragging) then
@@ -60,6 +45,20 @@ end
 
 -- default mouse down handler
 function defaultOnMouseDown(comp, x, y, button, parentX, parentY)
+    if (1 == button) and get(comp.resizeble) and 
+                isInRect(comp.resizeRect, x, y) 
+    then
+        local pos = get(comp.position)
+        comp.resizing = true;
+        comp.dragStartX = parentX
+        comp.dragStartY = parentY
+        comp.dragStartPosX = pos[1]
+        comp.dragStartPosY = pos[2]
+        comp.dragStartSizeX = pos[3]
+        comp.dragStartSizeY = pos[4]
+        return true;
+    end
+
     if (1 == button) and get(comp.movable) then
         comp.dragging = 1
         return true
@@ -70,8 +69,13 @@ end
 
 -- default mouse up handler
 function defaultOnMouseUp(comp, x, y, button, parentX, parentY)
-    if 1 == button and get(comp.movable) then
-        comp.dragging = 0
+    if 1 == button and (get(comp.movable) or get(comp.resizeble)) then
+        if comp.dragging then
+            comp.dragging = 0
+        end
+        if comp.resizing then
+            comp.resizing = false
+        end
         return true
     end
     return false
@@ -80,6 +84,17 @@ end
 
 -- default mouse move handler
 function defaultOnMouseMove(comp, x, y, button, parentX, parentY)
+    if (rawget(comp, "resizing")) then
+        local pos = get(comp.position)
+        local newSizeX = comp.dragStartSizeX + (parentX - comp.dragStartX)
+        local newSizeY = comp.dragStartSizeY - (parentY - comp.dragStartY)
+        pos[2] = comp.dragStartY - (newSizeY - comp.dragStartSizeY)
+        pos[3] = newSizeX
+        pos[4] = newSizeY
+        set(comp.position, pos)
+        return true
+    end
+
     if (2 == rawget(comp, "dragging")) and get(comp.movable) then
         local position = get(comp.position)
         position[1] = comp.dragStartPosX + (parentX - comp.dragStartX)
@@ -103,6 +118,7 @@ function createComponent(name)
         name = name,
         visible = createProperty(true),
         movable = createProperty(false),
+        resizeble = createProperty(false),
         onMouseUp = defaultOnMouseUp,
         onMouseDown = defaultOnMouseDown,
         onMouseClick = defaultOnMouseClick,
@@ -761,18 +777,57 @@ function subpanel(tbl)
     end
 
     if not get(tbl.noClose) then
+        local pos = get(c.position)
+        local btnWidth = c.size[1] / pos[3] * 16
+        local btnHeight = c.size[2] / pos[4] * 16
+
         if not button then
             button = loadComponent('button')
         end
 
         c.component('closeButton', button { 
-            position = { c.size[1] - 16, c.size[2] - 16, 16, 16};
+            position = { c.size[1] - btnWidth, c.size[2] - btnHeight, 
+                btnWidth, btnHeight };
             image = loadImage('close.png');
             onMouseClick = function()
                 set(c.visible, false)
                 return true
             end;
         })
+    end
+
+    if not get(tbl.noResize) then
+        set(c.resizeble, true)
+        local pos = get(c.position)
+        c.resizeWidth = c.size[1] / pos[3] * 10
+        c.resizeHeight = c.size[2] / pos[4] * 10
+        
+        if not rectangle then
+            rectangle = loadComponent('rectangle')
+        end
+        
+        c.resizeRect = { c.size[1] - c.resizeWidth, 0, 
+                c.resizeWidth, c.resizeHeight };
+
+        c.component('resizeButton', rectangle { 
+            position = c.resizeRect;
+            color = { 0.10, 0.10, 0.10, 1.0 };
+        });
+        
+        if not clickable then
+            clickable = loadComponent('clickable')
+        end
+
+        c.component('resizeClickable', clickable {
+            position = c.resizeRect;
+            cursor = { 
+                x = 8, 
+                y = 26, 
+                width = 16, 
+                height = 16, 
+                shape = loadImage("clickable.png")
+            }
+        });
     end
 
     popup(c)
