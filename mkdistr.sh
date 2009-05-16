@@ -9,13 +9,11 @@ if [ -d tmp ] ; then
 fi
 mkdir tmp
 mkdir tmp/$DIR
-mkdir tmp/$DIR/src
 
 
 # build libavionics
 cd libavionics
 make clean
-cp -r ../libavionics ../tmp/$DIR/src/
 make
 if [ $? != 0 ] ; then
     echo "Can't build libavionics!"
@@ -25,7 +23,6 @@ fi
 # build x-plane plugin
 cd ../xap
 make clean
-cp -r ../xap ../tmp/$DIR/src/
 make
 if [ $? != 0 ] ; then
     echo "Can't build xap!"
@@ -35,24 +32,22 @@ cd ..
 
 cd tmp
 cp -r ../doc $DIR/
-cp -r ../examples $DIR/
-cp ../version.h $DIR/
 
 mkdir $DIR/xap
 cp ../xap/lin.xpl $DIR/xap/
 strip --strip-all $DIR/xap/lin.xpl
-cp /mnt/windows/asso/ngauges/xap/win.xpl $DIR/xap/
+cp /mnt/windows/asso/sasl/xap/win.xpl $DIR/xap/
 cp -r ../data $DIR/xap
-
+find $DIR -name .svn -exec rm -rf {} ';'
 
 # make archive
 if [ ! -d ../distr ] ; then
     mkdir ../distr
 fi
-if [ -f ../distr/${DIR}.zip ] ; then
-    rm ../distr/${DIR}.zip
+if [ -f ../distr/${DIR}$1.zip ] ; then
+    rm ../distr/${DIR}$1.zip
 fi
-zip -r -9 ../distr/${DIR}.zip $DIR
+zip -r -9 ../distr/${DIR}$1.zip $DIR
 cd ..
 
 # make aircrafts distributions
@@ -68,12 +63,31 @@ for t in * ; do
         if [ -d $t/doc ] ; then
             rm -f $t/doc/*.odt
         fi
-        rm -f ../distr/$t.zip
-        zip -r -9 ../distr/$t.zip $t
+        rm -f ../distr/$t$1.zip
+        find . -name .svn -exec rm -rf {} ';'
+        zip -r -9 ../distr/$t$1.zip $t
         cd ../examples
     fi
 done
 cd ..
+
+# make slava distr
+cd tmp
+DIR=slava-$VERSION
+mkdir ${DIR}
+cp ../slava/slava ${DIR}
+strip --strip-all ${DIR}/slava
+cp ../slava/slava-dist.sh ${DIR}/slava.sh
+cp ../slava/slava-dist.bat ${DIR}/slava.bat
+cp /mnt/windows/asso/sasl/slava/slava.exe ${DIR}
+cp -r ../data ${DIR}
+find ${DIR} -name .svn -exec rm -rf {} ';'
+if [ -f ../distr/${DIR}$1.zip ] ; then
+    rm ../distr/${DIR}$1.zip
+fi
+zip -r -9 ../distr/${DIR}$1.zip $DIR
+cd ..
+
 
 rm -rf tmp
 
