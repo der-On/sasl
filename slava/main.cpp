@@ -28,9 +28,13 @@ static void initSDL()
 }
 
 
-static void initScreen(int width, int height)
+static void initScreen(int width, int height, bool fullscreen)
 {
-    SDL_Surface *screen = SDL_SetVideoMode(width, height, 32, SDL_OPENGL);
+    int flags = SDL_OPENGL;
+    if (fullscreen)
+        flags |= SDL_FULLSCREEN;
+
+    SDL_Surface *screen = SDL_SetVideoMode(width, height, 32, flags);
     if (! screen) {
         fprintf(stderr, "Unable to set video: %s\n", SDL_GetError());
         exit(1);
@@ -106,7 +110,7 @@ int main(int argc, char *argv[])
     int width = cmdLine.getScreenWidth();
     int height = cmdLine.getScreenHeight();
 
-    initScreen(width, height);
+    initScreen(width, height, cmdLine.isFullscreen());
 
     XA xa = createPanel(width, height, cmdLine.getDataDir(), 
             cmdLine.getPanel(), cmdLine.getNetHost(), cmdLine.getNetPort(),
