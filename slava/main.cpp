@@ -12,6 +12,7 @@
 
 #include "xavionics.h"
 #include "cmdline.h"
+#include "fps.h"
 
 
 using namespace slava;
@@ -111,6 +112,9 @@ int main(int argc, char *argv[])
             cmdLine.getPanel(), cmdLine.getNetHost(), cmdLine.getNetPort(),
             cmdLine.getNetSecret());
 
+    Fps fps;
+    fps.setTargetFps(cmdLine.getTargetFps());
+
     bool done = false;
     while (! done) {
         if (xa_update(xa))
@@ -164,6 +168,8 @@ int main(int argc, char *argv[])
                     break;
             }
         }
+
+        fps.update();
     }
 
     xa_done(xa);

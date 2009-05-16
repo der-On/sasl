@@ -34,6 +34,9 @@ class CmdLine
         /// path to data dir
         std::string dataDir;
 
+        /// Desired FPS
+        int targetFps;
+
     public:
         /// Parse command line
         CmdLine(int argc, char *argv[]);
@@ -62,6 +65,9 @@ class CmdLine
         
         /// Returns path to data dir
         const std::string& getDataDir() const { return dataDir; }
+        
+        /// Returns desired FPS
+        int getTargetFps() const { return targetFps; }
 };
 
 };

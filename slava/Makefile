@@ -22,6 +22,6 @@ install: $(TARGET)
 	cp -f $(TARGET) $(PLUGINS)
 
 run: $(TARGET)
-	./$(TARGET)
+	./$(TARGET) --secret supersecret --data ../data --panel ../examples/Tu-104BN/avionics.lua
 
         

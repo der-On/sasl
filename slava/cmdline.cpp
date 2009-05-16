@@ -11,7 +11,8 @@ using namespace slava;
 slava::CmdLine::CmdLine(int argc, char *argv[]): 
     netHost(""), netPort(45829), secret(""), 
     screenWidth(800), screenHeight(600),
-    fullscreen(false), panel("panel.lua"), dataDir("./data")
+    fullscreen(false), panel("panel.lua"), dataDir("./data"),
+    targetFps(60)
 {
     for (int i = 1; i < argc; i++) {
         if (! argv[i])
@@ -33,6 +34,8 @@ slava::CmdLine::CmdLine(int argc, char *argv[]):
             panel = std::string(argv[++i]);
         else if ((! strcmp(argv[i], "--data")) && (i < argc - 1))
             dataDir = std::string(argv[++i]);
+        else if ((! strcmp(argv[i], "--fps")) && (i < argc - 1))
+            targetFps = strToInt(argv[++i]);
         else {
             printf("Invalid option '%s'.\n", argv[i]);
             exit(1);
