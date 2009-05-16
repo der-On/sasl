@@ -48,16 +48,25 @@ function dragStop(comp)
 end
 
 
--- default mouse down handler
-function defaultOnMouseDown(comp, x, y, button, parentX, parentY)
-    if (1 == button) and get(comp.movable) then
+-- default mouse click handler
+function defaultOnMouseClick(comp, x, y, button, parentX, parentY)
+    if (1 == button) and get(comp.movable) and (1 == comp.dragging) then
         local position = get(comp.position)
         comp.dragStartX = parentX
         comp.dragStartY = parentY
         comp.dragStartPosX = position[1]
         comp.dragStartPosY = position[2]
-        comp.dragging = true
+        comp.dragging = 2
         return true
+    end
+    return false
+end
+
+-- default mouse down handler
+function defaultOnMouseDown(comp, x, y, button, parentX, parentY)
+    if (1 == button) and get(comp.movable) then
+        comp.dragging = 1
+        return false
     end
     return false
 end
@@ -66,7 +75,7 @@ end
 -- default mouse up handler
 function defaultOnMouseUp(comp, x, y, button, parentX, parentY)
     if 1 == button and get(comp.movable) then
-        comp.dragging = false
+        comp.dragging = 0
         return true
     end
     return false
@@ -75,7 +84,7 @@ end
 
 -- default mouse move handler
 function defaultOnMouseMove(comp, x, y, button, parentX, parentY)
-    if rawget(comp, "dragging") and get(comp.movable) then
+    if (2 == rawget(comp, "dragging")) and get(comp.movable) then
         local position = get(comp.position)
         position[1] = comp.dragStartPosX + (parentX - comp.dragStartX)
         position[2] = comp.dragStartPosY + (parentY - comp.dragStartY)
@@ -100,6 +109,7 @@ function createComponent(name)
         movable = createProperty(false),
         onMouseUp = defaultOnMouseUp,
         onMouseDown = defaultOnMouseDown,
+        onMouseClick = defaultOnMouseClick,
         onMouseMove = defaultOnMouseMove,
     }
     data._C = data
@@ -714,15 +724,14 @@ end
 -- create popup movable subpanel hidden by default
 function subpanel(tbl)
     local c = createComponent('subpanel')
-    mergeTables(c, tbl)
     set(c.position, tbl.position)
-    c.onMouseClick = function() return true; end
     c.size = { tbl.position[3], tbl.position[4] }
     set(c.visible, false)
     set(c.movable, true)
+    c.cursor = { x = 0; y = 0; shape = loadImage("none.png") }
     c.components = tbl.components
 
-    if not get(c.noBackground) then
+    if not get(tbl.noBackground) then
         if not rectangle then
             rectangle = loadComponent('rectangle')
         end
@@ -731,7 +740,7 @@ function subpanel(tbl)
             rectangle { position = { 0, 0, c.size[1], c.size[2] } } )
     end
 
-    if not get(c.noClose) then
+    if not get(tbl.noClose) then
         if not button then
             button = loadComponent('button')
         end

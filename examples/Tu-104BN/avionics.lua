@@ -5,10 +5,10 @@ size = { 2048, 2048 }
 -- Pop-up navigator panel
 navigatorPanel = subpanel {
     position = { 50, 320, 400, 400 };
-    noBackground = true;
-    noClose = true;
 
     components = {
+        -- heading airpeed settings
+        ap_hdg {  position = { 10, 10, 80, 30 } };
     };
 };
 
