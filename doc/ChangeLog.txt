@@ -1,3 +1,7 @@
+  * subpanel can be created without close button and background
+  * Panels dragging fixed
+  * OnMouseDown event restored
+  * SLAVA has fullscreen option
   * Mouse dragging should be handled by component received initial mouse click
   * Components can be stored in own subdirectories
   * FPS limiter added to SLAVA application

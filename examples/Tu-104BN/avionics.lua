@@ -1,6 +1,19 @@
 
 size = { 2048, 2048 }
 
+
+-- Pop-up navigator panel
+navigatorPanel = subpanel {
+    position = { 50, 320, 400, 400 };
+    noBackground = true;
+    noClose = true;
+
+    components = {
+    };
+};
+
+
+-- 3D cockpit
 components = { 
     
     -- airspeed indicator
@@ -53,7 +66,14 @@ components = {
     ap_vvi {  position = { 990, 1512, 149*0.8, 56*0.8 } };
 
     -- pressure settings
-    pressure { position = { 227, 1242, 200*0.76, 159*0.76 } }
+    pressure { position = { 227, 1242, 200*0.76, 159*0.76 } };
+
+    -- show navigator panel
+    togglePanelButton {
+        position = { 320, 1690, 25, 25 };
+        panel = navigatorPanel;
+        image = loadImage("navigation.png");
+    };
 }
 
 

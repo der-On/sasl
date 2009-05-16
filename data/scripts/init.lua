@@ -714,6 +714,7 @@ end
 -- create popup movable subpanel hidden by default
 function subpanel(tbl)
     local c = createComponent('subpanel')
+    mergeTables(c, tbl)
     set(c.position, tbl.position)
     c.onMouseClick = function() return true; end
     c.size = { tbl.position[3], tbl.position[4] }
@@ -721,25 +722,29 @@ function subpanel(tbl)
     set(c.movable, true)
     c.components = tbl.components
 
-    if not rectangle then
-        rectangle = loadComponent('rectangle')
-    end
+    if not get(c.noBackground) then
+        if not rectangle then
+            rectangle = loadComponent('rectangle')
+        end
     
-    if not button then
-        button = loadComponent('button')
+        table.insert(c.components, 1,
+            rectangle { position = { 0, 0, c.size[1], c.size[2] } } )
     end
 
-    table.insert(c.components, 1,
-        rectangle { position = { 0, 0, c.size[1], c.size[2] } } )
+    if not get(c.noClose) then
+        if not button then
+            button = loadComponent('button')
+        end
 
-    c.component('closeButton', button { 
-        position = { c.size[1] - 16, c.size[2] - 16, 16, 16};
-        image = loadImage('close.png');
-        onMouseClick = function()
-            set(c.visible, false)
-            return true
-        end;
-    })
+        c.component('closeButton', button { 
+            position = { c.size[1] - 16, c.size[2] - 16, 16, 16};
+            image = loadImage('close.png');
+            onMouseClick = function()
+                set(c.visible, false)
+                return true
+            end;
+        })
+    end
 
     popup(c)
 
