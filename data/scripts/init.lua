@@ -681,12 +681,18 @@ end
 
 -- Called when mouse click event was processed
 function onMouseClick(x, y, button, layer)
-    pressedButton = button
-    local handled, path = runTopHandler(layer, "onMouseClick", x, y, button)
-    if handled then
-        focusedComponentPath = path
+    if focusedComponentPath then
+        setCursor(x, y, cursor.shape, layer)
+        return runFocusedHandler(focusedComponentPath, "onMouseClick", 
+                x, y, button)
+    else
+        pressedButton = button
+        local handled, path = runTopHandler(layer, "onMouseClick", x, y, button)
+        if handled then
+            focusedComponentPath = path
+        end
+        return handled
     end
-    return handled
 end
 
 -- Called when mouse motion event was processed
