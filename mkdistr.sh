@@ -80,6 +80,7 @@ strip --strip-all ${DIR}/slava
 cp ../slava/slava-dist.sh ${DIR}/slava.sh
 cp ../slava/slava-dist.bat ${DIR}/slava.bat
 cp /mnt/windows/asso/sasl/slava/slava.exe ${DIR}
+cp ../../SDL.dll ${DIR}
 cp -r ../data ${DIR}
 find ${DIR} -name .svn -exec rm -rf {} ';'
 if [ -f ../distr/${DIR}$1.zip ] ; then
