@@ -548,7 +548,8 @@ function runHandler(component, name, x, y, button, path)
     end
     local mx = (x - position[1]) * size[1] / position[3]
     local my = (y - position[2]) * size[2] / position[4]
-    for _, v in pairs(component.components) do
+    for i = #component.components, 1, -1 do
+        v = component.components[i]
         if get(v.visible) and isInRect(get(v.position), mx, my) then
             local res = runHandler(v, name, mx, my, button, path)
             if res then
@@ -624,7 +625,8 @@ function getCursorShape(component, x, y)
     end
     local mx = (x - position[1]) * size[1] / position[3]
     local my = (y - position[2]) * size[2] / position[4]
-    for _, v in pairs(component.components) do
+    for i = #component.components, 1, -1 do
+        v = component.components[i]
         if get(v.visible) and isInRect(get(v.position), mx, my) then
             local res = getCursorShape(v, mx, my)
             if res then
@@ -671,7 +673,7 @@ function onMouseDown(x, y, button, layer)
             for i, v in pairs(popups.components) do
                 if v == comp then
                     table.remove(popups.components, i)
-                    table.insert(popups.components, 1, comp)
+                    table.insert(popups.components, comp)
                     focusedComponentPath = nil
                     return handled
                 end
