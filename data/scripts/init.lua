@@ -692,6 +692,7 @@ end
 -- Called when mouse motion event was processed
 function onMouseMove(x, y, layer)
     if focusedComponentPath then
+        setCursor(x, y, cursor.shape, layer)
         local res = runFocusedHandler(focusedComponentPath, "onMouseMove", 
                 x, y, pressedButton)
         return res

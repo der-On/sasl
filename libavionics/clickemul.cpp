@@ -29,6 +29,16 @@ void ClickEmulator::onMouseDown(int button, int x, int y, int l)
     layer = l;
 }
 
+
+void ClickEmulator::onMouseMove(int x, int y, int layer)
+{
+    if (layer == this->layer) {
+        mouseX = x;
+        mouseY = y;
+    }
+}
+
+
 void ClickEmulator::onMouseUp()
 {
     button = 0;

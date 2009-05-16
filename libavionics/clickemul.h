@@ -45,6 +45,9 @@ class ClickEmulator
     public:
         /// Called on mouse down events
         void onMouseDown(int button, int x, int y, int layer);
+        
+        /// Called on mouse move events
+        void onMouseMove(int x, int y, int layer);
 
         /// Returns button number of simulated click event button or zero
         /// If no click simulation required
