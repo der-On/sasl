@@ -1,3 +1,4 @@
+  * subpanels can be resized
   * subpanels should popup after click
   * subpanel can be created without close button and background
   * Panels dragging fixed

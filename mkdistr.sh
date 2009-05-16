@@ -2,6 +2,13 @@
 
 # prepare directory
 VERSION=`awk '/VERSION_MAJOR/ { major=$3 } /VERSION_MINOR/ { minor=$3 } /VERSION_PATCH/ { patch=$3 } END { print major "." minor "." patch }'` < version.h
+
+# enable snapshot mode
+if [ "x$1" != "x" ] ; then
+    VERSION=${VERSION}-$1
+    export CXXFLAGS=-DSNAPSHOT=$1
+fi
+
 DIR=xap-$VERSION
 
 if [ -d tmp ] ; then
@@ -14,7 +21,7 @@ mkdir tmp/$DIR
 # build libavionics
 cd libavionics
 make clean
-make
+make 
 if [ $? != 0 ] ; then
     echo "Can't build libavionics!"
     exit -1
@@ -23,9 +30,18 @@ fi
 # build x-plane plugin
 cd ../xap
 make clean
-make
+make 
 if [ $? != 0 ] ; then
     echo "Can't build xap!"
+    exit -1
+fi
+
+# build slava
+cd ../slava
+make clean
+make 
+if [ $? != 0 ] ; then
+    echo "Can't build slava!"
     exit -1
 fi
 cd ..
@@ -44,10 +60,10 @@ find $DIR -name .svn -exec rm -rf {} ';'
 if [ ! -d ../distr ] ; then
     mkdir ../distr
 fi
-if [ -f ../distr/${DIR}$1.zip ] ; then
-    rm ../distr/${DIR}$1.zip
+if [ -f ../distr/${DIR}.zip ] ; then
+    rm ../distr/${DIR}.zip
 fi
-zip -r -9 ../distr/${DIR}$1.zip $DIR
+zip -r -9 ../distr/${DIR}.zip $DIR
 cd ..
 
 # make aircrafts distributions
@@ -63,9 +79,9 @@ for t in * ; do
         if [ -d $t/doc ] ; then
             rm -f $t/doc/*.odt
         fi
-        rm -f ../distr/$t$1.zip
+        rm -f ../distr/$t.zip
         find . -name .svn -exec rm -rf {} ';'
-        zip -r -9 ../distr/$t$1.zip $t
+        zip -r -9 ../distr/$t.zip $t
         cd ../examples
     fi
 done
@@ -83,10 +99,10 @@ cp /mnt/windows/asso/sasl/slava/slava.exe ${DIR}
 cp ../../SDL.dll ${DIR}
 cp -r ../data ${DIR}
 find ${DIR} -name .svn -exec rm -rf {} ';'
-if [ -f ../distr/${DIR}$1.zip ] ; then
-    rm ../distr/${DIR}$1.zip
+if [ -f ../distr/${DIR}.zip ] ; then
+    rm ../distr/${DIR}.zip
 fi
-zip -r -9 ../distr/${DIR}$1.zip $DIR
+zip -r -9 ../distr/${DIR}.zip $DIR
 cd ..
 
 

@@ -579,11 +579,18 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc)
 {
     XPLMDebugString("XAP: Starting...\n");
 
-    strcpy(outName, "Custom Avionics");
-    strcpy(outSig, "babichev.avionics");
+    strcpy(outName, "X-Plane Scriptable Avionics");
+    strcpy(outSig, "babichev.xap");
 
-    sprintf(outDesc, "Custom Avionics Helper Plugin v%i.%i.%i", 
+#ifdef SNAPSHOT
+#define QUOTE(x) #x
+    sprintf(outDesc, "X-Plane scriptable avionics library plugin snapshot %i.%i.%i %s", 
+            VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, QUOTE(SNAPSHOT));
+#undef QUOTE
+#else
+    sprintf(outDesc, "X-Plane scriptable avionics library plugin v%i.%i.%i", 
             VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+#endif
 
     viewType = XPLMFindDataRef("sim/graphics/view/view_type");
     //windowLeft = XPLMFindDataRef("sim/graphics/view/panel_total_win_l");
