@@ -707,9 +707,14 @@ function onMouseUp(x, y, button, layer)
                 x, y, button)
         pressedButton = 0
         focusedComponentPath = nil
+        local cursor = getTopCursorShape(layer, x, y)
+        setCursor(x, y, cursor, layer)
         return res
     else
-        return runTopHandler(layer, "onMouseUp", x, y, button)
+        local res = runTopHandler(layer, "onMouseUp", x, y, button)
+        local cursor = getTopCursorShape(layer, x, y)
+        setCursor(x, y, cursor, layer)
+        return res
     end
 end
 
@@ -745,7 +750,7 @@ function onMouseMove(x, y, layer)
 end
 
 
--- create popup movable subpanel hidden by default
+-- create popup movable resizable subpanel hidden by default
 function subpanel(tbl)
     local c = createComponent('subpanel')
     set(c.position, tbl.position)
