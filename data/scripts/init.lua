@@ -29,10 +29,6 @@ function createProperty(value)
 end
 
 
--- component grabbed mouse focus (after mouse pressed)
-focusedComponent = nil
-
-
 -- component currently dragging
 draggableComponent = nil
 
@@ -66,7 +62,7 @@ end
 function defaultOnMouseDown(comp, x, y, button, parentX, parentY)
     if (1 == button) and get(comp.movable) then
         comp.dragging = 1
-        return false
+        return true
     end
     return false
 end
@@ -670,6 +666,17 @@ function onMouseDown(x, y, button, layer)
     local handled, path = runTopHandler(layer, "onMouseDown", x, y, button)
     if handled then
         focusedComponentPath = path
+        if (1 == layer) or (3 == layer) then
+            local comp = path[1]
+            for i, v in pairs(popups.components) do
+                if v == comp then
+                    table.remove(popups.components, i)
+                    table.insert(popups.components, 1, comp)
+                    focusedComponentPath = nil
+                    return handled
+                end
+            end
+        end
     end
     return handled
 end
@@ -681,7 +688,6 @@ function onMouseUp(x, y, button, layer)
         local res = runFocusedHandler(focusedComponentPath, "onMouseUp", 
                 x, y, button)
         pressedButton = 0
-        focusedComponent = nil
         focusedComponentPath = nil
         return res
     else
@@ -726,6 +732,18 @@ function subpanel(tbl)
     local c = createComponent('subpanel')
     set(c.position, tbl.position)
     c.size = { tbl.position[3], tbl.position[4] }
+    c.onMouseClick = function (comp, x, y, button, parentX, parentY)
+        defaultOnMouseClick(comp, x, y, button, parentX, parentY)
+        return true
+    end
+    c.onMouseDown = function (comp, x, y, button, parentX, parentY)
+        defaultOnMouseDown(comp, x, y, button, parentX, parentY)
+        return true
+    end
+    c.onMouseMove = function (comp, x, y, button, parentX, parentY)
+        defaultOnMouseMove(comp, x, y, button, parentX, parentY)
+        return true
+    end
     set(c.visible, false)
     set(c.movable, true)
     c.cursor = { x = 0; y = 0; shape = loadImage("none.png") }

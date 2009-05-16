@@ -229,10 +229,8 @@ bool Avionics::onMouseDown(int x, int y, int button, int layer)
 {
     if (clickEmulation) {
         bool res = call4(lua, "onMouseDown", x, y, button, layer);
-        if (res)
-            return true;
         clickEmulator.onMouseDown(button, x, y, layer);
-        if (onMouseClick(x, y, button, layer))
+        if (onMouseClick(x, y, button, layer) || res)
             return true;
     }
     return call4(lua, "onMouseDown", x, y, button, layer);
