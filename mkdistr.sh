@@ -79,9 +79,9 @@ for t in * ; do
         if [ -d $t/doc ] ; then
             rm -f $t/doc/*.odt
         fi
-        rm -f ../distr/$t.zip
+        rm -f ../distr/$t-${VERSION}.zip
         find . -name .svn -exec rm -rf {} ';'
-        zip -r -9 ../distr/$t.zip $t
+        zip -r -9 ../distr/$t-${VERSION}.zip $t
         cd ../examples
     fi
 done
@@ -92,6 +92,7 @@ cd tmp
 DIR=slava-$VERSION
 mkdir ${DIR}
 cp ../slava/slava ${DIR}
+cp -r ../panels ${DIR}
 strip --strip-all ${DIR}/slava
 cp ../slava/slava-dist.sh ${DIR}/slava.sh
 cp ../slava/slava-dist.bat ${DIR}/slava.bat
