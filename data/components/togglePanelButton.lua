@@ -13,7 +13,7 @@ components = {
     button {
         image = image;
 
-        onMouseClick = function()
+        onMouseDown = function()
             local p = get(panel)
             set(p.visible, not get(p.visible))
             return true

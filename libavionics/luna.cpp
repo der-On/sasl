@@ -31,6 +31,38 @@ static int luaPrint(lua_State *L)
     return 0;
 }
 
+/// bitwise and
+static int luaBitAnd(lua_State *L) 
+{
+    int n = lua_gettop(L);
+    int res = 0;
+    if (2 == n) 
+        res = lua_tointeger(L, 1) & lua_tointeger(L, 2);
+    lua_pushinteger(L, res);
+    return 1;
+}
+
+/// bitwise or
+static int luaBitOr(lua_State *L) 
+{
+    int n = lua_gettop(L);
+    int res = 0;
+    if (2 == n) 
+        res = lua_tointeger(L, 1) | lua_tointeger(L, 2);
+    lua_pushinteger(L, res);
+    return 1;
+}
+
+/// bitwise xor
+static int luaBitXor(lua_State *L) 
+{
+    int n = lua_gettop(L);
+    int res = 0;
+    if (2 == n) 
+        res = lua_tointeger(L, 1) ^ lua_tointeger(L, 2);
+    lua_pushinteger(L, res);
+    return 1;
+}
 
 
 Luna::Luna()
@@ -38,6 +70,9 @@ Luna::Luna()
     lua = lua_open();
     luaL_openlibs(lua);
     lua_register(lua, "print", luaPrint);
+    lua_register(lua, "bitand", luaBitAnd);
+    lua_register(lua, "bitor", luaBitOr);
+    lua_register(lua, "bitxor", luaBitXor);
 
     lua_newtable(lua);
     lua_setfield(lua, LUA_REGISTRYINDEX, "xavionics");

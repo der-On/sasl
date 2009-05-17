@@ -301,8 +301,10 @@ static int handleMouseLayerClick(int x, int y, XPLMMouseStatus status,
         int layer)
 {
     switch (status) {
-        case xplm_MouseDown: return xa_mouse_button_down(xa, x, y, 1, layer);
-        case xplm_MouseUp: return xa_mouse_button_up(xa, x, y, 1, layer);
+        case xplm_MouseDown: 
+            return xa_mouse_button_down(xa, x, y, 1, layer);
+        case xplm_MouseUp: 
+            return xa_mouse_button_up(xa, x, y, 1, layer);
     }
     return 0;
 }

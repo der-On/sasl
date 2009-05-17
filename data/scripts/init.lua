@@ -707,14 +707,9 @@ function onMouseUp(x, y, button, layer)
                 x, y, button)
         pressedButton = 0
         focusedComponentPath = nil
-        local cursor = getTopCursorShape(layer, x, y)
-        setCursor(x, y, cursor, layer)
         return res
     else
-        local res = runTopHandler(layer, "onMouseUp", x, y, button)
-        local cursor = getTopCursorShape(layer, x, y)
-        setCursor(x, y, cursor, layer)
-        return res
+        return runTopHandler(layer, "onMouseUp", x, y, button)
     end
 end
 

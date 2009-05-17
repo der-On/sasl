@@ -69,8 +69,19 @@ components = {
     -- large bloody ADF
     un1 { position = { 420, 320, 280, 280 }, },
  
-    -- hirectional gyro
-    nav_compas { position = { 720, 460, 140, 140 }, },
+    -- directional gyro
+    nav_compas { position = { 720, 470, 140, 140 }, },
+    
+    -- VOR 1
+    vor { position = { 720, 315, 140, 140 }, },
+    
+    -- VOR 2
+    vor { 
+        position = { 720, 160, 140, 140 }, 
+        v_plank = globalPropertyf("sim/cockpit2/radios/indicators/nav2_hdef_dots_pilot"),
+        h_plank = globalPropertyf("sim/cockpit2/radios/indicators/nav2_vdef_dots_pilot"),
+        obs = globalPropertyf("sim/cockpit2/radios/actuators/nav2_obs_deg_mag_pilot"),
+    },
     
     -- DME 1
     dme { position = { 490, 180, 100, 100 }, },
@@ -96,5 +107,36 @@ components = {
 
     -- autopilot on/off switch
     ap_switch {  position = { 430, 195, 32, 64 } };
+    
+    -- autopilot hdg mode button
+    ap_mode_btn {  
+        bit = 2;
+        position = { 485, 28, 16, 16 } 
+    };
+    
+    -- autopilot vvi mode button
+    ap_mode_btn {  
+        bit = 16;
+        position = { 485, 58, 16, 16 } 
+    };
+    
+    -- autopilot alt hold mode button
+    ap_mode_btn {  
+        bit = 16384;
+        position = { 485, 88, 16, 16 } 
+    };
+    
+    -- autothrottle mode button
+    ap_mode_btn {  
+        bit = 1;
+        position = { 485, 118, 16, 16 } 
+    };
+
+    -- autopilote labels
+    texture {
+        position = { 440, 2, 32, 155 };
+        image = loadImage('aplabels.png');
+    };
+    
 }
 
