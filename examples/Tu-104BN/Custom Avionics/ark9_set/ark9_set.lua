@@ -3,31 +3,38 @@ size = {388, 284}
 -- define component property table. 
 defineProperty("left_freq", globalPropertyf("sim/cockpit2/radios/actuators/adf1_frequency_hz"))  -- left frequency
 defineProperty("right_freq", globalPropertyf("sim/cockpit2/radios/actuators/adf1_standby_frequency_hz"))  -- right frequency
-defineProperty("active", globalPropertyf("sim/cockpit2/radios/actuators/adf1_right_is_selected"))  -- selector of active disk. 0 - left, 1 - right
+defineProperty("active", globalPropertyf("sim/cockpit2/radios/actuators/adf1_right_is_selected"))  -- selector of active disk. 0 - left, 1 - right 
+defineProperty("mode", globalPropertyf("sim/cockpit2/radios/actuators/adf1_power"))  -- adf mode. 0 = off, 1 = antenna, 2 = on, 3 = tone, 4 = test
+defineProperty("fail", globalPropertyf("sim/operation/failures/rel_adf1"))
+defineProperty("adf", globalPropertyf("sim/cockpit2/radios/indicators/adf1_relative_bearing_deg"))
+defineProperty("gauge_power",globalPropertyi("sim/custom/xap/gauge_power_avail"))
+defineProperty("world_green", globalPropertyf("sim/graphics/misc/cockpit_light_level_g"))  -- green component of natural light in cockpit
 
--- variables for animation in 3D cockpit
---[[
-defineProperty("left_1", globalPropertyf("sim/custom/xap/ark_1_left_1"))  -- left dick for set 0-9 kHz
-defineProperty("left_10", globalPropertyf("sim/custom/xap/ark_1_left_10"))  -- left dick for set 00-90 kHz
-defineProperty("left_100", globalPropertyf("sim/custom/xap/ark_1_left_100"))  -- left dick for set 100-1200 kHz
-defineProperty("right_1", globalPropertyf("sim/custom/xap/ark_1_right_1"))  -- right dick for set 0-9 kHz
-defineProperty("right_10", globalPropertyf("sim/custom/xap/ark_1_right_10"))  -- right dick for set 00-90 kHz
-defineProperty("right_100", globalPropertyf("sim/custom/xap/ark_1_right_100"))  -- right dick for set 100-1200 kHz
---]]
+
+
 -- define image table
-defineProperty("background", loadImage("ark_set.png", 0, 0, 388, 284))
-defineProperty("big_disk", loadImage("ark_set.png", 406.5, 5, 100, 100))
-defineProperty("small_disk", loadImage("ark_set.png", 428, 112, 56, 56))
-defineProperty("ones_disk", loadImage("ark_set.png", 436, 191, 40, 40))
-defineProperty("disk_handle", loadImage("ark_set.png", 444, 234, 22, 68))
-defineProperty("niddle", loadImage("ark_set.png", 411, 214, 1, 58))
-defineProperty("caps", loadImage("ark_set.png", 0, 297, 296, 88))
+defineProperty("background", loadImage("ark9_set.png", 0, 0, 388, 284))
+defineProperty("big_disk", loadImage("ark9_set.png", 406.5, 5, 100, 100))
+defineProperty("small_disk", loadImage("ark9_set.png", 428, 112, 56, 56))
+defineProperty("ones_disk", loadImage("ark9_set.png", 436, 191, 40, 40))
+defineProperty("disk_handle", loadImage("ark9_set.png", 444, 234, 22, 68))
+defineProperty("niddle", loadImage("ark9_set.png", 411, 214, 1, 58))
+defineProperty("caps", loadImage("ark9_set.png", 0, 297, 296, 88))
+defineProperty("mode_selector", loadImage("ark9_set.png", 434, 320, 43, 76))
+defineProperty("signal_nd", loadImage("ark9_set.png", 410, 239, 2, 57)) 
+defineProperty("led", loadImage("ark9_set.png", 394, 352, 12, 12))
+
 defineProperty("tmb_left", loadImage("tumbler_left.png"))
 defineProperty("tmb_right", loadImage("tumbler_right.png"))
+defineProperty("background_lit", loadImage("ark9_set_lit.png", 0, 0, 388, 284))
+defineProperty("background_digits", loadImage("ark9_set_digits.png", 0, 0, 388, 284))
 
 
 -- define initial position for disks
 set(active, 1) -- by default active disk is right
+set(mode, 0) -- OFF by default
+
+
 
 -- define local variables
 
@@ -41,15 +48,16 @@ local hundreds_right = 0
 local freq_R 
 local freq_L 
 local act
+local mode_sel
+local signal
+local power
 
-    -- set limits for frequency that gauge can set (0100 - 1299)
-    if get(left_freq) > 1299 then set(left_freq, 1299) end
-    if get(left_freq) < 100 then set(left_freq, 100) end
-    if get(right_freq) > 1299 then set(right_freq, 1299) end
-    if get(right_freq) < 100 then set(right_freq, 100) end   
+local night = 0
 
 function update()
     act = get(active)
+    power = get(gauge_power)
+
     -- set limits for frequency that gauge can set (0100 - 1299)
     if get(left_freq) > 1299 then set(left_freq, 1299) end
     if get(left_freq) < 100 then set(left_freq, 100) end
@@ -74,15 +82,27 @@ function update()
    decades_right = freq_R - math.floor(freq_R / 100) * 100 - ones_right
    hundreds_right = math.floor(freq_R / 100) * 100
 
---[[   -- set variables for animation 
-   set(left_1, ones_left)
-   set(left_10, decades_left)
-   set(left_100, hundreds_left)
+   -- define position for mode selector
+   local mod = get(mode)
+   if mod == 0 then mode_sel = 0 end
+   if mod == 1 then mode_sel = 2 end
+   if mod == 2 then mode_sel = 1 end
+   if mod == 3 or mod == 4 then mode_sel = 3 end
+   
+   -- calculate signal indicator's needle position
+   local adf_bearing = get(adf)
+   if mod > 0 and get(fail) < 6 and power == 1 then
+      if adf_bearing == 90 then signal = math.random(0, 4) - 50
+         else signal = math.random(0, 4) + 30 
+      end
+   else signal = -60
+   end
 
-   set(right_1, ones_right)
-   set(right_10, decades_right)
-   set(right_100, hundreds_right)   
-   --]]
+   -- calculate night light
+    if get(world_green) > 0.75 then night = 0
+       else night = 1
+    end 
+
 end  
 
 
@@ -95,6 +115,65 @@ components = {
         image = get(background)
     },
 
+    -- background image
+    textureLit { 
+        position = { 0, 0, 388, 284 },
+        image = get(background_lit),
+        visible = function()
+           if get(mode) > 0 and get(fail) < 6 and power == 1 then return true
+           else return false
+           end 
+           return a        
+        end
+    }, 
+
+    -- background image
+    texture { 
+        position = { 0, 0, 388, 284 },
+        image = get(background_digits),
+        visible = function()
+           return night == 0
+        end        
+    },
+    
+    -- left disk indicator
+    textureLit { 
+        position = { 61, 118, 10, 10 },
+        image = get(led),
+        visible = function()
+           local a
+           if act == 0 and get(mode) > 0 and get(fail) < 6 and power == 1 then a = true
+           else a = false
+           end 
+           return a 
+        end,
+    },    
+    
+    -- right disk indicator
+    textureLit { 
+        position = { 246, 118, 10, 10 },
+        image = get(led),
+        visible = function()
+           local a
+           if act == 1 and get(mode) > 0 and get(fail) < 6 and power == 1 then a = true
+           else a = false
+           end 
+           return a 
+        end,
+    },    
+        
+
+    -- signal needle
+    needle {
+        position = { 111, 205, 57, 57  },
+        image = get(signal_nd),
+        angle = function ()
+           return signal
+        end
+    
+    },    
+
+    
     -- left ones disk
     needle {
         position = { 25, 48, 40, 40 },
@@ -180,7 +259,17 @@ components = {
         end
     
     },
+
+    -- mode handle
+    needle {
+        position = { 183, 171, 76, 76 },
+        image = get(mode_selector),
+        angle = function ()
+           return mode_sel * 30 - 60
+        end
     
+    },    
+
     -- select left/right disk
     switch {
         position = { 242, 230, 64, 18 },
@@ -208,8 +297,8 @@ components = {
        position = { 14, 50, 25, 40 },
         
        cursor = { 
-            x = 10, 
-            y = 28, 
+            x = 0, 
+            y = 0, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateleft.png")
@@ -233,8 +322,8 @@ components = {
        position = { 42, 50, 25, 40 },
         
        cursor = { 
-            x = 10, 
-            y = 28, 
+            x = 0, 
+            y = 0, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateright.png")
@@ -258,8 +347,8 @@ components = {
        position = { 195, 50, 25, 40 },
         
        cursor = { 
-            x = 10, 
-            y = 28, 
+            x = 0, 
+            y = 0, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateleft.png")
@@ -283,8 +372,8 @@ components = {
        position = { 225, 50, 25, 40 },
         
        cursor = { 
-            x = 10, 
-            y = 28, 
+            x = 0, 
+            y = 0, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateright.png")
@@ -309,8 +398,8 @@ components = {
        position = { 75, 50, 30, 40 },
         
        cursor = { 
-            x = 10, 
-            y = 28, 
+            x = 0, 
+            y = 0, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateleft.png")
@@ -333,8 +422,8 @@ components = {
        position = { 158, 50, 30, 40 },
         
        cursor = { 
-            x = 10, 
-            y = 28, 
+            x = 0, 
+            y = 0, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateright.png")
@@ -358,8 +447,8 @@ components = {
        position = { 255, 50, 30, 40 },
         
        cursor = { 
-            x = 10, 
-            y = 28, 
+            x = 0, 
+            y = 0, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateleft.png")
@@ -383,8 +472,8 @@ components = {
        position = { 335, 50, 30, 40 },
         
        cursor = { 
-            x = 10, 
-            y = 28, 
+            x = 0, 
+            y = 0, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateright.png")
@@ -408,8 +497,8 @@ components = {
        position = { 115, 30, 35, 25 },
         
        cursor = { 
-            x = 10, 
-            y = 28, 
+            x = 0, 
+            y = 0, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateleft.png")
@@ -432,8 +521,8 @@ components = {
        position = { 115, 90, 35, 25 },
         
        cursor = { 
-            x = 10, 
-            y = 28, 
+            x = 0, 
+            y = 0, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateright.png")
@@ -457,8 +546,8 @@ components = {
        position = { 290, 30, 35, 25 },
         
        cursor = { 
-            x = 10, 
-            y = 28, 
+            x = 0, 
+            y = 0, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateleft.png")
@@ -481,8 +570,8 @@ components = {
        position = { 290, 90, 35, 25 },
         
        cursor = { 
-            x = 10, 
-            y = 28, 
+            x = 0, 
+            y = 0, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateright.png")
@@ -500,6 +589,58 @@ components = {
             return true
         end
     },       
+ 
+    -- click zones for set left ones
+    clickable {
+       position = { 183, 175, 30, 60 },
+        
+       cursor = { 
+            x = 0, 
+            y = 0, 
+            width = 16, 
+            height = 16, 
+            shape = loadImage("rotateleft.png")
+        },  
+        
+        onMouseClick = function(x, y, button) 
+            local mod
+            if mode_sel > 0 then mode_sel = mode_sel - 1 end
+            
+            if mode_sel == 0 then mod = 0 end
+            if mode_sel == 1 then mod = 2 end
+            if mode_sel == 2 then mod = 1 end
+            if mode_sel == 3 then mod = 3 end
+            
+            set(mode, mod)
+            return true
+        end
+    },
+
+    clickable {
+       position = { 220, 175, 25, 60 },
+        
+       cursor = { 
+            x = 0, 
+            y = 0, 
+            width = 16, 
+            height = 16, 
+            shape = loadImage("rotateright.png")
+        },  
+        
+        onMouseClick = function(x, y, button) 
+            local mod
+            if mode_sel < 3 then mode_sel = mode_sel + 1 end
+            
+            if mode_sel == 0 then mod = 0 end
+            if mode_sel == 1 then mod = 2 end
+            if mode_sel == 2 then mod = 1 end
+            if mode_sel == 3 then mod = 3 end
+            
+            set(mode, mod)
+            return true
+        end
+    }, 
+ 
 
 }
 

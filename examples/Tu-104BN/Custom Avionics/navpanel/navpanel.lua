@@ -1,5 +1,8 @@
 -- navigator panel
 
+createProp("sim/custom/xap/gauge_power_avail", 'int');
+set(globalPropertyi('sim/custom/xap/gauge_power_avail'), 1);
+
 size = { 1024, 768 }
 
 -- panel components
@@ -12,16 +15,19 @@ components = {
     };
 
     -- ADF 1
-    ark_set {
+    ark9_set {
         position = { 20, 320, 388*1.0, 284*1.0 };
     };
     
     -- ADF 2
-    ark_set {
+    ark9_set {
         position = { 20, 20, 388*1.0, 284*1.0 };
         left_freq = globalPropertyf("sim/cockpit2/radios/actuators/adf2_frequency_hz");
         right_freq = globalPropertyf("sim/cockpit2/radios/actuators/adf2_standby_frequency_hz");
         active = globalPropertyf("sim/cockpit2/radios/actuators/adf2_right_is_selected");
+        mode = globalPropertyf("sim/cockpit2/radios/actuators/adf2_power"); 
+        fail = globalPropertyf("sim/operation/failures/rel_adf2");
+        adf = globalPropertyf("sim/cockpit2/radios/indicators/adf2_relative_bearing_deg");
     };
 
     -- clock
@@ -44,5 +50,51 @@ components = {
     
     -- mach meter
     machmeter { position = { 595, 20, 135, 135 }, },
+    
+    -- NAV1 receiver
+    nav1_set { position = { 20, 600, 220, 140 }, },
+    
+    -- NAV2 receiver
+    nav2_set { position = { 230, 600, 220, 140 }, },
+    
+    -- COM1 receiver
+    com_set { position = { 440, 600, 220, 140 }, },
+    
+    -- COM2 receiver
+    com_set { 
+        position = { 650, 600, 220, 140 }, 
+        frequency = globalPropertyf("sim/cockpit2/radios/actuators/com2_frequency_hz");
+    };
+
+    -- large bloody ADF
+    un1 { position = { 420, 320, 280, 280 }, },
+ 
+    -- hirectional gyro
+    nav_compas { position = { 720, 460, 140, 140 }, },
+    
+    -- DME 1
+    dme { position = { 490, 180, 100, 100 }, },
+    
+    -- DME 2
+    dme { 
+        position = { 600, 180, 100, 100 }, 
+        distance = globalPropertyf("sim/cockpit/radios/nav2_dme_dist_m");
+        hasDistance = globalPropertyf("sim/cockpit/radios/nav2_has_dme");
+    },
+    
+    -- heading airpeed settings
+    ap_hdg {  position = { 510, 20, 149*0.6, 56*0.6 } };
+       
+    -- vertical speed settings
+    ap_vvi {  position = { 510, 50, 149*0.6, 56*0.6 } };
+
+    -- metric autopilot altitude settings
+    ap_alt {  position = { 510, 80, 149*0.6, 56*0.6 } };
+    
+    -- metric autopilot airpeed settings
+    ap_speed {  position = { 510, 110, 149*0.6, 56*0.6 } };
+
+    -- autopilot on/off switch
+    ap_switch {  position = { 430, 195, 32, 64 } };
 }
 
