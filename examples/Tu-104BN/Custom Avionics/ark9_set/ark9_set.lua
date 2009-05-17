@@ -7,7 +7,7 @@ defineProperty("active", globalPropertyf("sim/cockpit2/radios/actuators/adf1_rig
 defineProperty("mode", globalPropertyf("sim/cockpit2/radios/actuators/adf1_power"))  -- adf mode. 0 = off, 1 = antenna, 2 = on, 3 = tone, 4 = test
 defineProperty("fail", globalPropertyf("sim/operation/failures/rel_adf1"))
 defineProperty("adf", globalPropertyf("sim/cockpit2/radios/indicators/adf1_relative_bearing_deg"))
-defineProperty("gauge_power",globalPropertyi("sim/custom/xap/gauge_power_avail"))
+defineProperty("gauge_power", 1)
 defineProperty("world_green", globalPropertyf("sim/graphics/misc/cockpit_light_level_g"))  -- green component of natural light in cockpit
 
 

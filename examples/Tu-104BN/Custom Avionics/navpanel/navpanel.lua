@@ -1,8 +1,5 @@
 -- navigator panel
 
-createProp("sim/custom/xap/gauge_power_avail", 'int');
-set(globalPropertyi('sim/custom/xap/gauge_power_avail'), 1);
-
 size = { 1024, 768 }
 
 -- panel components

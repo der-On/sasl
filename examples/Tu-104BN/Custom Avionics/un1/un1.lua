@@ -4,7 +4,7 @@ size = {360, 360}
 
 -- initialize component property table
 
-defineProperty("gauge_power", globalPropertyi("sim/custom/xap/gauge_power_avail"))    -- local logic gauge power
+defineProperty("gauge_power", 1)    -- local logic gauge power
 defineProperty("adf1", globalPropertyf("sim/cockpit2/radios/indicators/adf1_relative_bearing_deg"))    -- bearing of ADF1
 defineProperty("adf2", globalPropertyf("sim/cockpit2/radios/indicators/adf2_relative_bearing_deg"))    -- bearing of ADF2
 defineProperty("fail_1", globalPropertyf("sim/operation/failures/rel_adf1"))

@@ -6,7 +6,7 @@ size = {360, 360}
 
 defineProperty("gyro", globalPropertyf("sim/cockpit2/gauges/indicators/heading_electric_deg_mag_pilot"))
 defineProperty("fail", globalPropertyf("sim/operation/failures/rel_ss_dgy"))
-defineProperty("gauge_power", globalPropertyi("sim/custom/xap/gauge_power_avail"))
+defineProperty("gauge_power", 1)
 
 -- background image
 defineProperty("background", loadImage("un1.png", 794, 320, 180, 180))
