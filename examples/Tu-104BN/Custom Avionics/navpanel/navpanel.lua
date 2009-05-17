@@ -41,5 +41,8 @@ components = {
     
     -- artifical horizon
     agd_1 { position = { 735, 20, 135, 135 }, },
+    
+    -- mach meter
+    machmeter { position = { 595, 20, 135, 135 }, },
 }
 

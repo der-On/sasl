@@ -108,11 +108,11 @@ components = {
  
     
     clickable {
-        position = {165, 17, 30, 30 },
+        position = {173, 25, 30, 30 },
         
        cursor = { 
-            x = 0, 
-            y = 0, 
+            x = 8, 
+            y = 26, 
             width = 16, 
             height = 16, 
             shape = loadImage("clickable.png")
@@ -181,11 +181,11 @@ components = {
 
     
     clickable {
-        position = {17, 20, 30, 30 },
+        position = {7, 22, 30, 30 },
         
        cursor = { 
-            x = 0, 
-            y = 0, 
+            x = 8, 
+            y = 26, 
             width = 16, 
             height = 16, 
             shape = loadImage("clickable.png")

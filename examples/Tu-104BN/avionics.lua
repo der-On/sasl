@@ -36,6 +36,11 @@ components = {
     uv_3m { 
         position = { 210, 1500, 165, 165 },
     },
+    
+    -- mach number indicator
+    machmeter { 
+        position = { 220, 1358, 150, 150 },
+    },
    
     -- vertical speed indicator
     lun_1140_02_8 {
@@ -74,6 +79,11 @@ components = {
         position = { 320, 1690, 25, 25 };
         panel = navigatorPanel;
         image = loadImage("navigation.png");
+    };
+    
+    -- clock
+    achs1 { 
+        position = { 65, 1358, 150, 150 }; 
     };
 }
 
