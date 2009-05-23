@@ -1,3 +1,6 @@
+  * default values for properties added
+  * double properties support added
+  * commands API added
   * subpanels can be resized
   * subpanels should popup after click
   * subpanel can be created without close button and background
