@@ -584,10 +584,12 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc)
     strcpy(outSig, "babichev.xap");
 
 #ifdef SNAPSHOT
-#define QUOTE(x) #x
+#define xstr(s) str(s)
+#define str(s) #s
     sprintf(outDesc, "X-Plane scriptable avionics library plugin snapshot %i.%i.%i %s", 
-            VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, QUOTE(SNAPSHOT));
-#undef QUOTE
+            VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, xstr(SNAPSHOT));
+#undef str
+#undef xstr
 #else
     sprintf(outDesc, "X-Plane scriptable avionics library plugin v%i.%i.%i", 
             VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);

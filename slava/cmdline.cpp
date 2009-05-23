@@ -14,10 +14,12 @@ using namespace slava;
 static void printVersion()
 {
 #ifdef SNAPSHOT
-#define QUOTE(x) #x
+#define xstr(s) str(s)
+#define str(s) #s
     printf("Stand-Alone Avionics Application snapshot %i.%i.%i %s\n", 
-            VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, QUOTE(SNAPSHOT));
-#undef QUOTE
+            VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, xstr(SNAPSHOT));
+#undef str
+#undef xstr
 #else
     printf("Stand-Alone Avionics Application v%i.%i.%i\n", 
             VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
