@@ -2,6 +2,7 @@
 size = { 2048, 2048 }
 
 
+
 -- Pop-up navigator panel
 navigatorPanel = subpanel {
     position = { 50, 100, 1024*0.8, 768*0.8 };
@@ -12,6 +13,26 @@ navigatorPanel = subpanel {
         navpanel {  position = { 0, 0, 1024*0.8, 768*0.8 } };
     };
 };
+
+
+-- commands API usage example
+
+-- register navigator panel popup command
+local navigatorCommand = createCommand('custom/Tu-104/panels/navigator',
+        'Popup navigator panel')
+print('command', navigatorCommand)
+
+-- navigator command handler
+function navigatorCommandHandler(phase)
+    if 0 == phase then
+        set(navigatorPanel.visible, not get(navigatorPanel.visible))
+    end
+    return 0
+end
+
+
+-- register created commandhandler
+registerCommandHandler(navigatorCommand, 0, navigatorCommandHandler)
 
 
 -- 3D cockpit

@@ -98,7 +98,7 @@ static int luaCommandHandler(XaCommand command, int phase,
 {
     Commands::CommandHandler *handler = (Commands::CommandHandler*)data;
     if (! handler)
-        return 0;
+        return 1;
 
     return handler->commands->handleCommand(command, phase, handler);
 }
@@ -144,6 +144,14 @@ Commands::Commands(Luna &lua): lua(lua)
 
 Commands::~Commands()
 {
+    if (callbacks.remove_command_handler)
+        for (std::list<CommandHandler>::iterator i = commands.begin(); 
+                i != commands.end(); i++)
+        {
+            CommandHandler &h = *i;
+            callbacks.remove_command_handler(h.command, luaCommandHandler,
+                h.before, &h, data);
+        }
 }
 
 
