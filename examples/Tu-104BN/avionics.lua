@@ -20,7 +20,6 @@ navigatorPanel = subpanel {
 -- register navigator panel popup command
 local navigatorCommand = createCommand('custom/Tu-104/panels/navigator',
         'Popup navigator panel')
-print('command', navigatorCommand)
 
 -- navigator command handler
 function navigatorCommandHandler(phase)
