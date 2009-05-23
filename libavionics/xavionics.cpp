@@ -320,3 +320,10 @@ void xa_stop_netprop_server(XA xa)
 }
 
 
+void xa_set_commands(XA xa, struct XaCommandCallbacks *callbacks, void *data)
+{
+    assert(xa && xa->avionics);
+    xa->avionics->setCommandsCallbacks(callbacks, data);
+}
+
+

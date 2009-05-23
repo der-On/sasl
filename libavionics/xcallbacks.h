@@ -86,6 +86,55 @@ struct PropsCallbacks {
 };
 
 
+//
+// Commands API
+//
+
+
+/// abstract command type
+typedef void* XaCommand;
+
+/// Command callback function
+typedef int (*xa_command_callback)(XaCommand command,
+        int phase, void *data); 
+
+/// Returns command reference or NULL if not found
+typedef XaCommand (*xa_find_command_callback)(const char *name, void *cmdDta);
+
+/// Create new command or return reference to existing command
+typedef XaCommand (*xa_create_command_callback)(const char *name, 
+        const char *description, void *cmdDta);
+
+/// Attach handler to comand
+typedef void (*xa_add_command_handler_callback)(XaCommand command,
+        xa_command_callback handler, int before, void *data, void *cmdDta);
+
+/// Remove command handler
+typedef void (*xa_remove_command_handler_callback)(XaCommand command,
+        xa_command_callback handler, int before, void *data, void *cmdDta);
+
+/// Start command
+typedef void (*xa_command_begin_callback)(XaCommand command, void *cmdDta);
+
+/// Finish command
+typedef void (*xa_command_end_callback)(XaCommand command, void *cmdDta);
+
+/// Start and finish command immediately
+typedef void (*xa_command_once_callback)(XaCommand command, void *cmdDta);
+
+
+/// commands callbacks API
+struct XaCommandCallbacks {
+    xa_find_command_callback find_command;
+    xa_create_command_callback create_command;
+    xa_add_command_handler_callback add_command_handler;
+    xa_remove_command_handler_callback remove_command_handler;
+    xa_command_begin_callback command_begin;
+    xa_command_end_callback command_end;
+    xa_command_once_callback command_once;
+};
+
+
 #ifndef __cplusplus
 extern "C" {
 #endif

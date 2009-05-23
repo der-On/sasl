@@ -70,7 +70,8 @@ class Luna
         /// \param field name of field
         int getFieldi(int tableIdx, const std::string &field, int dflt=0);
 
-        /// Create reference to object attop of stack.  
+        /// Create reference to object at top of stack.  
+        /// Pops value from stack.
         /// Returns reference number
         int addRef();
 

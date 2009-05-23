@@ -19,6 +19,7 @@ using namespace xap;
 static XPLMMenuID xapMenu;
 
 // menus items IDs
+static int xapMenuItem = -1;
 static int startMenuItem;
 static int stopMenuItem;
 static int optionsMenuItem;
@@ -167,9 +168,11 @@ static void xapMenuCallback(void *menuRef, void *param)
 void xap::initGui()
 {
     XPLMMenuID pluginsMenu = XPLMFindPluginsMenu();
-    int subMenuItem = XPLMAppendMenuItem(pluginsMenu, "X-Avionics", 
-            NULL, 1);
-    xapMenu = XPLMCreateMenu("X-Avionics", pluginsMenu, subMenuItem,
+
+    if (-1 == xapMenuItem)
+        xapMenuItem = XPLMAppendMenuItem(pluginsMenu, "X-Avionics", 
+                NULL, 1);
+    xapMenu = XPLMCreateMenu("X-Avionics", pluginsMenu, xapMenuItem,
             xapMenuCallback, NULL);
     startMenuItem = XPLMAppendMenuItem(xapMenu, "Start server", START_MENU, 1);
     stopMenuItem = XPLMAppendMenuItem(xapMenu, "Stop server", STOP_MENU, 1);

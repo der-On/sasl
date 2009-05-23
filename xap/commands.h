@@ -2,15 +2,14 @@
 #define __COMMANDS_H__
 
 
-struct lua_State;
+#include "xavionics.h"
 
+namespace xap {
 
 /// Register commands-related Lua functions
-void registerCommandsApi(lua_State *L);
+void registerCommandsApi(XA xa);
 
-
-/// Remove all registered commands
-void unregisterAllCommands();
+};
 
 
 #endif

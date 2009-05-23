@@ -448,7 +448,6 @@ static int luaLog(lua_State *L)
 static void exportToLua(lua_State *L)
 {
     lua_register(L, "print", luaLog);
-    registerCommandsApi(L);
 }
 
 
@@ -459,7 +458,6 @@ static void freeAvionics(bool keepProps)
     doneGui();
     if (! xa)
         return;
-    unregisterAllCommands();
     xa_done(xa);
     xa = NULL;
     if ((! keepProps) && props) {
@@ -520,6 +518,7 @@ static void reloadPanel(bool keepProps)
 
         xa = xa_init(dataDir.c_str());
         xa_enable_click_emulator(xa, 1);
+        registerCommandsApi(xa);
 
         if (! props)
             props = propsInit();

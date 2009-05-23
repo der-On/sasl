@@ -13,7 +13,7 @@ using namespace xa;
 
 
 Avionics::Avionics(const std::string &path): path(path), clickEmulator(timer),
-    server(properties)
+    server(properties), commands(lua)
 {
     panelWidth = popupWidth = 1024;
     panelHeight = popupHeight = 768;
@@ -293,5 +293,12 @@ int Avionics::startPropsServer(int port, const std::string &secret)
 void Avionics::stopPropsServer()
 {
     server.stop();
+}
+
+
+void Avionics::setCommandsCallbacks(XaCommandCallbacks *callbacks, 
+        void *data)
+{
+    commands.setCallbacks(callbacks, data);
 }
 

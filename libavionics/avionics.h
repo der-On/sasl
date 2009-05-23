@@ -10,6 +10,7 @@
 #include "xcallbacks.h"
 #include "properties.h"
 #include "propsserv.h"
+#include "commands.h"
 
 
 namespace xa {
@@ -57,6 +58,9 @@ class Avionics
 
         /// Properties server
         PropsServer server;
+
+        /// Commands API
+        Commands commands;
 
     public:
         /// Initialize avionics internal data
@@ -128,6 +132,13 @@ class Avionics
 
         /// Stop ptops server
         void stopPropsServer();
+
+        /// Returns commands API
+        Commands& getCommands() { return commands; };
+
+        /// Set commands callbacks
+        void setCommandsCallbacks(XaCommandCallbacks *callbacks,
+                void *data);
 
     private:
         /// Add path to components search list

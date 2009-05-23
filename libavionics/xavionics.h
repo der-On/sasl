@@ -223,6 +223,10 @@ int xa_set_background_color(XA xa, float r, float g, float b, float a);
 int xa_set_show_clickable(XA xa, int show);
 
 
+/// Commands API
+void xa_set_commands(XA xa, struct XaCommandCallbacks *callbacks, void *data);
+
+
 // networked properties functions
 
 
