@@ -159,22 +159,32 @@ panel = createComponent("panel")
 popups = createComponent("popups")
 
 
+-- returns simulator double property
+function globalPropertyd(name, default)
+    local ref = findProp(name, "double")
+    return {
+        __property = 1;
+        get = function() return getPropd(ref, default); end;
+        set = function(self, value) setPropd(ref, value); end;
+    }
+end
+
 -- returns simulator float property
-function globalPropertyf(name)
+function globalPropertyf(name, default)
     local ref = findProp(name, "float")
     return {
         __property = 1;
-        get = function() return getPropf(ref); end;
+        get = function() return getPropf(ref, default); end;
         set = function(self, value) setPropf(ref, value); end;
     }
 end
 
 -- returns simulator int property
-function globalPropertyi(name)
+function globalPropertyi(name, default)
     local ref = findProp(name, "int")
     return {
         __property = 1;
-        get = function(doNotCall) return getPropi(ref); end;
+        get = function(doNotCall) return getPropi(ref, default); end;
         set = function(self, value) setPropi(ref, value); end;
     }
 end

@@ -61,9 +61,28 @@ static int luaCreateProp(lua_State *L)
 
     PropRef prop = getAvionics(L)->getProps().createProp(propName, type);
 
-    if (prop)
+    if (prop) {
+        if (! lua_isnil(L, 3)) {
+            switch (type) {
+                case PROP_INT: {
+                        int value = lua_tointeger(L, 3);
+                        getAvionics(L)->getProps().setProp(prop, value);
+                        break;
+                    }
+                case PROP_FLOAT: {
+                        float value = (float)lua_tonumber(L, 3);
+                        getAvionics(L)->getProps().setProp(prop, value);
+                        break;
+                    }
+                case PROP_DOUBLE: {
+                        double value = lua_tonumber(L, 3);
+                        getAvionics(L)->getProps().setProp(prop, value);
+                        break;
+                    }
+            }
+        }
         lua_pushlightuserdata(L, prop);
-    else
+    } else
         lua_pushnil(L);
 
     return 1;
