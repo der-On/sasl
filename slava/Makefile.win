@@ -3,7 +3,7 @@ HEADERS=$(wildcard *.h)
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)
 
-CXXFLAGS=-Wall  -I/usr/include/lua5.1 -DWINDOWS -DWIN32 -I../libavionics -m32 -ggdb -Ic:/mingw/include/SDL  -D_GNU_SOURCE=1 -Dmain=SDL_main
+CXXFLAGS+=-Wall  -I/usr/include/lua5.1 -DWINDOWS -DWIN32 -I../libavionics -m32 -ggdb -Ic:/mingw/include/SDL  -D_GNU_SOURCE=1 -Dmain=SDL_main
 LNFLAGS=-m32 -L. -L../libavionics -ggdb -Lc:/ming/sdk/lib  -mwindows
 LIBS=-lxavionics -lm -lws2_32 -llua -lSOIL -lOpenGL32 -lmingw32 -lSDLmain -lSDL
 
