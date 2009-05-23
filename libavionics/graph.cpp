@@ -73,7 +73,7 @@ static int luaDrawFrame(lua_State *L)
     return 0;
 }
 
-/// Draw white frame (for debugging)
+/// Draw non-filled rectangle
 static void drawRectangle(double x, double y, double width, double height,
         double r, double g, double b, double a)
 {
@@ -90,10 +90,62 @@ static void drawRectangle(double x, double y, double width, double height,
     glEnable(GL_TEXTURE_2D);
 }
 
-/// Lua wrapper for drawFrame
+/// Lua wrapper for drawRectangle
 static int luaDrawRectangle(lua_State *L)
 {
     drawRectangle(lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3), 
+            lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6),
+            lua_tonumber(L, 7), lua_tonumber(L, 8));
+    return 0;
+}
+
+/// Draw triangle of specified color
+static void drawTriangle(double x1, double y1, double x2, double y2,
+        double x3, double y3,
+        double r, double g, double b, double a)
+{
+    glDisable(GL_TEXTURE_2D);
+
+    glColor4d(r, g, b, a);
+    glBegin(GL_TRIANGLES);
+       glVertex2d(x1, y1);
+       glVertex2d(x2, y2);
+       glVertex2d(x3, y3);
+    glEnd();
+    
+    glEnable(GL_TEXTURE_2D);
+}
+
+/// Lua wrapper for drawTriangle
+static int luaDrawTriangle(lua_State *L)
+{
+    drawTriangle(lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3), 
+            lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6),
+            lua_tonumber(L, 7), lua_tonumber(L, 8), lua_tonumber(L, 9), 
+            lua_tonumber(L, 10));
+    return 0;
+}
+
+
+/// Draw line
+static void drawLine(double x1, double y1, double x2, double y2,
+        double r, double g, double b, double a)
+{
+    glDisable(GL_TEXTURE_2D);
+
+    glColor4d(r, g, b, a);
+    glBegin(GL_LINES);
+      glVertex2d(x1, y1);
+      glVertex2d(x2, y2);
+    glEnd();
+    
+    glEnable(GL_TEXTURE_2D);
+}
+
+/// Lua wrapper for drawLine
+static int luaDrawLine(lua_State *L)
+{
+    drawLine(lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3), 
             lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6),
             lua_tonumber(L, 7), lua_tonumber(L, 8));
     return 0;
@@ -294,5 +346,7 @@ void xa::exportGraphToLua(Luna &lua)
     lua_register(L, "drawTexturePart", luaDrawTexturePart);
     lua_register(L, "drawRotatedTexturePart", luaDrawRotatedTexturePart);
     lua_register(L, "drawRectangle", luaDrawRectangle);
+    lua_register(L, "drawTriangle", luaDrawTriangle);
+    lua_register(L, "drawLine", luaDrawLine);
 }
 
