@@ -166,6 +166,10 @@ int main(int argc, char *argv[])
                                     cmdLine.getNetSecret());
                             showClickable = false;
                             break;
+                        
+                        case SDLK_ESCAPE:
+                            done = true;
+                            break;
 
                         default: break;
                     };
