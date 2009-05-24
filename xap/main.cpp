@@ -37,12 +37,6 @@ static bool has2d = false;
 /// Reference to panel left in window coordinates
 static XPLMDataRef viewType;
 
-/// Reference to panel scroll Y variable
-static XPLMDataRef panelScrollY;
-
-/// Reference to panel scroll X variable
-static XPLMDataRef panelScrollX;
-
 /// Reference to panel left in panel coordinates
 static XPLMDataRef panelLeft;
 
@@ -65,37 +59,49 @@ static bool popupViewInitialized = false;
 static XPLMWindowID fakeWindow;
 
 /// Reference to mouse X coord in texture coord space
-XPLMDataRef clickX;
+static XPLMDataRef clickX;
 
 /// Reference to mouse Y coord in texture coord space
-XPLMDataRef clickY;
+static XPLMDataRef clickY;
 
 /// Reference show panel click spots property
-XPLMDataRef showClickable;
+static XPLMDataRef showClickable;
 
 /// last value of show clickable property
 static int lastShowClickable;
 
-/// Width of panel in pixels
-static int panelWidth;
+/// Width of 2D panel in pixels
+static int panelWidth2d;
 
-/// Height of panel in pixels
-static int panelHeight;
+/// Height of 2D panel in pixels
+static int panelHeight2d;
+
+/// Width of 3D panel in pixels
+static int panelWidth3d;
+
+/// Height of 3D panel in pixels
+static int panelHeight3d;
+
+/// Last known width of panel
+static int lastPanelWidth;
+
+/// Last known height of panel
+static int lastPanelHeight;
 
 /// reload panel hot key ID
 static XPLMHotKeyID reloadHotKey;
 
 /// Cockpit light red component
-XPLMDataRef cockpitRed;
+static XPLMDataRef cockpitRed;
 
 /// Cockpit light green component
-XPLMDataRef cockpitGreen;
+static XPLMDataRef cockpitGreen;
 
 /// Cockpit light blue component
-XPLMDataRef cockpitBlue;
+static XPLMDataRef cockpitBlue;
 
 /// Is cockpit transparent?
-XPLMDataRef cockpitTransparent;
+static XPLMDataRef cockpitTransparent;
 
 /// Width of popup layer
 static int popupWidth;
@@ -109,6 +115,20 @@ static Props props = NULL;
 /// Options storage
 Options xap::options;
 
+// visible panel region in screen coords
+static XPLMDataRef panelWinB;
+static XPLMDataRef panelWinT;
+static XPLMDataRef panelWinL;
+static XPLMDataRef panelWinR;
+
+/// width of screen
+static XPLMDataRef screenWidth;
+
+/// height of screen
+static XPLMDataRef screenHeight;
+
+/// type of panel rendering
+static XPLMDataRef panelRenderType;
 
 /// Returns name of configuration file
 static std::string getConfigFileName()
@@ -199,23 +219,45 @@ static int getPropi(const char *name)
 
 
 // Calculate panel coords
-static void setupPanelView()
+static void calculatePanelSize()
 {
-    if (! panelHeight) {
+    if (! panelHeight2d) {
         double top = getPropd("sim/graphics/view/panel_total_pnl_t");
         double bottom = getPropd("sim/graphics/view/panel_total_pnl_b");
         double panelTotalHeight = top - bottom;
-        panelHeight = (int)panelTotalHeight;
+        panelHeight2d = (int)panelTotalHeight;
     }
+    if (! panelHeight3d)
+        panelHeight3d = panelHeight2d;
 
-    if (! panelWidth) {
+    if (! panelWidth2d) {
         double left = getPropd("sim/graphics/view/panel_total_pnl_l");
         double right = getPropd("sim/graphics/view/panel_total_pnl_r");
         double panelTotalWidth = right - left;
-        panelWidth = (int)panelTotalWidth;
+        panelWidth2d = (int)panelTotalWidth;
     }
+    if (! panelWidth3d)
+        panelWidth3d = panelWidth2d;
+}
 
-    xa_set_panel_size(xa, panelWidth, panelHeight);
+
+static void setPanelSize(int width, int height)
+{
+    if ((lastPanelWidth != width) || (lastPanelHeight != height)) {
+        xa_set_panel_size(xa, width, height);
+        lastPanelWidth = width;
+        lastPanelHeight = height;
+    }
+}
+
+
+/// Update size of panel in libavionics
+static void updatePanelSize()
+{
+    if ((! has2d) || (has2d && (2 == XPLMGetDatai(panelRenderType))))
+        setPanelSize(panelWidth3d, panelHeight3d);
+    else 
+        setPanelSize(panelWidth2d, panelHeight2d);
 }
 
 
@@ -241,9 +283,11 @@ static int drawGauges(XPLMDrawingPhase phase, int isBefore, void *refcon)
         glPushMatrix();
 
         if (! panelViewInitialized) {
-            setupPanelView();
+            calculatePanelSize();
             panelViewInitialized = true;
         }
+
+        updatePanelSize();
 
         glTranslatef(XPLMGetDataf(panelLeft), XPLMGetDataf(panelBottom), 0);
 
@@ -311,16 +355,20 @@ static int handleMouseLayerClick(int x, int y, XPLMMouseStatus status,
 
 
 /// Convert coords passed to x-plane callback to something more sensible
-static void getPanelCoords(int panelX, int panelY, float &x, float &y)
+static void getPanelCoords(int mouseX, int mouseY, float &x, float &y)
 {
-    if (! has2d) {
+    if ((! has2d) || (has2d && (2 == XPLMGetDatai(panelRenderType)))) {
         float texX = XPLMGetDataf(clickX);
         float texY = XPLMGetDataf(clickY);
-        x = texX * (float)panelWidth;
-        y = texY * (float)panelHeight;
+        x = texX * (float)panelWidth3d;
+        y = texY * (float)panelHeight3d;
     } else {
-        x = panelX - XPLMGetDataf(panelLeft);
-        y = panelY - XPLMGetDataf(panelBottom);
+        float l = XPLMGetDataf(panelWinL);
+        float b = XPLMGetDataf(panelWinB);
+        float panelTotalWidth = XPLMGetDataf(panelWinR) - l;
+        float panelTotalHeight = XPLMGetDataf(panelWinT) - b;
+        x = ((float)mouseX - l) / panelTotalWidth * panelWidth2d;
+        y = ((float)mouseY - b) / panelTotalHeight * panelHeight2d;
     }
 }
 
@@ -543,8 +591,11 @@ static void reloadPanel(bool keepProps)
             freeAvionics(keepProps);
         } else {
             has2d = getGlobalPanelValue("panel2d", false);
-            panelWidth = getGlobalPanelValue("fixedPanelWidth", 0);
-            panelHeight = getGlobalPanelValue("fixedPanelHeight", 0);
+            panelWidth2d = getGlobalPanelValue("panelWidth2d", 0);
+            panelHeight2d = getGlobalPanelValue("panelHeight2d", 0);
+            panelWidth3d = getGlobalPanelValue("panelWidth3d", 0);
+            panelHeight3d = getGlobalPanelValue("panelHeight3d", 0);
+            lastPanelWidth = lastPanelHeight = 0;
     
             XPLMDebugString("XAP: Avionics loaded\n");
         }
@@ -599,9 +650,16 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc)
     //windowLeft = XPLMFindDataRef("sim/graphics/view/panel_total_win_l");
     panelLeft = XPLMFindDataRef("sim/graphics/view/panel_total_pnl_l");
     panelBottom = XPLMFindDataRef("sim/graphics/view/panel_total_pnl_b");
+    
+    panelRenderType = XPLMFindDataRef("sim/graphics/view/panel_render_type");
+    panelWinB = XPLMFindDataRef("sim/graphics/view/panel_total_win_b");
+    panelWinT = XPLMFindDataRef("sim/graphics/view/panel_total_win_t");
+    panelWinL = XPLMFindDataRef("sim/graphics/view/panel_total_win_l");
+    panelWinR = XPLMFindDataRef("sim/graphics/view/panel_total_win_r");
+    
+    screenWidth = XPLMFindDataRef("sim/graphics/view/window_width");
+    screenHeight = XPLMFindDataRef("sim/graphics/view/window_height");
 
-    panelScrollY = XPLMFindDataRef("sim/graphics/misc/current_scroll_pos");
-    panelScrollX = XPLMFindDataRef("sim/graphics/misc/current_scroll_pos_x");
     clickX = XPLMFindDataRef("sim/graphics/view/click_3d_x");
     clickY = XPLMFindDataRef("sim/graphics/view/click_3d_y");
     showClickable = XPLMFindDataRef("sim/graphics/misc/show_panel_click_spots");

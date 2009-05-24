@@ -56,7 +56,7 @@ function defaultOnMouseDown(comp, x, y, button, parentX, parentY)
         comp.dragStartPosY = pos[2]
         comp.dragStartSizeX = pos[3]
         comp.dragStartSizeY = pos[4]
-        return true;
+        return true
     end
 
     if (1 == button) and get(comp.movable) then
