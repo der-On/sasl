@@ -52,9 +52,6 @@ static XPLMDataRef panelBottom;
 /// True if panel view options were initialized
 static bool panelViewInitialized = false;
 
-/// True if popup view options were initialized
-static bool popupViewInitialized = false;
-
 /// I needn't window, but there are no other ways to detect mouse clicks
 static XPLMWindowID fakeWindow;
 
@@ -129,6 +126,8 @@ static XPLMDataRef screenHeight;
 
 /// type of panel rendering
 static XPLMDataRef panelRenderType;
+
+
 
 /// Returns name of configuration file
 static std::string getConfigFileName()
@@ -207,7 +206,7 @@ static double getPropd(const char *name)
 }
 
 /// Returns value of property as int
-static int getPropi(const char *name)
+/*static int getPropi(const char *name)
 {
     XPLMDataRef ref = XPLMFindDataRef(name);
     if (! ref) {
@@ -215,7 +214,7 @@ static int getPropi(const char *name)
         return 0;
     } else
         return XPLMGetDatai(ref);
-}
+}*/
 
 
 // Calculate panel coords
@@ -262,11 +261,15 @@ static void updatePanelSize()
 
 
 // Calculate popup coords
-static void setupPopupView()
+static void updatePopupSize()
 {
-    popupWidth = getPropi("sim/graphics/view/window_width");
-    popupHeight = getPropi("sim/graphics/view/window_height");
-    xa_set_popup_size(xa, popupWidth, popupHeight);
+    int width = XPLMGetDatai(screenWidth);
+    int height = XPLMGetDatai(screenHeight);
+    if ((popupWidth != width) || (popupHeight != height)) {
+        xa_set_popup_size(xa, width, height);
+        popupWidth = width;
+        popupHeight = height;
+    }
 }
 
 
@@ -311,10 +314,7 @@ static int drawPopups(XPLMDrawingPhase phase, int isBefore, void *refcon)
     if (xa) {
         glPushMatrix();
 
-        if (! popupViewInitialized) {
-            setupPopupView();
-            popupViewInitialized = true;
-        }
+        updatePopupSize();
 
         XPLMSetGraphicsState(0, 1, 0, 0, 1, 1, 1);
         
@@ -558,7 +558,7 @@ static void reloadPanel(bool keepProps)
     std::string panelPath = getPanelPath(dir);
     if (isFileExists(panelPath)) {
         XPLMDebugString("XAP: Loading avionics...\n");
-        panelViewInitialized = popupViewInitialized = false;
+        panelViewInitialized = false;
 
         std::string dataDir = dir + "/plugins/xap/data";
         if (! isFileExists(dataDir + "/scripts/init.lua"))
@@ -596,6 +596,7 @@ static void reloadPanel(bool keepProps)
             panelWidth3d = getGlobalPanelValue("panelWidth3d", 0);
             panelHeight3d = getGlobalPanelValue("panelHeight3d", 0);
             lastPanelWidth = lastPanelHeight = 0;
+            popupWidth = popupHeight = 0;
     
             XPLMDebugString("XAP: Avionics loaded\n");
         }
