@@ -253,7 +253,7 @@ static void setPanelSize(int width, int height)
 /// Update size of panel in libavionics
 static void updatePanelSize()
 {
-    if ((! has2d) || (has2d && (2 == XPLMGetDatai(panelRenderType))))
+    if ((! has2d) || (has2d && (0 != XPLMGetDatai(panelRenderType))))
         setPanelSize(panelWidth3d, panelHeight3d);
     else 
         setPanelSize(panelWidth2d, panelHeight2d);
@@ -357,7 +357,7 @@ static int handleMouseLayerClick(int x, int y, XPLMMouseStatus status,
 /// Convert coords passed to x-plane callback to something more sensible
 static void getPanelCoords(int mouseX, int mouseY, float &x, float &y)
 {
-    if ((! has2d) || (has2d && (2 == XPLMGetDatai(panelRenderType)))) {
+    if ((! has2d) || (has2d && (0 != XPLMGetDatai(panelRenderType)))) {
         float texX = XPLMGetDataf(clickX);
         float texY = XPLMGetDataf(clickY);
         x = texX * (float)panelWidth3d;
