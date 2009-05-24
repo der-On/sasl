@@ -34,9 +34,6 @@ XA xap::xa = NULL;
 // True for 2D panels
 static bool has2d = false;
 
-/// Reference to panel left in window coordinates
-static XPLMDataRef viewType;
-
 /// Reference to panel left in panel coordinates
 static XPLMDataRef panelLeft;
 
@@ -124,8 +121,8 @@ static XPLMDataRef screenWidth;
 /// height of screen
 static XPLMDataRef screenHeight;
 
-/// type of panel rendering
-static XPLMDataRef panelRenderType;
+/// type of panel view
+static XPLMDataRef viewType;
 
 
 
@@ -250,10 +247,17 @@ static void setPanelSize(int width, int height)
 }
 
 
+/// returns true if 2D panel is active
+static bool is2dPanelView()
+{
+    return 1000 == XPLMGetDatai(viewType);
+}
+
+
 /// Update size of panel in libavionics
 static void updatePanelSize()
 {
-    if ((! has2d) || (has2d && (0 != XPLMGetDatai(panelRenderType))))
+    if ((! has2d) || (has2d && (! is2dPanelView())))
         setPanelSize(panelWidth3d, panelHeight3d);
     else 
         setPanelSize(panelWidth2d, panelHeight2d);
@@ -357,7 +361,7 @@ static int handleMouseLayerClick(int x, int y, XPLMMouseStatus status,
 /// Convert coords passed to x-plane callback to something more sensible
 static void getPanelCoords(int mouseX, int mouseY, float &x, float &y)
 {
-    if ((! has2d) || (has2d && (0 != XPLMGetDatai(panelRenderType)))) {
+    if ((! has2d) || (has2d && (! is2dPanelView()))) {
         float texX = XPLMGetDataf(clickX);
         float texY = XPLMGetDataf(clickY);
         x = texX * (float)panelWidth3d;
@@ -652,7 +656,6 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc)
     panelLeft = XPLMFindDataRef("sim/graphics/view/panel_total_pnl_l");
     panelBottom = XPLMFindDataRef("sim/graphics/view/panel_total_pnl_b");
     
-    panelRenderType = XPLMFindDataRef("sim/graphics/view/panel_render_type");
     panelWinB = XPLMFindDataRef("sim/graphics/view/panel_total_win_b");
     panelWinT = XPLMFindDataRef("sim/graphics/view/panel_total_win_t");
     panelWinL = XPLMFindDataRef("sim/graphics/view/panel_total_win_l");
