@@ -1,21 +1,16 @@
 size = { 290, 290 }
 
 -- background image
-defineProperty("background", loadImage("agd1-bg.png", size[1], size[2]))
+defineProperty("background", loadImage("agi1-bg.png", size[1], size[2]))
 
 -- attitude tape
-defineProperty("tapeImage", loadImage("agd1-tape.png", 80, 720))
-
--- aircraft image
-defineProperty("planeImage", loadImage("agd1-plane.png"))
+defineProperty("tapeImage", loadImage("agi1-tape.png", 80, 720))
 
 -- aircraft pitch
 defineProperty("pitch", globalPropertyf("sim/cockpit2/gauges/indicators/pitch_vacuum_deg_pilot"))
---defineProperty("pitch", globalPropertyf("sim/cockpit2/gauges/indicators/pitch_electric_deg_pilot"))
 
 -- aircraft roll
 defineProperty("roll", globalPropertyf("sim/cockpit2/gauges/indicators/roll_vacuum_deg_pilot"))
---defineProperty("roll", globalPropertyf("sim/cockpit2/gauges/indicators/roll_electric_deg_pilot"))
 
 -- height of visible window area
 local winHeight = 80 / 720
@@ -26,14 +21,15 @@ local deg = 2 / 720
 components = {
 
     -- attitude tape
-    tape {
-        position = { 56, 55, 178, 178 },
+    rotated_tape {
+        position = { 58, 66, 174, 174 },
         image = get(tapeImage),
         window = { 1.0, 0.1111111111111 },
+        angle = roll,
 
         -- calculate pitch level
         scrollY = function()
-            return (0.5 - winHeight / 2) - deg * get(pitch);
+            return (0.5 - winHeight / 2) + deg * get(pitch);
         end,
     },
 
@@ -43,16 +39,9 @@ components = {
         image = get(background)
     },
 
-    -- aircraft image
-    needle {
-        position = { 10, 8, 272, 272 },
-        image = get(planeImage),
-        angle = roll,
-    },
-
     -- slip ball
     slip {
-        position = { 81, 17, 128, 64 }
+        position = { 81, 10, 128, 64 }
     }
 }
 

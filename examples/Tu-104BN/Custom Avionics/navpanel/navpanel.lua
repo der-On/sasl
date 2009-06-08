@@ -49,7 +49,10 @@ components = {
     machmeter { position = { 595, 20, 135, 135 }, },
     
     -- NAV1 receiver
-    nav1_set { position = { 20, 600, 220, 140 }, },
+    nav1_set { 
+        position = { 20, 600, 220, 140 }, 
+--        ilsOnly = true,
+    },
     
     -- NAV2 receiver
     nav2_set { position = { 230, 600, 220, 140 }, },
@@ -70,6 +73,7 @@ components = {
     nav_compas { position = { 720, 470, 140, 140 }, },
     
     -- VOR 1
+    --psp48 { position = { 720, 315, 140, 140 }, },
     vor { position = { 720, 315, 140, 140 }, },
     
     -- VOR 2
