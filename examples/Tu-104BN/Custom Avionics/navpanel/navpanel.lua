@@ -57,39 +57,30 @@ components = {
     -- NAV2 receiver
     nav2_set { position = { 230, 600, 220, 140 }, },
     
-    -- COM1 receiver
-    com_set { position = { 440, 600, 220, 140 }, },
-    
-    -- COM2 receiver
-    com_set { 
-        position = { 650, 600, 220, 140 }, 
-        frequency = globalPropertyf("sim/cockpit2/radios/actuators/com2_frequency_hz");
-    };
-
     -- large bloody ADF
-    un1 { position = { 420, 320, 280, 280 }, },
+    un1 { position = { 460, 180, 380, 380 }, },
  
     -- directional gyro
-    nav_compas { position = { 720, 470, 140, 140 }, },
+    --nav_compas { position = { 720, 470, 140, 140 }, },
     
     -- VOR 1
     --psp48 { position = { 720, 315, 140, 140 }, },
-    vor { position = { 720, 315, 140, 140 }, },
+    vor { position = { 450, 580, 160, 160 }, },
     
     -- VOR 2
     vor { 
-        position = { 720, 160, 140, 140 }, 
+        position = { 620, 580, 160, 160 }, 
         v_plank = globalPropertyf("sim/cockpit2/radios/indicators/nav2_hdef_dots_pilot"),
         h_plank = globalPropertyf("sim/cockpit2/radios/indicators/nav2_vdef_dots_pilot"),
         obs = globalPropertyf("sim/cockpit2/radios/actuators/nav2_obs_deg_mag_pilot"),
     },
     
     -- DME 1
-    dme { position = { 490, 180, 100, 100 }, },
+    dme { position = { 790, 670, 80, 80 }, },
     
     -- DME 2
     dme { 
-        position = { 600, 180, 100, 100 }, 
+        position = { 790, 570, 80, 80 }, 
         distance = globalPropertyf("sim/cockpit/radios/nav2_dme_dist_m");
         hasDistance = globalPropertyf("sim/cockpit/radios/nav2_has_dme");
     },
@@ -107,7 +98,7 @@ components = {
     ap_speed {  position = { 510, 110, 149*0.6, 56*0.6 } };
 
     -- autopilot on/off switch
-    ap_switch {  position = { 430, 195, 32, 64 } };
+    ap_switch {  position = { 440, 160, 32, 64 } };
     
     -- autopilot hdg mode button
     ap_mode_btn {  
