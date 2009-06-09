@@ -5,33 +5,25 @@ size = { 2048, 2048 }
 
 -- Pop-up navigator panel
 navigatorPanel = subpanel {
+
+    -- deafult panel position
     position = { 50, 100, 1024*0.8, 768*0.8 };
+
+    -- disable default background
     noBackground = true;
 
+    -- command ID for shortcut binding
+    command = "Tu-104/panels/navigator";
+
+    -- panel descriptions for shortcuts setup dialog
+    description = "Toggle Tu-104 navigator panel";
+
+    -- components of panel
     components = {
         -- navigator panel body
         navpanel {  position = { 0, 0, 1024*0.8, 768*0.8 } };
     };
 };
-
-
--- commands API usage example
-
--- register navigator panel popup command
-local navigatorCommand = createCommand('custom/Tu-104/panels/navigator',
-        'Popup navigator panel')
-
--- navigator command handler
-function navigatorCommandHandler(phase)
-    if 0 == phase then
-        set(navigatorPanel.visible, not get(navigatorPanel.visible))
-    end
-    return 0
-end
-
-
--- register created commandhandler
-registerCommandHandler(navigatorCommand, 0, navigatorCommandHandler)
 
 
 -- 3D cockpit

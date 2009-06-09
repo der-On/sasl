@@ -840,6 +840,23 @@ function subpanel(tbl)
         });
     end
 
+    if get(tbl.command) then
+        -- register navigator panel popup command
+        local command = createCommand(get(tbl.command), get(tbl.description))
+
+        -- navigator command handler
+        function commandHandler(phase)
+            if 0 == phase then
+                set(c.visible, not get(c.visible))
+            end
+            return 0
+        end
+
+
+        -- register created commandhandler
+        registerCommandHandler(command, 0, commandHandler)
+    end
+
     popup(c)
 
     return c
