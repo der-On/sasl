@@ -28,9 +28,21 @@ static void initSDL()
 }
 
 
+static void updateScreenSettings(int width, int height)
+{
+    glViewport(0, 0, width, height);
+    glClearColor(0, 0, 0, 0);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0, width, 0, height, -1, 1);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+}
+
+
 static void initScreen(int width, int height, bool fullscreen)
 {
-    int flags = SDL_OPENGL;
+    int flags = SDL_OPENGL | SDL_RESIZABLE;
     if (fullscreen)
         flags |= SDL_FULLSCREEN;
 
@@ -40,13 +52,7 @@ static void initScreen(int width, int height, bool fullscreen)
         exit(1);
     }
 
-    glViewport(0, 0, width, height);
-    glClearColor(0, 0, 0, 0);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0, width, 0, height, -1, 1);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+    updateScreenSettings(width, height);
 
     glColor3f(1.0f, 1.0f, 1.0f);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -111,6 +117,8 @@ int main(int argc, char *argv[])
     int height = cmdLine.getScreenHeight();
 
     initScreen(width, height, cmdLine.isFullscreen());
+    std::string title = "SLAVA - " + cmdLine.getPanel();
+    SDL_WM_SetCaption(title.c_str(), title.c_str());
 
     XA xa = createPanel(width, height, cmdLine.getDataDir(), 
             cmdLine.getPanel(), cmdLine.getNetHost(), cmdLine.getNetPort(),
@@ -173,6 +181,14 @@ int main(int argc, char *argv[])
 
                         default: break;
                     };
+                    break;
+                
+                case SDL_VIDEORESIZE: 
+                    width = event.resize.w;
+                    height = event.resize.h;
+                    initScreen(width, height, cmdLine.isFullscreen());
+                    xa_set_panel_size(xa, width, height);
+                    xa_set_popup_size(xa, width, height);
                     break;
             }
         }
