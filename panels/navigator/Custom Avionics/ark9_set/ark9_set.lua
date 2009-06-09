@@ -7,7 +7,7 @@ defineProperty("active", globalPropertyf("sim/cockpit2/radios/actuators/adf1_rig
 defineProperty("mode", globalPropertyf("sim/cockpit2/radios/actuators/adf1_power"))  -- adf mode. 0 = off, 1 = antenna, 2 = on, 3 = tone, 4 = test
 defineProperty("fail", globalPropertyf("sim/operation/failures/rel_adf1"))
 defineProperty("adf", globalPropertyf("sim/cockpit2/radios/indicators/adf1_relative_bearing_deg"))
-defineProperty("gauge_power",globalPropertyi("sim/custom/xap/gauge_power_avail"))
+defineProperty("gauge_power", 1)
 defineProperty("world_green", globalPropertyf("sim/graphics/misc/cockpit_light_level_g"))  -- green component of natural light in cockpit
 
 
@@ -297,8 +297,8 @@ components = {
        position = { 14, 50, 25, 40 },
         
        cursor = { 
-            x = 0, 
-            y = 0, 
+            x = 10, 
+            y = 28, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateleft.png")
@@ -322,8 +322,8 @@ components = {
        position = { 42, 50, 25, 40 },
         
        cursor = { 
-            x = 0, 
-            y = 0, 
+            x = 10, 
+            y = 28, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateright.png")
@@ -347,8 +347,8 @@ components = {
        position = { 195, 50, 25, 40 },
         
        cursor = { 
-            x = 0, 
-            y = 0, 
+            x = 10, 
+            y = 28, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateleft.png")
@@ -372,8 +372,8 @@ components = {
        position = { 225, 50, 25, 40 },
         
        cursor = { 
-            x = 0, 
-            y = 0, 
+            x = 10, 
+            y = 28, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateright.png")
@@ -398,8 +398,8 @@ components = {
        position = { 75, 50, 30, 40 },
         
        cursor = { 
-            x = 0, 
-            y = 0, 
+            x = 10, 
+            y = 28, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateleft.png")
@@ -422,8 +422,8 @@ components = {
        position = { 158, 50, 30, 40 },
         
        cursor = { 
-            x = 0, 
-            y = 0, 
+            x = 10, 
+            y = 28, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateright.png")
@@ -447,8 +447,8 @@ components = {
        position = { 255, 50, 30, 40 },
         
        cursor = { 
-            x = 0, 
-            y = 0, 
+            x = 10, 
+            y = 28, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateleft.png")
@@ -472,8 +472,8 @@ components = {
        position = { 335, 50, 30, 40 },
         
        cursor = { 
-            x = 0, 
-            y = 0, 
+            x = 10, 
+            y = 28, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateright.png")
@@ -497,8 +497,8 @@ components = {
        position = { 115, 30, 35, 25 },
         
        cursor = { 
-            x = 0, 
-            y = 0, 
+            x = 10, 
+            y = 28, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateleft.png")
@@ -521,8 +521,8 @@ components = {
        position = { 115, 90, 35, 25 },
         
        cursor = { 
-            x = 0, 
-            y = 0, 
+            x = 10, 
+            y = 28, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateright.png")
@@ -546,8 +546,8 @@ components = {
        position = { 290, 30, 35, 25 },
         
        cursor = { 
-            x = 0, 
-            y = 0, 
+            x = 10, 
+            y = 28, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateleft.png")
@@ -570,8 +570,8 @@ components = {
        position = { 290, 90, 35, 25 },
         
        cursor = { 
-            x = 0, 
-            y = 0, 
+            x = 10, 
+            y = 28, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateright.png")
@@ -595,8 +595,8 @@ components = {
        position = { 183, 175, 30, 60 },
         
        cursor = { 
-            x = 0, 
-            y = 0, 
+            x = 10, 
+            y = 28, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateleft.png")
@@ -620,8 +620,8 @@ components = {
        position = { 220, 175, 25, 60 },
         
        cursor = { 
-            x = 0, 
-            y = 0, 
+            x = 10, 
+            y = 28, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateright.png")

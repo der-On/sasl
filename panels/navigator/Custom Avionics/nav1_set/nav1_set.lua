@@ -2,6 +2,7 @@ size = {220, 140}
 
 -- define property table
 defineProperty("frequency", globalPropertyf("sim/cockpit2/radios/actuators/nav1_frequency_hz"))  -- set the frequency
+defineProperty("ilsOnly", false)  -- true to work with ILS only
 
 
 -- images table
@@ -108,8 +109,8 @@ components = {
        position = { 7, 35, 30, 40 },
         
        cursor = { 
-            x = 0, 
-            y = 0, 
+            x = 10, 
+            y = 28, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateleft.png")
@@ -118,7 +119,15 @@ components = {
         onMouseClick = function(x, y, button) 
             -- calculate new frequency
             freq_100 = freq_100 - 1
-            if freq_100 == 107 then freq_100 = 117 end
+            if get(ilsOnly) then
+                if 108 > freq_100 then 
+                    freq_100 = 111
+                end
+            else
+                if 108 > freq_100 then 
+                    freq_100 = 117 
+                end
+            end
             
             local fr = freq_100 * 100 + freq_10
             set(frequency, fr)
@@ -131,8 +140,8 @@ components = {
        position = { 37, 35, 30, 40 },
         
        cursor = { 
-            x = 0, 
-            y = 0, 
+            x = 10, 
+            y = 28, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateright.png")
@@ -141,7 +150,15 @@ components = {
         onMouseClick = function(x, y, button) 
             -- calculate new frequency
             freq_100 = freq_100 + 1
-            if freq_100 == 118 then freq_100 = 108 end
+            if get(ilsOnly) then
+                if 111 < freq_100 then 
+                    freq_100 = 108
+                end
+            else
+                if 117 < freq_100 then 
+                    freq_100 = 108 
+                end
+            end
             
             local fr = freq_100 * 100 + freq_10
             set(frequency, fr)
@@ -156,8 +173,8 @@ components = {
        position = { 135, 35, 30, 40 },
         
        cursor = { 
-            x = 0, 
-            y = 0, 
+            x = 10, 
+            y = 28, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateleft.png")
@@ -166,7 +183,19 @@ components = {
         onMouseClick = function(x, y, button) 
             -- calculate new frequency
             freq_10 = freq_10 - 5
-            if freq_10 == -5 then freq_10 = 95 end
+            if get(ilsOnly) then
+                local v = math.modf(freq_10 / 10)
+                if 1 ~= v % 2 then
+                    freq_10 = freq_10 - 10
+                end
+                if 0 >= freq_10 then 
+                    freq_10 = 95 
+                end
+            else
+                if 0 > freq_10 then 
+                    freq_10 = 95 
+                end
+            end
             
             local fr = freq_100 * 100 + freq_10
             set(frequency, fr)
@@ -179,8 +208,8 @@ components = {
        position = { 165, 35, 30, 40 },
         
        cursor = { 
-            x = 0, 
-            y = 0, 
+            x = 10, 
+            y = 28, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateright.png")
@@ -189,7 +218,19 @@ components = {
         onMouseClick = function(x, y, button) 
             -- calculate new frequency
             freq_10 = freq_10 + 5
-            if freq_10 == 100 then freq_10 = 0 end
+            if get(ilsOnly) then
+                local v = math.modf(freq_10 / 10)
+                if 1 ~= v % 2 then
+                    freq_10 = freq_10 + 10
+                end
+                if 95 < freq_10 then 
+                    freq_10 = 10
+                end
+            else
+                if 95 < freq_10 then 
+                    freq_10 = 0
+                end
+            end
             
             local fr = freq_100 * 100 + freq_10
             set(frequency, fr)

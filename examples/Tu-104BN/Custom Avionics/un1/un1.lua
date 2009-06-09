@@ -157,8 +157,8 @@ components = {
         position = { 290, 10, 30, 60 },
         
        cursor = { 
-            x = 0, 
-            y = 0, 
+            x = 10, 
+            y = 28, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateleft.png")
@@ -176,8 +176,8 @@ components = {
         position = { 320, 10, 30, 60 },
         
        cursor = { 
-            x = 0, 
-            y = 0, 
+            x = 10, 
+            y = 28, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateright.png")

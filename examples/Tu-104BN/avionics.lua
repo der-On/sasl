@@ -28,6 +28,30 @@ navigatorPanel = subpanel {
 };
 
 
+-- Pop-up radio operator panel
+radioPanel = subpanel {
+
+    -- deafult panel position
+    position = { 20, 20, 340, 250 };
+
+    -- disable default background
+    noBackground = true;
+
+    -- command ID for shortcut binding
+    command = "xap/panels/2";
+
+    -- panel descriptions for shortcuts setup dialog
+    description = "Toggle Tu-104 radio operator panel";
+
+    -- components of panel
+    components = {
+        -- radio operator panel body
+        radiopanel {  position = { 0, 0, 340, 250 } };
+    };
+};
+
+
+
 -- 3D cockpit
 components = { 
     
@@ -134,6 +158,13 @@ components = {
         position = { 220, 1590, 25, 25 };
         panel = navigatorPanel;
         image = loadImage("navigation.png");
+    };
+        
+    -- show radio operator panel
+    togglePanelButton {
+        position = { 250, 1590, 25, 25 };
+        panel = radioPanel;
+        image = loadImage("radio.png");
     };
     
     -- ADF 1
