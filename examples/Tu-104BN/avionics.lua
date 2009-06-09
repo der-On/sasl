@@ -1,9 +1,8 @@
 
 size = { 2048, 2048 }
 
--- power avialability
-createProp("sim/custom/xap/gauge_power_avail", "int");  -- power for gauges and systems is exist
-
+-- power for gauges and systems is exist
+createProp("sim/custom/xap/gauge_power_avail", "int");  
 
 -- Pop-up navigator panel
 navigatorPanel = subpanel {
@@ -54,6 +53,9 @@ radioPanel = subpanel {
 
 -- 3D cockpit
 components = { 
+
+    -- update aircraft logic
+    logic { },
     
     -- altitude indicator
     vd_10 { 
@@ -207,9 +209,6 @@ components = {
         oil_p = globalPropertyf("sim/cockpit2/engine/indicators/oil_pressure_psi[1]"),
         oil_t = globalPropertyf("sim/cockpit2/engine/indicators/oil_temperature_deg_C[1]"),
     },
-
-    -- update aircraft logic
-    logic { },
 }
 
 

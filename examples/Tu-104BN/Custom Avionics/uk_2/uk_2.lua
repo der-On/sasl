@@ -5,7 +5,7 @@ size = { 160, 160 }
 defineProperty("gyro", globalPropertyf("sim/cockpit2/gauges/indicators/heading_electric_deg_mag_pilot"))
 defineProperty("fail", globalPropertyf("sim/operation/failures/rel_ss_dgy"))
 defineProperty("gauge_power", globalPropertyi("sim/custom/xap/gauge_power_avail"))
-defineProperty("curse", globalPropertyf("sim/custom/xap/uk_curs"))
+defineProperty("curse", 0)
 
 -- background image
 defineProperty("background", loadImage("uk_2.png", 0, 0, 150, 150))
@@ -86,6 +86,21 @@ components = {
         end,
     },  
 
+    -- heading rotary
+    rotary {
+        position = { 0, 0, 40, 40 };
+        image = loadImage("rotary.png");
+        value = curse;
+        adjuster = function(value)
+            if 360 >= value then
+                value = value - 360
+            end
+            if 0 > value then
+                value = value + 360
+            end
+            return value
+        end
+    },
    
 }
 

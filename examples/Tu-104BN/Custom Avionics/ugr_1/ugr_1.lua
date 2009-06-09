@@ -18,6 +18,7 @@ defineProperty("background", loadImage("ugr_1.png", 0, 0, 150, 150))
 defineProperty("bearing_needle", loadImage("ugr_1.png", 156, 0, 18, 122))
 defineProperty("obs_needle", loadImage("ugr_1.png", 192, 0, 53, 122))
 defineProperty("gyro_needle", loadImage("ugr_1.png", 141, 141, 115, 115))
+defineProperty("rotaryImage", loadImage("rotary.png"))
 
 
 
@@ -75,13 +76,13 @@ components = {
     -- background image
     texture { 
         position = { 5, 5, 150, 150 },
-        image = get(background),
+        image = background,
     },
 
     -- gyro needle
     needle {
         position = { 21, 25, 115, 115 },
-        image = get(gyro_needle),
+        image = gyro_needle,
         angle = function() 
              return - get(gyro)
         end,
@@ -91,7 +92,7 @@ components = {
     -- OBS needle
     needle {
         position = { 18, 22, 122, 122 },
-        image = get(obs_needle),
+        image = obs_needle,
         angle = function() 
             return get(obs) - get(gyro)
         end,
@@ -101,19 +102,25 @@ components = {
     -- bearing needle
     needle {
         position = { 20, 21, 120, 120 },
-        image = get(bearing_needle),
+        image = bearing_needle,
         angle = function() 
              return angle
         end,
     },  
+
+    -- rotary background
+    texture {
+        position = { 0, 0, 40, 40 },
+        image = rotaryImage,
+    },
 
      -- click zone for decrement OBS
      clickable {
         position = { 0, 0, 20, 40 },
         
        cursor = { 
-            x = 0, 
-            y = 0, 
+            x = 10, 
+            y = 28, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateleft.png")
@@ -132,8 +139,8 @@ components = {
         position = { 20, 0, 20, 40 },
         
        cursor = { 
-            x = 0, 
-            y = 0, 
+            x = 10, 
+            y = 28, 
             width = 16, 
             height = 16, 
             shape = loadImage("rotateright.png")
