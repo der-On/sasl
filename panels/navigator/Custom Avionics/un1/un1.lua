@@ -10,7 +10,8 @@ defineProperty("adf2", globalPropertyf("sim/cockpit2/radios/indicators/adf2_rela
 defineProperty("fail_1", globalPropertyf("sim/operation/failures/rel_adf1"))
 defineProperty("fail_2", globalPropertyf("sim/operation/failures/rel_adf2"))
 defineProperty("adf1_mode", globalPropertyf("sim/cockpit2/radios/actuators/adf1_power")) 
-defineProperty("adf2_mode", globalPropertyf("sim/cockpit2/radios/actuators/adf2_power")) 
+defineProperty("adf2_mode", globalPropertyf("sim/cockpit2/radios/actuators/adf2_power"))
+defineProperty("gyro", globalPropertyf("sim/cockpit2/gauges/indicators/heading_electric_deg_mag_pilot")) 
 
 defineProperty("flight_time", globalPropertyf("sim/time/total_flight_time_sec"))  -- local time since aircraft was loaded 
 defineProperty("M", globalPropertyf("sim/flightmodel/position/M"))  -- some momentum of aircraft. it's remein one value, when sim paused
@@ -120,7 +121,7 @@ components = {
         position = { 39, 39, 284, 284 },
         image = get(scale),
         angle = function() 
-             return curs
+             return curs - get(gyro)
         end,
     },    
  

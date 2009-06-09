@@ -36,7 +36,6 @@ components = {
         position = { 32.5, 47, 90 , 90 },
         image = get(long_needle),
         angle = function()
-            --local v = get(fuel_p) * 0.07031 
             local v = get(fuel_p)
             if v < 100 then
                 return v * 120 / 100 - 60; 
