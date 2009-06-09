@@ -755,6 +755,18 @@ function onMouseMove(x, y, layer)
 end
 
 
+-- move panel to top of screen
+function movePanelToTop(panel)
+    for i, v in pairs(popups.components) do
+        if v == panel then
+            table.remove(popups.components, i)
+            table.insert(popups.components, panel)
+            return
+        end
+    end
+end
+
+
 -- create popup movable resizable subpanel hidden by default
 function subpanel(tbl)
     local c = createComponent('subpanel')
@@ -848,6 +860,9 @@ function subpanel(tbl)
         function commandHandler(phase)
             if 0 == phase then
                 set(c.visible, not get(c.visible))
+                if get(c.visible) then
+                    movePanelToTop(c)
+                end
             end
             return 0
         end

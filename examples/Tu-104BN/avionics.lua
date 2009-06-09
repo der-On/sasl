@@ -177,6 +177,7 @@ components = {
         oil_t = globalPropertyf("sim/cockpit2/engine/indicators/oil_temperature_deg_C[1]"),
     },
 
+    -- update aircraft logic
     logic { },
 }
 

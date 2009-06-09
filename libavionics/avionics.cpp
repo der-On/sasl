@@ -79,16 +79,20 @@ void Avionics::loadPanel(const std::string &fileName)
     int idx = fileName.find_last_of('/');
     if (0 > idx)
         idx = fileName.find_last_of('\\');
-    if (0 < idx) {
-        std::string panelDir = fileName.substr(0, idx);
-        addSearchPath(panelDir);
-        addSearchPath(panelDir + "/Custom Avionics");
-    } else {
-        addSearchPath("./");
-        addSearchPath("./Custom Avionics");
-    }
+    std::string panelDir;
+    if (0 < idx)
+        panelDir = fileName.substr(0, idx);
+    else
+        panelDir = ".";
+    
+    addSearchPath(panelDir);
+    addSearchPath(panelDir + "/Custom Avionics");
+    addSearchImagePath(panelDir + "/Custom Avionics/images");
     
     lua_State *L = lua.getLua();
+
+    lua_pushstring(L, panelDir.c_str());
+    lua_setglobal(L, "panelDir");
 
     lua_getglobal(L, "loadPanel");              // loadPanel
     lua_pushstring(L, fileName.c_str());        // loadPanel "fileName"
