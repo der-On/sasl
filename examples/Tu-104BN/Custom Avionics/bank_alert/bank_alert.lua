@@ -4,7 +4,7 @@ size = { 160, 25 }
 defineProperty("roll", globalPropertyf("sim/cockpit2/gauges/indicators/roll_vacuum_deg_pilot"))
 
 -- bank angle to alert
-defineProperty("maxBank", 45);
+defineProperty("maxBank", 30);
 
 -- background image
 defineProperty("background", loadImage("bank_alert.png", 4, 2, 160, 25))

@@ -25,7 +25,7 @@ components = {
         position = { 58, 66, 174, 174 },
         image = get(tapeImage),
         window = { 1.0, 0.1111111111111 },
-        angle = roll,
+        angle = function() return -get(roll); end,
 
         -- calculate pitch level
         scrollY = function()
