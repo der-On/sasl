@@ -57,7 +57,7 @@ components = {
     -- background image
     texture { 
         position = { 5, 5, 150, 150 },
-        image = get(background),
+        image = background,
     },
 
     -- round scale
@@ -72,7 +72,7 @@ components = {
     -- triangle (marker) image
     texture { 
         position = { 70, 113, 15, 15 },
-        image = get(triangle),
+        image = triangle,
     },
    
 

@@ -47,11 +47,6 @@ components = {
         position = { 440, 1520, 150, 150 }, 
     },
     
-    -- clock
---[[    achs1 { 
-        position = { 440, 1358, 150, 150 }; 
-    };    ]]--
-    
     -- autopilot on/off switch
     ap_switch {  position = { 140, 1465, 32, 64 } };
 
@@ -66,6 +61,12 @@ components = {
     
     -- metric autopilot airpeed settings
     ap_speed {  position = { 500, 1480, 149*0.6, 56*0.6 } };
+    
+    -- autopilote labels
+    texture {
+        position = { 448, 1375, 32, 155 };
+        image = loadImage('aplabels.png');
+    };
     
     -- autopilot hdg mode button
     ap_mode_btn {  
@@ -89,12 +90,6 @@ components = {
     ap_mode_btn {  
         bit = 1;
         position = { 480, 1490, 16, 16 } 
-    };
-    
-    -- autopilote labels
-    texture {
-        position = { 448, 1375, 32, 155 };
-        image = loadImage('aplabels.png');
     };
     
     -- directional gyro
@@ -137,30 +132,6 @@ components = {
         position = { 290, 1440, 150, 150 },
     },
    
---[[    -- Metric DME 1
-    dme_simple {
-        position = { 1030, 1830, 90*0.7, 36*0.7 }, 
-    },
-
-    -- Metric DME 2
-    dme_simple {
-        position = { 1030, 1645, 90*0.7, 36*0.7 }, 
-        distance = globalPropertyf("sim/cockpit/radios/nav2_dme_dist_m"),
-        hasDistance = globalPropertyf("sim/cockpit/radios/nav2_has_dme"),
-    },
-
-    -- metric autopilot altitude settings
-    ap_alt {  position = { 990, 1550, 149*0.80, 56*0.80 } };
-    
-    -- metric autopilot airpeed settings
-    ap_speed {  position = { 990, 1589, 149*0.80, 56*0.80 } };
-    
-    -- heading airpeed settings
-    ap_hdg {  position = { 990, 1475, 149*0.80, 56*0.80 } };
-   
-    -- vertical speed settings
-    ap_vvi {  position = { 990, 1512, 149*0.8, 56*0.8 } }; ]]--
-
     -- pressure settings
     pressure { position = { 227, 1242, 200*0.76, 159*0.76 } };
 

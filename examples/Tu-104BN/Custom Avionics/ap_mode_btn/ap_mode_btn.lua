@@ -29,9 +29,8 @@ components = {
     -- toggle state button
     button {
         onMouseDown = function ()
-            print(get(bit), get(state), bitor(get(state), get(bit)))
-            --set(state, bitor(get(bit), get(state)))
             set(state, get(bit))
+            return true
         end
     }
 
