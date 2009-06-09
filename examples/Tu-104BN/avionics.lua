@@ -1,6 +1,8 @@
 
 size = { 2048, 2048 }
 
+-- power avialability
+createProp("sim/custom/xap/gauge_power_avail", "int");  -- power for gauges and systems is exist
 
 
 -- Pop-up navigator panel
@@ -13,7 +15,7 @@ navigatorPanel = subpanel {
     noBackground = true;
 
     -- command ID for shortcut binding
-    command = "Tu-104/panels/navigator";
+    command = "xap/panels/1";
 
     -- panel descriptions for shortcuts setup dialog
     description = "Toggle Tu-104 navigator panel";
@@ -173,7 +175,9 @@ components = {
         fuel_p = globalPropertyf("sim/cockpit2/engine/indicators/fuel_pressure_psi[1]"),
         oil_p = globalPropertyf("sim/cockpit2/engine/indicators/oil_pressure_psi[1]"),
         oil_t = globalPropertyf("sim/cockpit2/engine/indicators/oil_temperature_deg_C[1]"),
-    },    
+    },
+
+    logic { },
 }
 
 
