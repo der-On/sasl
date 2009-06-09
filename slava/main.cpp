@@ -42,7 +42,10 @@ static void updateScreenSettings(int width, int height)
 
 static void initScreen(int width, int height, bool fullscreen)
 {
-    int flags = SDL_OPENGL | SDL_RESIZABLE;
+    int flags = SDL_OPENGL;
+#ifndef WINDOWS
+    flags |= SDL_RESIZABLE;
+#endif
     if (fullscreen)
         flags |= SDL_FULLSCREEN;
 
@@ -182,7 +185,8 @@ int main(int argc, char *argv[])
                         default: break;
                     };
                     break;
-                
+
+#ifndef WINDOWS                
                 case SDL_VIDEORESIZE: 
                     width = event.resize.w;
                     height = event.resize.h;
@@ -190,6 +194,7 @@ int main(int argc, char *argv[])
                     xa_set_panel_size(xa, width, height);
                     xa_set_popup_size(xa, width, height);
                     break;
+#endif
             }
         }
 

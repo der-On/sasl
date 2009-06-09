@@ -1,4 +1,4 @@
-TARGET=slava
+TARGET=slava.exe
 HEADERS=$(wildcard *.h)
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)
@@ -14,6 +14,7 @@ all: $(TARGET)
 	
 $(TARGET): $(OBJECTS) ../libavionics/libxavionics.a
 	$(CXX) -o $(TARGET) $(LNFLAGS) $(OBJECTS) $(LIBS)
+	strip --strip-all $(TARGET)
 
 clean:
 	rm -f $(OBJECTS) $(TARGET)
