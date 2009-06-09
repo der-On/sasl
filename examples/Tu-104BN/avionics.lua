@@ -198,6 +198,19 @@ components = {
     eng_temp2 {
         position = { 940, 1290, 150, 150 },
     },
+
+    -- three needle first engine indicator
+    emi3 { 
+        position = { 50, 195, 130, 130 },
+    },
+    
+    -- three needle second engine indicator
+    emi3 {
+        position = { 690, 195, 130, 130 },
+        fuel_p = globalPropertyf("sim/cockpit2/engine/indicators/fuel_pressure_psi[1]"),
+        oil_p = globalPropertyf("sim/cockpit2/engine/indicators/oil_pressure_psi[1]"),
+        oil_t = globalPropertyf("sim/cockpit2/engine/indicators/oil_temperature_deg_C[1]"),
+    },    
 }
 
 
