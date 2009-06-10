@@ -21,7 +21,7 @@ components = {
     -- mach number needle
     -- scale is combination of linear function
     needle {
-        position = { 50, 50, size[1]-100, size[2]-100 },
+        position = { 30, 30, size[1]-60, size[2]-60 },
         image = get(needleImage),
         angle = function()
             local angle
