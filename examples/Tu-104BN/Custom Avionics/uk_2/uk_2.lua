@@ -19,7 +19,6 @@ defineProperty("plane_needle", loadImage("uk_2.png", 170, 6, 67, 130))
 local angle = get(gyro)
 
 function update()
-    local power = get(gauge_power)
     local v = get(gyro) + get(course)
  
     -- check if indicator is working  
@@ -52,9 +51,9 @@ components = {
     -- round scale
     needle {
         position = { 18, 22, 120, 120 },
-        image = get(scale),
+        image = scale,
         angle = function() 
-             return get(gyro) + get(course)
+             return get(course)
         end,
     },    
     
