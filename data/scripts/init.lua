@@ -169,6 +169,14 @@ function globalPropertyd(name, default)
     }
 end
 
+
+-- create new float property and set default value
+function createGlobalPropertyd(name, default)
+    local ref = createProp(name, 'double', default)
+    return globalPropertyd(name, default)
+end
+
+
 -- returns simulator float property
 function globalPropertyf(name, default)
     local ref = findProp(name, "float")
@@ -177,6 +185,12 @@ function globalPropertyf(name, default)
         get = function() return getPropf(ref, default); end;
         set = function(self, value) setPropf(ref, value); end;
     }
+end
+
+-- create new float property and set default value
+function createGlobalPropertyf(name, default)
+    local ref = createProp(name, 'float', default)
+    return globalPropertyf(name, default)
 end
 
 -- returns simulator int property
@@ -189,6 +203,11 @@ function globalPropertyi(name, default)
     }
 end
 
+-- create new float property and set default value
+function createGlobalPropertyi(name, default)
+    local ref = createProp(name, 'int', default)
+    return globalPropertyi(name, default)
+end
 
 -- returns value of property
 -- traverse recursive properties
