@@ -1,3 +1,6 @@
+2009-06-11 version 0.7.0 released
+
+  * xap hot key removed.  it is called by xap/reload ommand instead
   * toggle panel command can be specified during panel creation
   * default values for properties added
   * double properties support added
@@ -17,7 +20,7 @@
   * Added textureLit component which ignores current cockptit lighting
   * Only general (draw) components left if Components folder
 
-2008-23-11 0.6.1 released
+2008-11-23 0.6.1 released
 
   * cursor changes shape in 3D cockpit
   * RtTimer conflict fixed
