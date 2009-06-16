@@ -28,23 +28,27 @@ struct Property {
 };
 
 
+/// Value of property
+union Value {
+    /// Property as int
+    int intValue;
+
+    /// Property as float
+    float floatValue;
+
+    /// Property as double
+    double doubleValue;
+};
+
+
 /// Self-created property
 struct CustomProperty
 {
     /// Reference to property for unregistering
     XPLMDataRef ref;
 
-    /// Property data
-    union {
-        /// Property as int
-        int intValue;
-
-        /// Property as float
-        float floatValue;
-
-        /// Property as double
-        double doubleValue;
-    } data;
+    /// property value
+    Value data;
 };
 
 
@@ -56,18 +60,63 @@ typedef std::list<Property*> PropsList;
 typedef std::map<std::string, CustomProperty*> CustomPropsMap;
 
 
+/// delayed set property value command
+struct SetProp
+{
+    /// property reference
+    Property *property;
+
+    /// type of value
+    int type;
+
+    /// value to set
+    Value data;
+    
+    SetProp(Property *prop, int value) {
+        property = prop;
+        type = PROP_INT;
+        data.intValue = value;
+    };
+
+    SetProp(Property *prop, float value) {
+        property = prop;
+        type = PROP_FLOAT;
+        data.floatValue = value;
+    };
+    
+    SetProp(Property *prop, double value) {
+        property = prop;
+        type = PROP_DOUBLE;
+        data.doubleValue = value;
+    };
+};
+
+/// List of set prop commands
+typedef std::list<SetProp> PropsToSet;
+
+
 /// X-Plane properties info
 struct XPlaneProps {
     /// References to properties
     PropsList props;
+
+    /// user created properties
     CustomPropsMap customProps;
+
+    /// true if properties system was initialized
+    bool initialized;
+
+    /// list of properties to set
+    PropsToSet propsToSet;
 };
 
 
 /// Initialize properties structure
 Props xap::propsInit()
 {
-    return new XPlaneProps;
+    XPlaneProps *props = new XPlaneProps;
+    props->initialized = false;
+    return props;
 }
 
 
@@ -204,6 +253,13 @@ static int getPropInt(PropRef property, int *err)
 static int setPropInt(PropRef property, int value)
 {
     Property *prop = (Property*)property;
+    if (! prop)
+        return -1;
+    
+    XPlaneProps *props = prop->parent;
+    if (! props->initialized) 
+        props->propsToSet.push_back(SetProp(prop, value));
+
     if (! XPLMCanWriteDataRef(prop->ref))
         return -1;
 
@@ -287,6 +343,13 @@ static float getPropFloat(PropRef property, int *err)
 static int setPropFloat(PropRef property, float value)
 {
     Property *prop = (Property*)property;
+    if (! prop)
+        return -1;
+
+    XPlaneProps *props = prop->parent;
+    if (! props->initialized) 
+        props->propsToSet.push_back(SetProp(prop, value));
+
     if (! XPLMCanWriteDataRef(prop->ref))
         return -1;
 
@@ -369,6 +432,13 @@ static double getPropDouble(PropRef property, int *err)
 static int setPropDouble(PropRef property, double value)
 {
     Property *prop = (Property*)property;
+    if (! prop)
+        return -1;
+    
+    XPlaneProps *props = prop->parent;
+    if (! props->initialized) 
+        props->propsToSet.push_back(SetProp(prop, value));
+
     if (! XPLMCanWriteDataRef(prop->ref))
         return -1;
 
@@ -537,9 +607,33 @@ static PropRef createProp(Props props, const char *name, int type)
 }
 
 
+/// delayed properties write
+static int updateProps(Props props)
+{
+    XPlaneProps *p = (XPlaneProps*)props;
+
+    if (! p->initialized) {
+        p->initialized = true;
+        for (PropsToSet::iterator i = p->propsToSet.begin(); 
+                i != p->propsToSet.end(); i++)
+        {
+            SetProp &v = *i;
+            switch (v.type) {
+                case PROP_INT: setPropInt(v.property, v.data.intValue); break;
+                case PROP_FLOAT: setPropFloat(v.property, v.data.floatValue); break;
+                case PROP_DOUBLE: setPropDouble(v.property, v.data.doubleValue); break;
+            }
+        }
+        p->propsToSet.clear();
+    }
+
+    return 0;
+}
+
+
 static PropsCallbacks callbacks = { getPropRef, freePropRef, createProp, 
         getPropInt, setPropInt, getPropFloat, 
-        setPropFloat, getPropDouble, setPropDouble, NULL, NULL };
+        setPropFloat, getPropDouble, setPropDouble, updateProps, NULL };
 
 
 PropsCallbacks* xap::getPropsCallbacks()
