@@ -61,7 +61,7 @@ typedef std::map<std::string, CustomProperty*> CustomPropsMap;
 
 
 /// delayed set property value command
-struct SetProp
+struct SetPropCmd
 {
     /// property reference
     Property *property;
@@ -72,19 +72,19 @@ struct SetProp
     /// value to set
     Value data;
     
-    SetProp(Property *prop, int value) {
+    SetPropCmd(Property *prop, int value) {
         property = prop;
         type = PROP_INT;
         data.intValue = value;
     };
 
-    SetProp(Property *prop, float value) {
+    SetPropCmd(Property *prop, float value) {
         property = prop;
         type = PROP_FLOAT;
         data.floatValue = value;
     };
     
-    SetProp(Property *prop, double value) {
+    SetPropCmd(Property *prop, double value) {
         property = prop;
         type = PROP_DOUBLE;
         data.doubleValue = value;
@@ -92,7 +92,7 @@ struct SetProp
 };
 
 /// List of set prop commands
-typedef std::list<SetProp> PropsToSet;
+typedef std::list<struct SetPropCmd> PropsToSet;
 
 
 /// X-Plane properties info
@@ -258,7 +258,7 @@ static int setPropInt(PropRef property, int value)
     
     XPlaneProps *props = prop->parent;
     if (! props->initialized) 
-        props->propsToSet.push_back(SetProp(prop, value));
+        props->propsToSet.push_back(SetPropCmd(prop, value));
 
     if (! XPLMCanWriteDataRef(prop->ref))
         return -1;
@@ -348,7 +348,7 @@ static int setPropFloat(PropRef property, float value)
 
     XPlaneProps *props = prop->parent;
     if (! props->initialized) 
-        props->propsToSet.push_back(SetProp(prop, value));
+        props->propsToSet.push_back(SetPropCmd(prop, value));
 
     if (! XPLMCanWriteDataRef(prop->ref))
         return -1;
@@ -437,7 +437,7 @@ static int setPropDouble(PropRef property, double value)
     
     XPlaneProps *props = prop->parent;
     if (! props->initialized) 
-        props->propsToSet.push_back(SetProp(prop, value));
+        props->propsToSet.push_back(SetPropCmd(prop, value));
 
     if (! XPLMCanWriteDataRef(prop->ref))
         return -1;
@@ -617,7 +617,7 @@ static int updateProps(Props props)
         for (PropsToSet::iterator i = p->propsToSet.begin(); 
                 i != p->propsToSet.end(); i++)
         {
-            SetProp &v = *i;
+            SetPropCmd &v = *i;
             switch (v.type) {
                 case PROP_INT: setPropInt(v.property, v.data.intValue); break;
                 case PROP_FLOAT: setPropFloat(v.property, v.data.floatValue); break;

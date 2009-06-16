@@ -1,4 +1,4 @@
-2009-06-11 version 0.7.0 released
+2009-06-11 version 0.8.0 released
 
   * xap hot key removed.  it is called by xap/reload ommand instead
   * toggle panel command can be specified during panel creation
