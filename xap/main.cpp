@@ -82,8 +82,8 @@ static int lastPanelWidth;
 /// Last known height of panel
 static int lastPanelHeight;
 
-/// reload panel hot key ID
-static XPLMHotKeyID reloadHotKey;
+/// reload panel hot key command
+XPLMCommandRef reloadCommand;
 
 /// Cockpit light red component
 static XPLMDataRef cockpitRed;
@@ -610,9 +610,11 @@ static void reloadPanel(bool keepProps)
 
 
 /// Called on reload aircraft panel hot key pressed
-static void reloadPanelCallback(void *refcon)
+static int reloadPanelCallback(XPLMCommandRef command, int phase, void *data)
 {
-    reloadPanel(true);
+    if (xplm_CommandBegin == phase)
+        reloadPanel(true);
+    return 1;
 }
 
 static float updateAvionics(float elapsedSinceLastCall,    
@@ -686,7 +688,7 @@ PLUGIN_API void	XPluginStop(void)
 // disable plugin
 PLUGIN_API void XPluginDisable(void)
 {
-    XPLMUnregisterHotKey(reloadHotKey);
+    XPLMUnregisterCommandHandler(reloadCommand, reloadPanelCallback, 0, NULL);
     XPLMUnregisterFlightLoopCallback(updateAvionics, NULL);
     disabled = true;
     XPLMDestroyWindow(fakeWindow);
@@ -706,9 +708,9 @@ PLUGIN_API int XPluginEnable(void)
         printf("Error registering draw callback\n");
     fakeWindow = createFakeWindow();
     
-    reloadHotKey = XPLMRegisterHotKey(XPLM_VK_F8, xplm_DownFlag, 
-            "Reload panel", reloadPanelCallback, NULL);
-
+    reloadCommand = XPLMCreateCommand("xap/reload", "Reload SASL avionics");
+    XPLMRegisterCommandHandler(reloadCommand, reloadPanelCallback, 0, NULL);
+    
     reloadPanel(false);
 
     XPLMRegisterFlightLoopCallback(updateAvionics, -1, NULL);
