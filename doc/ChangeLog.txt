@@ -1,3 +1,5 @@
+  * MacOS X port added by Julik Tarkhanov
+
 2009-06-11 version 0.8.0 released
 
   * xap hot key removed.  it is called by xap/reload ommand instead
