@@ -1,0 +1,36 @@
+#PLUGINS="/opt/x-plane/X-Plane/Resources/plugins/xap"
+#PLUGINS="../../yk40/plane/plugins/xap"
+PLUGINS="../plugin/xap"
+SDK=/opt/x-plane/SDK
+
+TARGET=mac.xpl
+HEADERS=$(wildcard *.h)
+SOURCES=$(wildcard *.cpp)
+OBJECTS=$(SOURCES:.cpp=.o)
+OSXC=-arch ppc -arch i386 -universal
+OSXL=-arch ppc -arch i386
+
+DEFS= -DAPL=1 -fPIC -m32 -fno-stack-protector -DXPLM200 -ggdb
+
+# By default Lua installs itself into /usr/local so we will look for it there too
+CXXFLAGS+=-Wall -I$(SDK)/CHeaders/XPLM -I$(SDK)/CHeaders/Widgets -I/usr/local/include -I/usr/include/lua5.1 -I../libavionics $(DEFS) $(OSXC)
+# # XPLM is loaded dynamically on OS X hence the flag, -dynamiclib is used to get a .a instead of a .bundle
+# -undefined warning -flat_namespace -dynamiclib
+LNFLAGS+=-undefined warning -flat_namespace -dynamiclib -shared -rdynamic -nodefaultlibs -m32 -ggdb -L/usr/lib32 -L../libavionics -L/usr/local/lib  $(OSXL)
+LIBS+=-llua -lm -lxavionics -lSOIL #$(PLUGINS)/XPLM.so $(PLUGINS)/XPWidgets.so
+
+all: $(TARGET)
+
+.cpp.o:
+	$(CXX) $(CXXFLAGS) -c $<
+	
+$(TARGET): $(OBJECTS) ../libavionics/libxavionics.a
+	$(CXX) -o $(TARGET) $(LNFLAGS) $(OBJECTS) $(LIBS)
+
+clean:
+	rm -f $(OBJECTS) $(TARGET)
+
+install: $(TARGET)
+	cp -f $(TARGET) $(PLUGINS)
+
+

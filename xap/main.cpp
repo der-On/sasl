@@ -124,34 +124,54 @@ static XPLMDataRef screenHeight;
 /// type of panel view
 static XPLMDataRef viewType;
 
+/// Convert a Mac-style path with double colons to a POSIX path. Google for "FSRef to POSIX path"
+// if you want to know the ass-backwards way of doing it properly, but we won't link to Carbon
+// only for this mmkay?
+static std::string carbonPathToPosixPath(const std::string &carbonPath)
+{
+    // Check if we are on a Mac first, could be also #ifdef APL
+    std::string sep = XPLMGetDirectorySeparator();
+    if(sep != std::string(":")) return carbonPath;
+    
+    // Prepend the "Volumes" superdir to the path
+    std::string posixPath = std::string("/Volumes/") + carbonPath;
+    // Replace dots with slashes
+    for(unsigned int i = 0; i < posixPath.length(); i++) {
+        if(posixPath[i] == ':') posixPath[i] = '/';
+    }
+    XPLMDebugString("XAP: Translated path\n");
+    XPLMDebugString(posixPath.c_str());
+    return posixPath;
+}
 
+// Overrides XPLMGetDirectorySeparator() to return the POSIX / instead of : for paths on OS X
+static std::string getDirSeparator()
+{
+    std::string sep = XPLMGetDirectorySeparator();
+    if(sep == std::string(":")) {
+        XPLMDebugString("XAP: Using Mac paths\n");
+        return std::string("/");
+    } else {
+        return sep;
+    }
+}
 
 /// Returns name of configuration file
 static std::string getConfigFileName()
 {
-    char path[600];
+    char path[600], translatedPath[600 + 9];
+    
     XPLMGetPrefsPath(path);
     XPLMExtractFileAndPath(path);
-    strcat(path, XPLMGetDirectorySeparator());
-    strcat(path, "xap.prf");
-    return path;
+    
+    strcpy(translatedPath, carbonPathToPosixPath(std::string(path)).c_str());
+    strcat(translatedPath, getDirSeparator().c_str());
+    strcat(translatedPath, "xap.prf");
+    return translatedPath;
 }
-
-
-/// Returns directory including path separator
-static std::string getDir(const std::string &path)
-{
-    int idx = path.find_last_of('/');
-    if (-1 == idx)
-        idx = path.find_last_of('\\');
-    if (-1 == idx)
-        return "";
-    return path.substr(0, idx + 1);
-}
-
 
 /// Returns true if file exists
-static bool isFileExists(const std::string &path)
+static bool fileDoesExist(const std::string &path)
 {
     FILE *f = fopen(path.c_str(), "r");
     if (! f)
@@ -161,12 +181,19 @@ static bool isFileExists(const std::string &path)
 }
 
 
-/// Returns directory of current aircraft
+/// Returns directory of current aircraft, with the trailing separator
 static std::string getAircraftDir()
 {
     char model[512], path[512];
     XPLMGetNthAircraftModel(0, model, path);
-    return getDir(path);
+    XPLMExtractFileAndPath(path);
+    
+    std::string dir = carbonPathToPosixPath(std::string(path)) + getDirSeparator(); 
+    
+    XPLMDebugString("XAP: Got aircraft dir\n");
+    XPLMDebugString(dir.c_str());
+    XPLMDebugString("\nXAP: If the path does not look sane there was likely a problem with path translation\n");
+    return dir;
 }
 
 
@@ -464,9 +491,11 @@ static std::string getDataDir()
 {
     char buf[512];
     XPLMGetSystemPath(buf);
-    std::string sep = XPLMGetDirectorySeparator();
-
-    return std::string(buf) +  "Resources" + sep +
+    
+    std::string sep = getDirSeparator();
+    std::string path = carbonPathToPosixPath(std::string(buf));
+    
+    return path +  "Resources" + sep +
         "plugins" + sep + "xap" + sep + "data";
 }
 
@@ -560,12 +589,15 @@ static void reloadPanel(bool keepProps)
 
     std::string dir = getAircraftDir();
     std::string panelPath = getPanelPath(dir);
-    if (isFileExists(panelPath)) {
+
+    XPLMDebugString(panelPath.c_str());
+    
+    if (fileDoesExist(panelPath)) {
         XPLMDebugString("XAP: Loading avionics...\n");
         panelViewInitialized = false;
 
         std::string dataDir = dir + "/plugins/xap/data";
-        if (! isFileExists(dataDir + "/scripts/init.lua"))
+        if (! fileDoesExist(dataDir + "/scripts/init.lua"))
             dataDir = getDataDir();
 
         xa = xa_init(dataDir.c_str());
@@ -703,9 +735,9 @@ PLUGIN_API int XPluginEnable(void)
 
     disabled = false;
     if (! XPLMRegisterDrawCallback(drawGauges, xplm_Phase_Gauges, 0, NULL))
-        printf("Error registering draw callback\n");
+        printf("XAP: Error registering draw callback at xplm_Phase_Gauges\n");
     if (! XPLMRegisterDrawCallback(drawPopups, xplm_Phase_Window, 0, NULL))
-        printf("Error registering draw callback\n");
+        printf("XAP: Error registering draw callback at xplm_Phase_Window\n");
     fakeWindow = createFakeWindow();
     
     reloadCommand = XPLMCreateCommand("xap/reload", "Reload SASL avionics");

@@ -1,0 +1,24 @@
+TARGET=libxavionics.a
+HEADERS=$(wildcard *.h)
+SOURCES=$(wildcard *.cpp)
+OBJECTS=$(SOURCES:.cpp=.o)
+
+OSXC=-arch ppc -arch i386 -universal
+OSXL=-arch ppc -arch i386
+
+CXXFLAGS+=-Wall -I/usr/local/include -I/usr/include/lua5.1 -DAPL=1 -fPIC -m32 -ggdb -fno-stack-protector $(OSXC)
+LNFLAGS+=-shared -rdynamic -fPIC -m32 -ggdb $(OSXL)
+LIBS+=-llua5.1 -lm -lIL -lILU -lILUT
+
+all: $(TARGET)
+
+.cpp.o:
+	$(CXX) $(CXXFLAGS) -c $<
+	
+$(TARGET): $(OBJECTS)
+	$(AR) rs $(TARGET) $(OBJECTS)
+#	$(CXX) -o $(TARGET) $(LNFLAGS) $(OBJECTS) $(LIBS)
+
+clean:
+	rm -f $(OBJECTS) $(TARGET)
+

@@ -1,6 +1,11 @@
 #include "texture.h"
 
+#if APL
+#include <OpenGL/gl.h>
+#include <OpenGL/glu.h>
+#else
 #include <GL/gl.h>
+#endif
 
 #include "utils.h"
 #include "luna.h"

@@ -1,0 +1,32 @@
+# This will probably get you a NON-UNIVERSAL (!) plugin
+mkdir /tmp/xap-parts
+
+# Grab the X-Plane SDK and install it into /opt/x-plane
+mkdir /opt
+mkdir /opt/x-plane
+cd /opt/x-plane
+curl -O http://www.xsquawkbox.net/xpsdk/XPSDK200.zip
+unzip XPSDK200.zip
+
+# 1. Grab, build and install lua (from source!)
+cd /tmp/xap-parts
+curl http://www.lua.org/ftp/lua-5.1.4.tar.gz | tar xfz -
+cd lua-5.1.4; make && sudo make install
+
+# 2. Grab, build and install SDL (from source, not the framework version!)
+cd /tmp/xap-parts
+curl http://www.libsdl.org/release/SDL-1.2.13.tar.gz | tar xfz -
+cd SDL-1.2.13; ./configure && make && sudo make install
+
+# 3. Install and build SOIL (from source)
+cd /tmp/xap-parts
+curl -O http://www.lonesock.net/files/soil.zip
+unzip soil.zip
+cd "Simple OpenGL Image Library/projects/makefile"
+mkdir obj # The author has forgotten
+make && sudo make install
+
+# Now build Slava, libavionics and xap
+cd libavionics; make -f Makefile.mac
+cd ../slava; make -f Makefile.mac
+cd ../xap; make -f Makefile.mac

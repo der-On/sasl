@@ -1,6 +1,8 @@
 #include "commands.h"
 #include "xpsdk.h"
 
+// cstddef is needed on OS X to have NULL defined
+#include <cstddef>
 
 using namespace xap;
 

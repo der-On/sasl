@@ -38,6 +38,10 @@ static void logf(char *str, ...)
 #define printf logf
 #endif
 
+// MSG_NOSIGNAL does not exist on OS X and is never sent anyway
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#endif
 
 using namespace xa;
 

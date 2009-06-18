@@ -1,6 +1,12 @@
 #include "avionics.h"
 
+#if APL
+#include <OpenGL/gl.h>
+#include <OpenGL/glu.h>
+#else
 #include <GL/gl.h>
+#endif
+
 #include "exception.h"
 #include "graph.h"
 #include "texture.h"

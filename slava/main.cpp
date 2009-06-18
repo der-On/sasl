@@ -5,10 +5,14 @@
 #include <Winsock2.h>
 #endif
 
+#ifdef APL
+#include <SDLMain.h>
+#else
 #include <SDL.h>
 #include <SDL_video.h>
 #include <SDL_opengl.h>
 #include <SDL_events.h>
+#endif
 
 #include "xavionics.h"
 #include "cmdline.h"

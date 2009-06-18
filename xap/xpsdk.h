@@ -18,7 +18,7 @@
 #else
 #define TRUE 1
 #define FALSE 0
-#if __GNUC__
+#if APL
 #include <OpenGL/gl.h>
 #include <OpenGL/glu.h>
 #else
