@@ -1,4 +1,4 @@
-# This will probably get you a NON-UNIVERSAL (!) plugin
+# This will probably get you a NON-UNIVERSAL (!) plugin for Intel ONLY
 mkdir /tmp/xap-parts
 
 # Grab the X-Plane SDK and install it into /opt/x-plane
@@ -10,8 +10,13 @@ unzip XPSDK200.zip
 
 # 1. Grab, build and install lua (from source!)
 cd /tmp/xap-parts
-curl http://www.lua.org/ftp/lua-5.1.4.tar.gz | tar xfz -
-cd lua-5.1.4; make && sudo make install
+curl http://www.lua.org/ftp/lua-5.1.4.tar.gz | tar xfz -; cd lua-5.1.4
+# Alter the macosx build target for lua so that it gives you 10.4 compatible libraries
+# The line is in the src/Makefile for lua under macosx
+# Replace it just like so: 
+# macosx:
+#  	$(MAKE) all MYCFLAGS="-DLUA_USE_POSIX -mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch i386" 
+make && sudo make install
 
 # 2. Grab, build and install SDL (from source, not the framework version!)
 cd /tmp/xap-parts
@@ -24,7 +29,8 @@ curl -O http://www.lonesock.net/files/soil.zip
 unzip soil.zip
 cd "Simple OpenGL Image Library/projects/makefile"
 mkdir obj # The author has forgotten
-make && sudo make install
+# Now the same for SOIL - build for 10.4
+make CXXFLAGS="-mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch i386" && make install
 
 # Now build Slava, libavionics and xap
 cd libavionics; make -f Makefile.mac
