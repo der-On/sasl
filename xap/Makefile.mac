@@ -7,8 +7,10 @@ TARGET=mac.xpl
 HEADERS=$(wildcard *.h)
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)
-OSXC=-arch ppc -arch i386 -universal
-OSXL=-arch ppc -arch i386
+
+SDKROOT=/Developer/SDKs/MacOSX10.4u.sdk
+OSXC=-mmacosx-version-min=10.4 -isysroot $(SDKROOT) -arch i386
+OSXL=-arch ppc -arch i386 -syslibroot $(SDKROOT)
 
 DEFS= -DAPL=1 -fPIC -m32 -fno-stack-protector -DXPLM200 -ggdb
 
@@ -16,8 +18,8 @@ DEFS= -DAPL=1 -fPIC -m32 -fno-stack-protector -DXPLM200 -ggdb
 CXXFLAGS+=-Wall -I$(SDK)/CHeaders/XPLM -I$(SDK)/CHeaders/Widgets -I/usr/local/include -I/usr/include/lua5.1 -I../libavionics $(DEFS) $(OSXC)
 # # XPLM is loaded dynamically on OS X hence the flag, -dynamiclib is used to get a .a instead of a .bundle
 # -undefined warning -flat_namespace -dynamiclib
-LNFLAGS+=-undefined warning -flat_namespace -dynamiclib -shared -rdynamic -nodefaultlibs -m32 -ggdb -L/usr/lib32 -L../libavionics -L/usr/local/lib  $(OSXL)
-LIBS+=-llua -lm -lxavionics -lSOIL #$(PLUGINS)/XPLM.so $(PLUGINS)/XPWidgets.so
+LNFLAGS+=-undefined warning -flat_namespace -dynamiclib -shared -rdynamic -m32 -ggdb -L/usr/lib32 -L../libavionics -L/usr/local/lib  $(OSXL)
+LIBS+=-llua5.1 -lm -lxavionics -lSOIL #$(PLUGINS)/XPLM.so $(PLUGINS)/XPWidgets.so
 
 all: $(TARGET)
 

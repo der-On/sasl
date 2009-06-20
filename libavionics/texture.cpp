@@ -1,11 +1,5 @@
 #include "texture.h"
-
-#if APL
-#include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
-#else
-#include <GL/gl.h>
-#endif
+#include "glheaders.h"
 
 #include "utils.h"
 #include "luna.h"
@@ -29,7 +23,7 @@ Texture::Texture(int id, xa_bind_texture_2d_callback binder): id(id)
 {
     binderCallback = binder;
     bind();
-
+    
     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width); 
     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height); 
 }

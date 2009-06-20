@@ -1,17 +1,10 @@
 #include "texloader.h"
 #include <SOIL.h>
-#if APL
-#include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
-#else
-#include <GL/gl.h>
-#endif
-
+#include "glheaders.h"
 
 using namespace xa;
 
-
-unsigned int xa::loadTexture(const char *name, int texId, int *width, int *height)
+unsigned int xa::loadTexture(const char *name, GLuint texId, GLint *width, GLint *height)
 {
     unsigned id = SOIL_load_OGL_texture(name, 0, texId, SOIL_FLAG_POWER_OF_TWO);
     if (! id)

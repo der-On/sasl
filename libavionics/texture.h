@@ -1,12 +1,11 @@
 #ifndef __TEXTURE_H__
 #define __TEXTURE_H__
 
-
 #include <map>
 #include <string>
 #include "luna.h"
 #include "xcallbacks.h"
-
+#include "glheaders.h"
 
 namespace xa {
 
@@ -24,10 +23,10 @@ class Texture
         int id;
 
         /// Width of texture
-        int width;
+        GLint width;
 
         /// Height of texture
-        int height;
+        GLint height;
         
         /// Texture binder callback
         xa_bind_texture_2d_callback binderCallback;

@@ -3,10 +3,11 @@ HEADERS=$(wildcard *.h)
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)
 
-OSXC=-arch ppc -arch i386 -universal
-OSXL=-arch ppc -arch i386
+SDKROOT=/Developer/SDKs/MacOSX10.4u.sdk
+OSXC=-mmacosx-version-min=10.4 -isysroot $(SDKROOT) -arch i386
+OSXL=-arch ppc -arch i386 -syslibroot $(SDKROOT)
 
-CXXFLAGS+=-Wall -I/usr/local/include -I/usr/include/lua5.1 -DAPL=1 -fPIC -m32 -ggdb -fno-stack-protector $(OSXC)
+CXXFLAGS+=-m32 -Wall -I/usr/local/include -I/usr/include/lua5.1 -DAPL=1 -fPIC -ggdb -fno-stack-protector $(OSXC)
 LNFLAGS+=-shared -rdynamic -fPIC -m32 -ggdb $(OSXL)
 LIBS+=-llua5.1 -lm -lIL -lILU -lILUT
 
