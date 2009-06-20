@@ -12,7 +12,8 @@ unzip XPSDK200.zip
 cd /tmp/xap-parts
 curl http://www.lua.org/ftp/lua-5.1.4.tar.gz | tar xfz -; cd lua-5.1.4
 # Alter the macosx build target for lua so that it gives you 10.4 compatible libraries
-# The line is in the src/Makefile for lua under macosx
+# The line is in the src/Makefile for lua under macosx. Here is the explanation of what we need
+# http://lua-users.org/lists/lua-l/2008-08/msg00553.html
 # Replace it just like so: 
 # macosx:
 #  	$(MAKE) all MYCFLAGS="-DLUA_USE_POSIX -mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch i386" 
