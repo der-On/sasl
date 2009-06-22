@@ -1,3 +1,4 @@
+	* Prevent OS X plugin from being loaded twice from different locations
   * MacOS X port added by Julik Tarkhanov
 
 2009-06-11 version 0.8.0 released

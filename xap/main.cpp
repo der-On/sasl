@@ -680,7 +680,12 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc)
     
     XPLM_API XPLMPluginID other_xap_id = XPLMFindPluginBySignature(pluginSignature);
     if(-1 != other_xap_id) {
-        XPLMDebugString("XAP: trying to load a second copy, bailing out\n");
+        // Figure out where the other plugin came from
+        char pathToAnotherCopy[256];
+        XPLMGetPluginInfo(other_xap_id, NULL, pathToAnotherCopy, NULL, NULL);
+        XPLMDebugString("XAP: another copy already loaded from \n");
+        XPLMDebugString(pathToAnotherCopy);
+        XPLMDebugString("\nXAP: will not init twice, bailing\n");
         return 0;
     }
 #endif
