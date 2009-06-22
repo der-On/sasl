@@ -1,12 +1,8 @@
-#include "rttimer.h"
-
 #include <sys/time.h>
 #include <stdio.h>
-
+#include "rttimer.h"
 
 using namespace xa;
-
-
 
 RtTimer::RtTimer()
 {
