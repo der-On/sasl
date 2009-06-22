@@ -20,7 +20,6 @@ extern "C" {
 // version of plug-in
 #include "../version.h"
 
-
 using namespace xap;
 
 
@@ -665,13 +664,29 @@ static float updateAvionics(float elapsedSinceLastCall,
 }
 
 
+
 // start plugin
 PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc)
 {
     XPLMDebugString("XAP: Starting...\n");
+    const char *pluginSignature = "babichev.xap";
+    
+#ifdef APL
+    // Mac-specific: it IS possible to have XAP installed twice, once in the ACF folder
+    // and once in the X-System folder. Probably due to namespace mangling on OS X
+    // the system will NOT crash the app when the plugin gets loaded twice. 
+    // Thus, we query the enabled plugins for the defined signatures
+    // and DO NOT activate should the other plugin already be plugged in
+    
+    XPLM_API XPLMPluginID other_xap_id = XPLMFindPluginBySignature(pluginSignature);
+    if(-1 != other_xap_id) {
+        XPLMDebugString("XAP: trying to load a second copy, bailing out\n");
+        return 0;
+    }
+#endif
 
     strcpy(outName, "X-Plane Scriptable Avionics");
-    strcpy(outSig, "babichev.xap");
+    strcpy(outSig, pluginSignature);
 
 #ifdef SNAPSHOT
 #define xstr(s) str(s)
