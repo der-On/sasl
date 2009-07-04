@@ -8,7 +8,7 @@ OSXC=-mmacosx-version-min=10.4 -isysroot $(SDKROOT) -arch ppc -arch i386 -univer
 OSXL=-syslibroot=$(SDKROOT) -arch ppc -arch i386
 
 # Add OS X Frameworks to linker paths too, assume SOIL and SDL are installed from source and into /usr/local (as is by default)
-CXXFLAGS+=-Wall -I/usr/local/include -I/usr/local/include/SDL -I/usr/include/lua `sdl-config --cflags` -I../libavionics -m32 -ggdb $(OSXC)
+CXXFLAGS+=-Wall -I/usr/local/include -I/usr/local/include/SDL -I/usr/include `sdl-config --cflags` -I../libavionics -m32 -ggdb $(OSXC)
 LNFLAGS+=-undefined warning -flat_namespace -m32 -L. -L../libavionics -ggdb $(OSXL)
 LIBS+=-llua -lm `sdl-config --libs` -lxavionics -lSOIL
 
