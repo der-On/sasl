@@ -6,6 +6,7 @@
 #include "texture.h"
 #include "xconsts.h"
 #include "propsserv.h"
+#include "utils.h"
 
 
 using namespace xa;
@@ -13,7 +14,7 @@ using namespace xa;
 
 
 Avionics::Avionics(const std::string &path): path(path), clickEmulator(timer),
-    server(properties), commands(lua)
+    fontManager(textureManager), server(properties), commands(lua)
 {
     panelWidth = popupWidth = 1024;
     panelHeight = popupHeight = 768;
@@ -24,6 +25,7 @@ Avionics::Avionics(const std::string &path): path(path), clickEmulator(timer),
     lua.storeAvionics(this);
     exportGraphToLua(lua);
     exportTextureToLua(lua);
+    exportFontToLua(lua);
     exportPropsToLua(lua);
 
     if (lua.runScript(path + "/scripts/init.lua")) {
@@ -76,14 +78,7 @@ void Avionics::setPopupResolution(int width, int height)
 
 void Avionics::loadPanel(const std::string &fileName)
 {
-    int idx = fileName.find_last_of('/');
-    if (0 > idx)
-        idx = fileName.find_last_of('\\');
-    std::string panelDir;
-    if (0 < idx)
-        panelDir = fileName.substr(0, idx);
-    else
-        panelDir = ".";
+    std::string panelDir = getDirectory(fileName);
     
     addSearchPath(panelDir);
     addSearchPath(panelDir + "/Custom Avionics");

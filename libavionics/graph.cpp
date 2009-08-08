@@ -1,6 +1,7 @@
 #include "graph.h"
 #include "glheaders.h"
 #include "avionics.h"
+#include "font.h"
 
 using namespace xa;
 
@@ -330,6 +331,28 @@ static int luaDrawRotatedTexturePart(lua_State *L)
 }
 
 
+/// Lua wrapper for drawFont
+static int luaDrawFont(lua_State *L)
+{
+    if ((! lua_islightuserdata(L, 1) || lua_isnil(L, 1)))
+        return 0;
+
+    Font *font = (Font*)lua_touserdata(L, 1);
+    if (! font)
+        return 0;
+
+    float r, g, b, a;
+    getAvionics(L)->getBackgroundColor(r, g, b, a);
+    rgbaFromLua(L, 5, r, g, b, a);
+
+    drawFont(font, lua_tonumber(L, 2), lua_tonumber(L, 3), 
+            lua_tostring(L, 4), r, g, b, a);
+
+    return 0;
+}
+
+
+
 void xa::exportGraphToLua(Luna &lua)
 {
     lua_State *L = lua.getLua();
@@ -345,5 +368,6 @@ void xa::exportGraphToLua(Luna &lua)
     lua_register(L, "drawRectangle", luaDrawRectangle);
     lua_register(L, "drawTriangle", luaDrawTriangle);
     lua_register(L, "drawLine", luaDrawLine);
+    lua_register(L, "drawText", luaDrawFont);
 }
 

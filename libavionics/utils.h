@@ -37,6 +37,12 @@ inline std::string toString(const T& x, const char *file, int line)
 /// Converts value to string and throws exception on errors
 #define STRING(x) toString(x, __FILE__, __LINE__)
 
+/// convert number to integer
+int strToInt(const std::string &str, int dflt=0);
+
+
+/// Extract directory from full path to file
+std::string getDirectory(const std::string &fileName);
 
 };
 

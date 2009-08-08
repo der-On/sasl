@@ -563,6 +563,23 @@ function loadImage(fileName, x, y, width, height)
 end
 
 
+-- load font
+function loadFont(fileName)
+    for _, v in ipairs(searchImagePath) do
+        local t = getGLFont(v .. '/' .. fileName)
+        if t then
+            return t
+        end
+    end
+
+    local font = getGLTexture(fileName)
+    if not font then
+        print("Can't load font", fileName)
+    end
+    return tex
+end
+
+
 -- check if coord lay inside rectangle.  rectangle is array of 
 -- { x, y, width, height }
 function isInRect(rect, x, y)

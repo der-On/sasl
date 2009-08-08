@@ -7,6 +7,7 @@
 #include "rttimer.h"
 #include "clickemul.h"
 #include "texture.h"
+#include "font.h"
 #include "xcallbacks.h"
 #include "properties.h"
 #include "propsserv.h"
@@ -49,6 +50,9 @@ class Avionics
 
         /// Textures cache
         TextureManager textureManager;
+        
+        /// Fonts loader and cache
+        FontManager fontManager;
 
         /// Background color
         float bgR, bgG, bgB, bgA;
@@ -106,8 +110,11 @@ class Avionics
         /// \param period number of milliseconds before third and other click events
         void setClickParams(int delay, int period);
 
-        /// Rexturns texture manager
+        /// Returns texture manager
         TextureManager* getTextureManager() { return &textureManager; }
+
+        /// Returns font manager
+        FontManager* getFontManager() { return &fontManager; }
 
         /// Returns Lua state
         lua_State* getLua() { return lua.getLua(); }
