@@ -306,7 +306,7 @@ std::wstring xa::fromUtf8(const std::string &str)
         return L"";
     
     int len = str.length();
-    wchar_t buf[len + 1];
+    wchar_t *buf = (wchar_t*)alloca(sizeof(wchar_t) * (len + 1));
 
     int res = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), len + 1, 
             buf, len + 1);

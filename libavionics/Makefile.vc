@@ -1,0 +1,26 @@
+.SUFFIXES: .obj
+
+TARGET=xavionics.lib
+HEADERS=$(wildcard *.h)
+SOURCES=$(wildcard *.cpp)
+OBJECTS=$(SOURCES:.cpp=.obj)
+
+CXX=cl
+LD=lib
+
+CXXFLAGS+=/EHsc /DWINDOWS /nologo /MT /O2 /GL /DNDEBUG /D_LIB /fp:precise /TP /DWIN32
+LNFLAGS=/nologo /LTCG
+LIBS=soil.lib lua5.1.lib opengl32.lib ws2_32.lib
+
+all: $(TARGET)
+
+.cpp.obj:
+	$(CXX) $(CXXFLAGS) -c $<
+	
+$(TARGET): $(OBJECTS)
+	$(LD) /OUT:$(TARGET) $(LNFLAGS) $(OBJECTS) $(LIBS)
+
+clean:
+	rm -f $(OBJECTS) $(TARGET)
+
+

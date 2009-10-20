@@ -1,0 +1,27 @@
+.SUFFIXES: .obj
+
+TARGET=win.xpl
+HEADERS=$(wildcard *.h)
+SOURCES=$(wildcard *.cpp)
+OBJECTS=$(SOURCES:.cpp=.obj)
+SDK=d:/x-plane\ 9/SDK
+
+CXX=cl
+LD=link
+
+CXXFLAGS+=/EHsc /DWINDOWS /I../libavionics /nologo /MT /O2 /GL /DNDEBUG /fp:precise /TP /DWIN32 /I$(SDK)/CHeaders/XPLM /I$(SDK)/CHeaders/Widgets /DIBM=1 /DXPLM200
+LNFLAGS=/nologo /LTCG /LIBPATH:$(SDK)/Libraries/Win /DLL
+LIBS=../libavionics/xavionics.lib xplm.lib xpwidgets.lib
+
+all: $(TARGET)
+
+.cpp.obj:
+	$(CXX) $(CXXFLAGS) -c $<
+	
+$(TARGET): $(OBJECTS)
+	$(LD) /OUT:$(TARGET) $(LNFLAGS) $(OBJECTS) $(LIBS)
+
+clean:
+	rm -f $(OBJECTS) $(TARGET)
+
+

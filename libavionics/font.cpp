@@ -75,6 +75,12 @@ static std::string readLine(std::ifstream &f)
 }
 
 
+#ifdef _MSC_VER
+static bool isblank(char ch)
+{
+    return (' ' == ch) || ('\t' == ch);
+}
+#endif
 
 /// Returns word from line
 static std::string getKeyword(const std::string &line, int &pos)

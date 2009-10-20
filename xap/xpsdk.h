@@ -1,5 +1,5 @@
-#ifndef __XP_GL_H__
-#define __XP_GL_H__
+#ifndef __XP_SDK_H__
+#define __XP_SDK_H__
 
 
 // That's is x-plane way to include OpenGL headers

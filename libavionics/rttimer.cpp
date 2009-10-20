@@ -1,9 +1,23 @@
-#include <sys/time.h>
-#include <stdio.h>
 #include "rttimer.h"
+#ifdef _MSC_VER
+#include <windows.h>
+#else
+#include <sys/time.h>
+#endif
 
 using namespace xa;
 
+#ifdef _MSC_VER
+RtTimer::RtTimer()
+{
+    startSeconds = GetTickCount();
+}
+
+long RtTimer::getTime()
+{
+    return GetTickCount() - startSeconds;
+}
+#else
 RtTimer::RtTimer()
 {
     struct timeval tv;
@@ -18,4 +32,5 @@ long RtTimer::getTime()
     int seconds = tv.tv_sec - startSeconds;
     return seconds * 1000 + tv.tv_usec / 1000;
 }
+#endif
 

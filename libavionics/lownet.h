@@ -6,6 +6,11 @@
 
 #include <stdlib.h>
 
+#ifdef _MSC_VER
+#define uint16_t unsigned __int16
+#define uint32_t unsigned __int16
+#endif
+
 
 namespace xa {
 

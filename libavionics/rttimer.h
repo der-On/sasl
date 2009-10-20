@@ -1,6 +1,11 @@
 #ifndef __TIMER_H__
 #define __TIMER_H__
+
+#ifdef _MSC_VER
+#include <time.h>
+#else
 #include <sys/time.h>
+#endif
 
 
 namespace xa {
