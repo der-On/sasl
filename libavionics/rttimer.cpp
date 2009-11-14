@@ -4,6 +4,7 @@
 #else
 #include <sys/time.h>
 #endif
+#include <stdlib.h>
 
 using namespace xa;
 

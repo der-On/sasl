@@ -14,7 +14,8 @@ using namespace xa;
 
 
 Avionics::Avionics(const std::string &path): path(path), clickEmulator(timer),
-    fontManager(textureManager), server(properties), commands(lua)
+    fontManager(textureManager), properties(lua), server(properties), 
+    commands(lua)
 {
     panelWidth = popupWidth = 1024;
     panelHeight = popupHeight = 768;

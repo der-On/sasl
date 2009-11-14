@@ -52,12 +52,33 @@ struct CustomProperty
 };
 
 
+/// Self-created functional property
+struct FuncProperty
+{
+    /// Reference to property for unregistering
+    XPLMDataRef ref;
+
+    /// property getter
+    xa_prop_getter_callback getter;
+
+    /// property setter
+    xa_prop_setter_callback setter;
+
+    /// reference for callbacks
+    void *data;
+};
+
+
 /// List of referneces to properties
 typedef std::list<Property*> PropsList;
 
 
 /// List of self-created properties
 typedef std::map<std::string, CustomProperty*> CustomPropsMap;
+
+/// List of functional properties
+typedef std::list<FuncProperty*> FuncPropsList;
+
 
 
 /// delayed set property value command
@@ -103,6 +124,9 @@ struct XPlaneProps {
     /// user created properties
     CustomPropsMap customProps;
 
+    /// user created callback properties
+    FuncPropsList funcProps;
+
     /// true if properties system was initialized
     bool initialized;
 
@@ -129,6 +153,13 @@ void xap::propsDone(Props props)
 
     for (PropsList::iterator i = p->props.begin(); i != p->props.end(); ++i)
         delete *i;
+    
+    for (FuncPropsList::iterator i = p->funcProps.begin(); 
+            i != p->funcProps.end(); ++i)
+    {
+        XPLMUnregisterDataAccessor((*i)->ref);
+        delete *i;
+    }
     
     for (CustomPropsMap::iterator i = p->customProps.begin(); 
             i != p->customProps.end(); ++i)
@@ -631,8 +662,109 @@ static int updateProps(Props props)
 }
 
 
+/// Returns value of int callback property
+static int getIntCallback(void *refcon)
+{
+    FuncProperty *p = (FuncProperty*)refcon;
+    if (p && p->getter) {
+        int value;
+        p->getter(PROP_INT, &value, sizeof(value), p->data);
+        return value;
+    } else
+        return 0;
+}
+
+/// Set value of int callback property
+static void setIntCallback(void *refcon, int value)
+{
+    FuncProperty *p = (FuncProperty*)refcon;
+    if (p && p->setter)
+        p->setter(PROP_INT, &value, sizeof(value), p->data);
+}
+
+/// Returns value of float callback property
+static float getFloatCallback(void *refcon)
+{
+    FuncProperty *p = (FuncProperty*)refcon;
+    if (p && p->getter) {
+        float value;
+        p->getter(PROP_FLOAT, &value, sizeof(value), p->data);
+        return value;
+    } else
+        return 0;
+}
+
+/// Set value of float callback property
+static void setFloatCallback(void *refcon, float value)
+{
+    FuncProperty *p = (FuncProperty*)refcon;
+    if (p && p->setter)
+        p->setter(PROP_FLOAT, &value, sizeof(value), p->data);
+}
+
+/// Returns value of double callback property
+static double getDoubleCallback(void *refcon)
+{
+    FuncProperty *p = (FuncProperty*)refcon;
+    if (p && p->getter) {
+        double value;
+        p->getter(PROP_DOUBLE, &value, sizeof(value), p->data);
+        return value;
+    } else
+        return 0;
+}
+
+/// Set value of double callback property
+static void setDoubleCallback(void *refcon, double value)
+{
+    FuncProperty *p = (FuncProperty*)refcon;
+    if (p && p->setter)
+        p->setter(PROP_DOUBLE, &value, sizeof(value), p->data);
+}
+
+
+// create functional property
+static PropRef createFuncProp(Props props, const char *name, 
+            int type, xa_prop_getter_callback getter, 
+            xa_prop_setter_callback setter, void *ref)
+{
+    XPlaneProps *p = (XPlaneProps*)props;
+
+    PropRef propRef = getPropRef(props, name, type);
+    if (propRef)
+        return propRef;
+
+    FuncProperty *funcProp = new FuncProperty;
+    funcProp->data = ref;
+    funcProp->getter = getter;
+    funcProp->setter = setter;
+
+    switch (type) {
+        case PROP_INT:
+            funcProp->ref = XPLMRegisterDataAccessor(name, xplmType_Int, 1,
+                    getIntCallback, setIntCallback, NULL, NULL, NULL, NULL,
+                    NULL, NULL, NULL, NULL, NULL, NULL, funcProp, funcProp);
+            break;
+        case PROP_FLOAT:
+            funcProp->ref = XPLMRegisterDataAccessor(name, xplmType_Float, 1,
+                    NULL, NULL, getFloatCallback, setFloatCallback, NULL, NULL,
+                    NULL, NULL, NULL, NULL, NULL, NULL, funcProp, funcProp);
+            break;
+        case PROP_DOUBLE:
+            funcProp->ref = XPLMRegisterDataAccessor(name, xplmType_Double, 1,
+                    NULL, NULL, NULL, NULL, getDoubleCallback, setDoubleCallback,
+                    NULL, NULL, NULL, NULL, NULL, NULL, funcProp, funcProp);
+            break;
+    }
+
+    p->funcProps.push_back(funcProp);
+
+    return getPropRef(props, name, type);
+}
+
+
 static PropsCallbacks callbacks = { getPropRef, freePropRef, createProp, 
-        getPropInt, setPropInt, getPropFloat, 
+        createFuncProp, getPropInt, setPropInt, getPropFloat, 
         setPropFloat, getPropDouble, setPropDouble, updateProps, NULL };
 
 

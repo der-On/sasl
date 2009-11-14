@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 #include <string.h>
+#include <stdint.h>
+#include <stdio.h>
 
 
 using namespace xa;
@@ -284,6 +286,15 @@ static PropRef createProp(Props props, const char *name, int type)
     return createPropRef(props, name, type, 5);
 }
 
+/// create functional propert
+static PropRef createFuncProp(Props props, const char *name, 
+            int type, xa_prop_getter_callback getter, 
+            xa_prop_setter_callback setter, 
+            void *ref)
+{
+    printf("networked functional properties doesn't supported yet!\n");
+    return NULL;
+}
 
 /// does nothing for now.  properties referenced forever
 static void freePropRef(PropRef prop)
@@ -430,7 +441,7 @@ static int updateProps(Props props)
 
 
 static PropsCallbacks callbacks = { getPropRef, freePropRef, createProp, 
-        getPropInt, setPropInt, getPropFloat, 
+        createFuncProp, getPropInt, setPropInt, getPropFloat, 
         setPropFloat, getPropDouble, setPropDouble, updateProps, doneProps };
 
 

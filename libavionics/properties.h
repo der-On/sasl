@@ -4,6 +4,7 @@
 
 #include "xcallbacks.h"
 #include <string>
+#include <list>
 #include "luna.h"
 
 
@@ -14,6 +15,9 @@ namespace xa {
 class Properties
 {
     private:
+        /// Reference to Lua
+        Luna &lua;
+
         /// Pluggable properties module callbacks
         struct PropsCallbacks *propsCallbacks;
 
@@ -25,7 +29,24 @@ class Properties
         bool ignorePropsErrors;
 
     public:
-        Properties();
+        /// stpres references to property callbacks
+        struct FuncPropHandler{
+            /// reference to properties
+            Properties *properties;
+
+            /// Lua reference to getter func
+            int getter;
+
+            /// Lua reference to setter func
+            int setter;
+        };
+
+    private:
+        /// list of registered func props
+        std::list<FuncPropHandler> funcProps;
+
+    public:
+        Properties(Luna &lua);
 
         ~Properties();
 
@@ -45,7 +66,7 @@ class Properties
 
         /// Create new property
         PropRef createProp(const std::string &name, int type);
-
+        
         /// Release property struture
         void freeProp(PropRef prop);
 
@@ -72,6 +93,16 @@ class Properties
 
         /// Update properties subsystem
         int update();
+
+        /// register functional property
+        PropRef registerFuncProp(const std::string &name, int type, 
+                int getter, int setter);
+       
+        /// remove property handler from list and unref callbacks
+        void destroyFuncProp(FuncPropHandler *handler);
+
+        /// Returns Lua wrapper
+        Luna& getLua() { return lua; };
 };
 
 

@@ -219,8 +219,10 @@ int Commands::handleCommand(XaCommand command, int phase,
     int res = 1;
     if (lua_pcall(L, 1, 1, 0))
         printf("Error calling command handler: %s\n", lua_tostring(L, -1));
-    else
+    else {
         res = lua_tointeger(L, -1);
+        lua_pop(L, 1);
+    }
     
     return res;
 }

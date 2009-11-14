@@ -2,6 +2,7 @@
 
 #include "avionics.h"
 #include "exception.h"
+#include <string.h>
 
 
 using namespace xa;
@@ -83,6 +84,34 @@ static int luaCreateProp(lua_State *L)
         }
         lua_pushlightuserdata(L, prop);
     } else
+        lua_pushnil(L);
+
+    return 1;
+}
+
+/// Lua wrapper for createProp
+static int luaCreateFuncProp(lua_State *L)
+{
+    if (lua_isnil(L, 1) || lua_isnil(L, 2) || lua_isfunction(L, 3) ||
+            lua_isfunction(L, 4)) {
+        lua_pushnil(L);
+        return 1;
+    }
+
+    Luna &lua = getAvionics(L)->getLuna();
+
+    std::string propName = lua_tostring(L, 1);
+    int type = getPropType(lua_tostring(L, 2));
+    lua_pushvalue(L, 3);
+    int getter = lua.addRef();
+    lua_pushvalue(L, 4);
+    int setter = lua.addRef();
+   
+    PropRef p = getAvionics(L)->getProps().registerFuncProp(propName, type, 
+            getter, setter);
+    if (p)
+        lua_pushlightuserdata(L, p);
+    else
         lua_pushnil(L);
 
     return 1;
@@ -184,6 +213,7 @@ void xa::exportPropsToLua(Luna &lua)
 
     lua_register(L, "findProp", luaGetProp);
     lua_register(L, "createProp", luaCreateProp);
+    lua_register(L, "createFuncProp", luaCreateFuncProp);
     lua_register(L, "freeProp", luaFreeProp);
     lua_register(L, "getPropi", luaGetPropi);
     lua_register(L, "setPropi", luaSetPropi);
@@ -194,7 +224,7 @@ void xa::exportPropsToLua(Luna &lua)
 }
 
 
-Properties::Properties()
+Properties::Properties(Luna &lua): lua(lua)
 {
     ignorePropsErrors = true;
     propsCallbacks = NULL;
@@ -206,6 +236,14 @@ Properties::~Properties()
 {
     if (propsCallbacks && propsCallbacks->props_done)
         propsCallbacks->props_done(props);
+
+    for (std::list<FuncPropHandler>::iterator i = funcProps.begin();
+            i != funcProps.end(); i++) 
+    {
+        FuncPropHandler &h = *i;
+        lua.unRef(h.getter);
+        lua.unRef(h.setter);
+    }
 }
 
 
@@ -222,7 +260,6 @@ void Properties::setProps(struct PropsCallbacks *callbacks, Props p)
 PropRef Properties::getProp(const std::string &name, int type)
 {
     if (! (propsCallbacks && props)) {
-printf("no callbacks\n");
         if (ignorePropsErrors)
             return NULL;
         else
@@ -239,7 +276,6 @@ printf("no callbacks\n");
 PropRef Properties::createProp(const std::string &name, int type)
 {
     if (! (propsCallbacks && props)) {
-printf("no callbacks\n");
         if (ignorePropsErrors)
             return NULL;
         else
@@ -428,5 +464,111 @@ int Properties::update()
     }
 
     return err;
+}
+
+
+static int propGetterCallback(int type, void *buf, int maxSize, void *ref)
+{
+    Properties::FuncPropHandler *handler = (Properties::FuncPropHandler*)ref;
+    if (! handler)
+        return 0;
+
+    Luna &lua = handler->properties->getLua();
+    lua_State *L = lua.getLua();
+    
+    lua.getRef(handler->getter);
+    
+    if (lua_pcall(L, 0, 1, 0))
+        printf("Error calling property getter: %s\n", lua_tostring(L, -1));
+    else {
+        switch (type) {
+            case PROP_INT: {
+                    int v = lua_tointeger(L, -1);
+                    if (buf && (maxSize >= (int)sizeof(v)))
+                        memcpy(buf, &v, sizeof(v));
+                    return sizeof(v);
+                }
+            case PROP_FLOAT: {
+                    float v = (float)lua_tonumber(L, -1);
+                    if (buf && (maxSize >= (int)sizeof(v)))
+                        memcpy(buf, &v, sizeof(v));
+                    return sizeof(v);
+                }
+            case PROP_DOUBLE: {
+                    double v = lua_tonumber(L, -1);
+                    if (buf && (maxSize >= (int)sizeof(v)))
+                        memcpy(buf, &v, sizeof(v));
+                    return sizeof(v);
+                }
+        }
+        lua_pop(L, 1);
+    }
+
+    return 0;
+}
+
+
+static void propSetterCallback(int type, void *buf, int size, void *ref)
+{
+    Properties::FuncPropHandler *handler = (Properties::FuncPropHandler*)ref;
+    if ((! handler) || (! buf))
+        return;
+
+    Luna &lua = handler->properties->getLua();
+    lua_State *L = lua.getLua();
+    lua.getRef(handler->setter);
+
+    switch (type) {
+        case PROP_INT: 
+            lua_pushinteger(L, *((int*)buf));
+            break;
+        case PROP_FLOAT:
+            lua_pushnumber(L, *((float*)buf));
+            break;
+        case PROP_DOUBLE:
+            lua_pushnumber(L, *((double*)buf));
+            break;
+    }
+    
+    if (lua_pcall(lua.getLua(), 1, 0, 0))
+        printf("Error calling property setter: %s\n", lua_tostring(L, -1));
+}
+
+PropRef Properties::registerFuncProp(const std::string &name, int type, 
+        int getter, int setter)
+{
+    if (! (propsCallbacks && props)) {
+        if (ignorePropsErrors)
+            return 0;
+        else
+            EXCEPTION("Properties not active");
+    }
+
+    FuncPropHandler handler;
+    handler.properties = this;
+    handler.getter = getter;
+    handler.setter = setter;
+
+    funcProps.push_back(handler);
+
+    return propsCallbacks->create_func_prop(props, name.c_str(),
+            type, propGetterCallback, propSetterCallback, 
+            &(funcProps.back()));
+}
+
+
+void Properties::destroyFuncProp(FuncPropHandler *handler)
+{
+    for (std::list<FuncPropHandler>::iterator i = funcProps.begin(); 
+            i != funcProps.end(); i++)
+    {
+        FuncPropHandler *h = &(*i);
+        if ((h == handler)) {
+            lua.unRef(h->getter);
+            lua.unRef(h->setter);
+            funcProps.erase(i);
+            break;
+        }
+    }
 }
 

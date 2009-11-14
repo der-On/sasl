@@ -64,6 +64,27 @@ typedef int (*xa_set_prop_double_callback)(PropRef prop, double value);
 typedef PropRef (*xa_create_prop_callback)(Props props, const char *name, 
             int type);
 
+/// Get value of functional property.
+/// type - type of requested value
+/// value - pointer to buffer have to be filled with actual data
+/// maxSize - maximum size of buffer
+/// returns size of data stored in property
+typedef int (*xa_prop_getter_callback)(int type, void *value, 
+        int maxSize, void *ref);
+
+/// Set value of functional property.
+/// type - type of requested value
+/// value - pointer to buffer filled with actual data
+/// size - size of data
+typedef void (*xa_prop_setter_callback)(int type, void *value, 
+        int size, void *ref);
+
+/// Create new functional propery and returns reference to it.
+/// If property already exists just returns reference to it.
+typedef PropRef (*xa_create_func_prop_callback)(Props props, const char *name, 
+            int type, xa_prop_getter_callback getter, 
+            xa_prop_setter_callback setter, void *ref);
+
 /// Update properties.
 typedef int (*xa_update_props_callback)(Props props);
 
@@ -75,6 +96,7 @@ struct PropsCallbacks {
     xa_get_prop_ref_callback get_prop_ref;
     xa_free_prop_ref_callback free_prop_ref;
     xa_create_prop_callback create_prop;
+    xa_create_func_prop_callback create_func_prop;
     xa_get_prop_int_callback get_prop_int;
     xa_set_prop_int_callback set_prop_int;
     xa_get_prop_float_callback get_prop_float;

@@ -147,6 +147,9 @@ class Avionics
         void setCommandsCallbacks(XaCommandCallbacks *callbacks,
                 void *data);
 
+        /// Returns lua wrapper
+        Luna& getLuna() { return lua; };
+
     private:
         /// Add path to components search list
         void addSearchPath(const std::string &path);

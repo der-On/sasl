@@ -5,6 +5,7 @@
 #include "options.h"
 #include "utils.h"
 #include "xavionics.h"
+#include <stdio.h>
 
 
 using namespace xap;
