@@ -1,4 +1,7 @@
 #include "graph.h"
+
+#include <math.h>
+
 #include "glheaders.h"
 #include "avionics.h"
 #include "font.h"
@@ -352,6 +355,81 @@ static int luaDrawFont(lua_State *L)
 }
 
 
+static void rotatePoint(double &x, double &y, double ox, double oy, 
+        double centerX, double centerY, double angle, TexturePart *tex)
+{
+    double pw = tex->getX2() - tex->getX1();
+    double ph = tex->getY2() - tex->getY1();
+
+    double tx = ox - centerX;
+    double ty = oy - centerY;
+    x = tx * cos(angle) - ty * sin(angle) + centerX;
+    y = ty * cos(angle) + tx * sin(angle) + centerY;
+
+    x = tex->getX1() + x * pw;
+    y = tex->getY1() + y * ph;
+}
+
+
+/// can't find good name for this
+/// draw rectangle textured in strange way: texture coordinates are rotated
+/// by specified angle
+static void drawIntricatelyTexturedRectangle(Avionics *avionics, 
+        TexturePart *tex, double angle, double x, double y, double width, 
+        double height, double tx, double ty, double tw, double th,
+        float r, float g, float b, float a)
+{
+    double tx1 = tx;
+    double ty1 = ty;
+    double tx2 = tx1 + tw;
+    double ty2 = ty1 + th;
+
+    double tcx = (tx2 + tx1) / 2;
+    double tcy = (ty2 + ty1) / 2;
+
+    double c1x, c1y;
+    rotatePoint(c1x, c1y, tx1, ty1, tcx, tcy, angle, tex);
+    double c2x, c2y;
+    rotatePoint(c2x, c2y, tx2, ty1, tcx, tcy, angle, tex);
+    double c3x, c3y;
+    rotatePoint(c3x, c3y, tx2, ty2, tcx, tcy, angle, tex);
+    double c4x, c4y;
+    rotatePoint(c4x, c4y, tx1, ty2, tcx, tcy, angle, tex);
+    
+    glEnable(GL_TEXTURE_2D);
+
+    tex->getTexture()->bind();
+
+    glColor4f(r, g, b, a);
+    glBegin(GL_QUADS);
+      glTexCoord2f(c1x, c1y);  glVertex2d(x, y + height);
+      glTexCoord2f(c2x, c2y);  glVertex2d(x + width, y + height);
+      glTexCoord2f(c3x, c3y);  glVertex2d(x + width, y);
+      glTexCoord2f(c4x, c4y);  glVertex2d(x, y);
+    glEnd();
+}
+
+
+/// Lua wrapper for drawIntricatelyTexturedRectangle
+static int luaDrawIntricatelyTexturedRectangle(lua_State *L)
+{
+    if ((! lua_islightuserdata(L, 1) || lua_isnil(L, 1)))
+        return 0;
+
+    TexturePart *tex = (TexturePart*)lua_touserdata(L, 1);
+    
+    float r, g, b, a;
+    getAvionics(L)->getBackgroundColor(r, g, b, a);
+    rgbaFromLua(L, 11, r, g, b, a);
+
+    drawIntricatelyTexturedRectangle(getAvionics(L), tex, lua_tonumber(L, 2), 
+            lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), 
+            lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8), 
+            lua_tonumber(L, 9), lua_tonumber(L, 10),
+            r, g, b, a);
+
+    return 0;
+}
 
 void xa::exportGraphToLua(Luna &lua)
 {
@@ -369,5 +447,6 @@ void xa::exportGraphToLua(Luna &lua)
     lua_register(L, "drawTriangle", luaDrawTriangle);
     lua_register(L, "drawLine", luaDrawLine);
     lua_register(L, "drawText", luaDrawFont);
+    lua_register(L, "drawTexturedRect", luaDrawIntricatelyTexturedRectangle);
 }
 
