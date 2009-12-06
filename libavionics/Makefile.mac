@@ -5,23 +5,21 @@ OBJECTS=$(SOURCES:.cpp=.o)
 
 SDKROOT=/Developer/SDKs/MacOSX10.4u.sdk
 OSXC=-mmacosx-version-min=10.4 -isysroot $(SDKROOT) -arch i386 -arch ppc -universal
-OSXL=
+OSXL=-arch i386 -arch ppc -syslibroot=$(SDKROOT) -framework Cocoa -framework OpenGL 
 
-CXXFLAGS+=-m32 -Wall -I/usr/local/include -I/usr/include -DAPL=1 -fPIC -ggdb -fno-stack-protector $(OSXC)
-LNFLAGS+=-ggdb -L/usr/local/lib  $(OSXL)
+CXXFLAGS+=-m32 -Wall -I/usr/local/include -DAPL=1 -fPIC -ggdb -fno-stack-protector $(OSXC)
+LNFLAGS+=-ggdb -L/usr/local/lib $(OSXL) 
 LIBS+=-llua -lSDLmain -lSOIL
 
 all: $(TARGET)
 
 .cpp.o:
 	$(CXX) $(CXXFLAGS) -c $<
-	
-$(TARGET): $(OBJECTS)
-	$(AR) rs $(TARGET) $(OBJECTS)
 
+# Use plain libtool (it packages universal anyway)
 $(TARGET): $(OBJECTS)
-#	libtool -static -o $(TARGET) $(LNFLAGS) $(OBJECTS)
-#	$(CXX) -o $(TARGET) $(LNFLAGS) $(OBJECTS) $(LIBS)
+	libtool -static -ggdb -o $(TARGET) $(OBJECTS) $(LIBS)
+	ranlib $(TARGET)
 
 clean:
 	rm -f $(OBJECTS) $(TARGET)

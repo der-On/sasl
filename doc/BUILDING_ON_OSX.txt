@@ -3,13 +3,13 @@
 mkdir /tmp/xap-parts
 
 # Grab the X-Plane SDK and install it into /opt/x-plane
-mkdir /opt
-mkdir /opt/x-plane
+mkdir -p /opt/x-plane
 cd /opt/x-plane
 curl -O http://www.xsquawkbox.net/xpsdk/XPSDK200.zip
 unzip XPSDK200.zip
 
 # 1. Grab, build and install lua (from source!)
+mkdir -p /tmp/xap-parts
 cd /tmp/xap-parts
 curl http://www.lua.org/ftp/lua-5.1.4.tar.gz | tar xfz -; cd lua-5.1.4
 # Alter the macosx build target for lua so that it gives you 10.4 compatible libraries
@@ -26,7 +26,9 @@ curl http://www.libsdl.org/release/SDL-1.2.13.tar.gz | tar xfz -
 cd SDL-1.2.13
 # You can do ./configure && make && sudo make install but this will NOT be Universal. If you want to go Universal
 # then go to build-scripts/fatbuild.sh and replace all occurences of MacOSX10.3.9 with MacOSX10.4u (to build against the 10.4 SDK)
-# After the build is complete, sudo build-scripts/fatbuild.sh install as usual. This way you obtain a linkable Universal SDL
+# After the build is complete, 
+sudo build-scripts/fatbuild.sh install 
+# as usual. This way you obtain a linkable Universal SDL library that is not a MacOS framework
 
 # 3. Install and build SOIL (from source)
 cd /tmp/xap-parts
@@ -34,7 +36,7 @@ curl -O http://www.lonesock.net/files/soil.zip
 unzip soil.zip
 cd "Simple OpenGL Image Library/projects/makefile"
 mkdir obj # The author has forgotten
-# Now the same for SOIL - build for 10.4
+# Now the same for SOIL - build for 10.4 and universal
 make CXXFLAGS="-mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch i386 -arch ppc -universal" && make install
 
 # Now build Slava, libavionics and xap
