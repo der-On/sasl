@@ -17,7 +17,7 @@ Transport protocol is TCP.
 -------------------
 
 In order to setup connection client should establish TCP connection to
-server and send string 'NP1\n' without quotes, \n is carriedge
+server and send string 'NP2\n' without quotes, \n is carriedge
 return character.
 
 In response server will send the same characters back and random
@@ -37,8 +37,9 @@ Field         Size      Description
 command       1 byte    equals to 0x01 or 0x05
 type          1 byte    type of property
 id            1 byte    unique property ID
-size          1 byte    length of property name
-name          size      property name
+nameSize      1 byte    length of property name
+maxSize       2 bytes   maximum value length (for string properties only)
+name          nameSize  property name
 
 Server doesn't return anything in reply, but value of property should
 be sent on next update command.
@@ -52,6 +53,7 @@ Code  C++ Name   Description
 1     int        32 bit signed integer in network order
 2     float      IEEE float
 3     double     IEEE double
+4     string     character array
 
 
 2. SET PROPERTY VALUE
@@ -74,6 +76,13 @@ to 1.  After request number 0xFFFF next request will be 0x0000.
 Data format depends on property type.  For integer properties it is 4-bytes
 integer in network byte order.  Float and Double properties transfered
 in corresponding IEEE formats.
+
+For string properties data has following format:
+
+Field         Size      Description
+============= ========= ============================
+length        2 bytes   length of string
+characters    length    string value
 
 Server will not reply for set property message but it will send property
 new value on next update.
@@ -112,5 +121,12 @@ data format depends on property type.  For integer properties it is 4-bytes
 integer in network byte order.  Float and Double properties transfered
 in corresponding IEEE formats.  Type is always the same as in property
 subscription request.
+
+For string properties data has following format:
+
+Field         Size      Description
+============= ========= ============================
+length        2 bytes   length of string
+characters    length    string value
 
 

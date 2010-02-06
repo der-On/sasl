@@ -690,7 +690,7 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc)
     }
 #endif
 
-    strcpy(outName, "X-Plane Scriptable Avionics");
+    strcpy(outName, "SASL");
     strcpy(outSig, pluginSignature);
 
 #ifdef SNAPSHOT

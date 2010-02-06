@@ -65,7 +65,7 @@ class Properties
         PropRef getProp(const std::string &name, int type);
 
         /// Create new property
-        PropRef createProp(const std::string &name, int type);
+        PropRef createProp(const std::string &name, int type, int maxSize=0);
         
         /// Release property struture
         void freeProp(PropRef prop);
@@ -90,13 +90,20 @@ class Properties
         
         /// Set value of double property.
         int setProp(PropRef prop, double value);
+        
+        /// Returns value of property as string
+        /// On errors returns dflt
+        std::string getProps(PropRef prop, const std::string &dflt="", int *err=NULL);
+        
+        /// Set value of string property.
+        int setProp(PropRef prop, const std::string &value);
 
         /// Update properties subsystem
         int update();
 
         /// register functional property
         PropRef registerFuncProp(const std::string &name, int type, 
-                int getter, int setter);
+                int maxSize, int getter, int setter);
        
         /// remove property handler from list and unref callbacks
         void destroyFuncProp(FuncPropHandler *handler);

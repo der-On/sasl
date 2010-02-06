@@ -18,6 +18,8 @@ static int getPropType(const std::string &propType)
         return PROP_FLOAT;
     else if ("double" == propType)
         return PROP_DOUBLE;
+    else if ("string" == propType)
+        return PROP_STRING;
     else
         return -1;
 }
@@ -49,6 +51,7 @@ static int luaGetProp(lua_State *L)
     return 1;
 }
 
+
 /// Lua wrapper for createProp
 static int luaCreateProp(lua_State *L)
 {
@@ -59,24 +62,35 @@ static int luaCreateProp(lua_State *L)
 
     std::string propName = lua_tostring(L, 1);
     int type = getPropType(lua_tostring(L, 2));
+    int maxLen = 0;
+    int valArg = 3;
+    if (4 == type) {
+        maxLen = lua_tonumber(L, 3);
+        valArg++;
+    }
 
-    PropRef prop = getAvionics(L)->getProps().createProp(propName, type);
+    PropRef prop = getAvionics(L)->getProps().createProp(propName, type, maxLen);
 
     if (prop) {
-        if (! lua_isnil(L, 3)) {
+        if (! lua_isnil(L, valArg)) {
             switch (type) {
                 case PROP_INT: {
-                        int value = lua_tointeger(L, 3);
+                        int value = lua_tointeger(L, valArg);
                         getAvionics(L)->getProps().setProp(prop, value);
                         break;
                     }
                 case PROP_FLOAT: {
-                        float value = (float)lua_tonumber(L, 3);
+                        float value = (float)lua_tonumber(L, valArg);
                         getAvionics(L)->getProps().setProp(prop, value);
                         break;
                     }
                 case PROP_DOUBLE: {
-                        double value = lua_tonumber(L, 3);
+                        double value = lua_tonumber(L, valArg);
+                        getAvionics(L)->getProps().setProp(prop, value);
+                        break;
+                    }
+                case PROP_STRING: {
+                        const char *value = lua_tostring(L, valArg);
                         getAvionics(L)->getProps().setProp(prop, value);
                         break;
                     }
@@ -102,13 +116,14 @@ static int luaCreateFuncProp(lua_State *L)
 
     std::string propName = lua_tostring(L, 1);
     int type = getPropType(lua_tostring(L, 2));
+    int maxSize = lua_tonumber(L, 5);
     lua_pushvalue(L, 3);
     int getter = lua.addRef();
     lua_pushvalue(L, 4);
     int setter = lua.addRef();
    
     PropRef p = getAvionics(L)->getProps().registerFuncProp(propName, type, 
-            getter, setter);
+            maxSize, getter, setter);
     if (p)
         lua_pushlightuserdata(L, p);
     else
@@ -205,6 +220,30 @@ static int luaSetPropd(lua_State *L)
     return 0;
 }
 
+/// Lua wrapper for getProps
+static int luaGetProps(lua_State *L)
+{
+    PropRef prop = (PropRef)lua_touserdata(L, 1);
+    const char *dflt = "";
+    
+    if (! lua_isnil(L, 2))
+        dflt = lua_tostring(L, 2);
+
+    lua_pushstring(L, getAvionics(L)->getProps().getProps(prop, dflt).c_str());
+
+    return 1;
+}
+
+
+/// Lua wrapper for setPropf
+static int luaSetProps(lua_State *L)
+{
+    PropRef prop = (PropRef)lua_touserdata(L, 1);
+    const char *value = lua_tostring(L, 2);
+    getAvionics(L)->getProps().setProp(prop, value);
+    return 0;
+}
+
 
 
 void xa::exportPropsToLua(Luna &lua)
@@ -221,6 +260,8 @@ void xa::exportPropsToLua(Luna &lua)
     lua_register(L, "setPropf", luaSetPropf);
     lua_register(L, "getPropd", luaGetPropd);
     lua_register(L, "setPropd", luaSetPropd);
+    lua_register(L, "getProps", luaGetProps);
+    lua_register(L, "setProps", luaSetProps);
 }
 
 
@@ -273,7 +314,7 @@ PropRef Properties::getProp(const std::string &name, int type)
 }
 
 
-PropRef Properties::createProp(const std::string &name, int type)
+PropRef Properties::createProp(const std::string &name, int type, int maxSize)
 {
     if (! (propsCallbacks && props)) {
         if (ignorePropsErrors)
@@ -282,7 +323,8 @@ PropRef Properties::createProp(const std::string &name, int type)
             EXCEPTION("Properties not active");
     }
 
-    PropRef res = propsCallbacks->create_prop(props, name.c_str(), type);
+    PropRef res = propsCallbacks->create_prop(props, name.c_str(), type, 
+            maxSize);
     if ((! res) && (! ignorePropsErrors))
         EXCEPTION(std::string("Can't create property ") + name);
     return res;
@@ -372,7 +414,7 @@ float Properties::getPropf(PropRef prop, float dflt, int *err)
     float res = propsCallbacks->get_prop_float(prop, err);
     if (*err) {
         if (! ignorePropsErrors)
-            EXCEPTION("Can't get value of int property")
+            EXCEPTION("Can't get value of float property")
         else
             res = dflt;
     }
@@ -420,7 +462,7 @@ float Properties::getPropd(PropRef prop, double dflt, int *err)
     double res = propsCallbacks->get_prop_double(prop, err);
     if (*err) {
         if (! ignorePropsErrors)
-            EXCEPTION("Can't get value of int property")
+            EXCEPTION("Can't get value of double property")
         else
             res = dflt;
     }
@@ -441,6 +483,58 @@ int Properties::setProp(PropRef prop, double value)
     }
 
     int err = propsCallbacks->set_prop_double(prop, value);
+    if (err && (! ignorePropsErrors))
+        EXCEPTION("Can't set value of double property");
+    return err;
+}
+
+
+std::string Properties::getProps(PropRef prop, const std::string &dflt, 
+        int *err)
+{
+    int localErr;
+    if (! err)
+        err = &localErr;
+    *err = 0;
+
+    if (! prop)
+        return dflt;
+
+    if (! (propsCallbacks && props)) {
+        if (ignorePropsErrors) {
+            if (err) 
+                *err = -1;
+            return dflt;
+        } else
+            EXCEPTION("Properties not active");
+    }
+
+    int sz = propsCallbacks->get_prop_string(prop, NULL, 0, err);
+    char buf[sz + 1];
+    propsCallbacks->get_prop_string(prop, buf, sz, err);
+    if (*err) {
+        if (! ignorePropsErrors)
+            EXCEPTION("Can't get value of string property")
+        else
+            return dflt;
+    }
+    return buf;
+}
+
+
+int Properties::setProp(PropRef prop, const std::string &value)
+{
+    if (! prop)
+        return 0;
+    
+    if (! (propsCallbacks && props)) {
+        if (ignorePropsErrors)
+            return 0;
+        else
+            EXCEPTION("Properties not active");
+    }
+
+    int err = propsCallbacks->set_prop_string(prop, value.c_str());
     if (err && (! ignorePropsErrors))
         EXCEPTION("Can't set value of float property");
     return err;
@@ -500,6 +594,13 @@ static int propGetterCallback(int type, void *buf, int maxSize, void *ref)
                         memcpy(buf, &v, sizeof(v));
                     return sizeof(v);
                 }
+            case PROP_STRING: {
+                    const char *v = lua_tostring(L, -1);
+                    int len = strlen(v);
+                    if (buf && (maxSize >= (int)len))
+                        memcpy(buf, v, len + 1);
+                    return len + 1;
+                }
         }
         lua_pop(L, 1);
     }
@@ -528,6 +629,9 @@ static void propSetterCallback(int type, void *buf, int size, void *ref)
         case PROP_DOUBLE:
             lua_pushnumber(L, *((double*)buf));
             break;
+        case PROP_STRING:
+            lua_pushstring(L, ((char*)buf));
+            break;
     }
     
     if (lua_pcall(lua.getLua(), 1, 0, 0))
@@ -535,7 +639,7 @@ static void propSetterCallback(int type, void *buf, int size, void *ref)
 }
 
 PropRef Properties::registerFuncProp(const std::string &name, int type, 
-        int getter, int setter)
+        int maxSize, int getter, int setter)
 {
     if (! (propsCallbacks && props)) {
         if (ignorePropsErrors)
@@ -552,7 +656,7 @@ PropRef Properties::registerFuncProp(const std::string &name, int type,
     funcProps.push_back(handler);
 
     return propsCallbacks->create_func_prop(props, name.c_str(),
-            type, propGetterCallback, propSetterCallback, 
+            type, maxSize, propGetterCallback, propSetterCallback, 
             &(funcProps.back()));
 }
 

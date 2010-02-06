@@ -40,6 +40,11 @@ inline std::string toString(const T& x, const char *file, int line)
 /// convert number to integer
 int strToInt(const std::string &str, int dflt=0);
 
+/// convert number to float
+float strToFloat(const std::string &str, float dflt=0);
+
+/// convert number to double
+double strToDouble(const std::string &str, double dflt=0);
 
 /// Extract directory from full path to file
 std::string getDirectory(const std::string &fileName);

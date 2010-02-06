@@ -33,6 +33,9 @@ class ClientProp
             int intValue;
             float floatValue;
             double doubleValue;
+
+            char *buf;
+            int maxBufSize;
         } lastValue;
 
         /// Properties subsystem
@@ -42,11 +45,13 @@ class ClientProp
         PropRef ref;
 
     public:
-        ClientProp() { };
+        ClientProp();
 
         /// Create new reference to property
         ClientProp(int id, int type, const std::string &name, 
                 Properties *properties, PropRef ref);
+        
+        ~ClientProp();
 
     public:
         /// Returns true if property needed to send
@@ -63,6 +68,9 @@ class ClientProp
         
         /// Set property value as double
         void setDouble(double value);
+        
+        /// Set property value as string
+        void setString(const std::string &value);
 };
 
 

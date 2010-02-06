@@ -1,12 +1,12 @@
 #include "xavionics.h"
-#include "lownet.h"
-#include "md5.h"
-#include "lownet.h"
 #include <string>
 #include <vector>
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "lownet.h"
+#include "md5.h"
+#include "utils.h"
 
 
 using namespace xa;
@@ -33,6 +33,9 @@ class PropValue
             int intValue;
             float floatValue;
             double doubleValue;
+
+            char *buf;
+            int maxBufSize;
         } lastValue;
 
         /// Refernce to properties storage
@@ -44,6 +47,8 @@ class PropValue
     public:
         /// Create new property value
         PropValue(NetProps *props, int id, int type, const char *name);
+        
+        ~PropValue();
 
     public:
         /// Returns type of property
@@ -75,6 +80,12 @@ class PropValue
 
         /// Sets value of property.  returns non-zero on errors
         int setDouble(double newValue);
+        
+        /// Returns property value as double
+        int getString(char *buf, int maxSize, int *err);
+
+        /// Sets value of property.  returns non-zero on errors
+        int setString(const char *newValue);
         
         /// Load property value from raw data
         void parse(const unsigned char *data, int revision);
@@ -112,6 +123,14 @@ PropValue::PropValue(NetProps *props, int id, int type, const char *name):
 }
 
 
+PropValue::~PropValue()
+{
+    if (lastValue.buf)
+        free(lastValue.buf);
+}
+
+
+
 int PropValue::getInt(int *err)
 {
     if (err)
@@ -121,6 +140,7 @@ int PropValue::getInt(int *err)
         case PROP_INT: return lastValue.intValue;
         case PROP_FLOAT: return (int)lastValue.floatValue;
         case PROP_DOUBLE: return (int)lastValue.doubleValue;
+        case PROP_STRING: return strToInt(lastValue.buf);
     }
 
     if (err)
@@ -142,6 +162,14 @@ int PropValue::sendPropUpdate()
         case PROP_INT: buf.addInt32(lastValue.intValue);  return 0;
         case PROP_FLOAT: buf.addFloat(lastValue.floatValue);  return 0;
         case PROP_DOUBLE: buf.addDouble(lastValue.doubleValue);  return 0;
+        case PROP_STRING: 
+            int len = 0;
+            if (lastValue.buf)
+                len = strlen(lastValue.buf);
+            buf.addUint16(len);
+            if (len)
+                buf.add((unsigned char*)lastValue.buf, len);
+            return 0;
     }
     return -1;
 }
@@ -153,6 +181,7 @@ int PropValue::setInt(int newValue)
         case PROP_INT: lastValue.intValue = newValue; break;
         case PROP_FLOAT: lastValue.floatValue = newValue;  break;
         case PROP_DOUBLE: lastValue.doubleValue = newValue; break;
+        case PROP_STRING: return setString(toString(newValue).c_str());
     }
     return sendPropUpdate();
 }
@@ -170,6 +199,7 @@ float PropValue::getFloat(int *err)
             return lastValue.floatValue;
         case PROP_DOUBLE: 
             return (float)lastValue.doubleValue;
+        case PROP_STRING: return strToFloat(lastValue.buf);
     }
 
     if (err)
@@ -184,6 +214,7 @@ int PropValue::setFloat(float newValue)
         case PROP_INT: lastValue.intValue = (int)newValue; break;
         case PROP_FLOAT: lastValue.floatValue = newValue;  break;
         case PROP_DOUBLE: lastValue.doubleValue = newValue; break;
+        case PROP_STRING: return setString(toString(newValue).c_str());
     }
     return sendPropUpdate();
 }
@@ -198,6 +229,7 @@ double PropValue::getDouble(int *err)
         case PROP_INT: return lastValue.intValue;
         case PROP_FLOAT: return lastValue.floatValue;
         case PROP_DOUBLE: return lastValue.doubleValue;
+        case PROP_STRING: return strToDouble(lastValue.buf);
     }
 
     if (err)
@@ -212,10 +244,77 @@ int PropValue::setDouble(double newValue)
         case PROP_INT: lastValue.intValue = (int)newValue; break;
         case PROP_FLOAT: lastValue.floatValue = (float)newValue;  break;
         case PROP_DOUBLE: lastValue.doubleValue = newValue; break;
+        case PROP_STRING: return setString(toString(newValue).c_str());
     }
     return sendPropUpdate();
 }
 
+
+int PropValue::getString(char *buf, int maxSize, int *err)
+{
+    if (err)
+        *err = 0;
+
+    if (PROP_STRING != type) {
+        std::string s;
+        switch (type) {
+            case PROP_INT: s = toString(lastValue.intValue);  break;
+            case PROP_FLOAT: s = toString(lastValue.floatValue);  break;
+            case PROP_DOUBLE: s = toString(lastValue.doubleValue); break;
+            default:
+                if (err)
+                    *err = 1;
+                return 0;
+        }
+        int len = s.length();
+        if ((len + 1 > maxSize) || (! buf)) {
+            if (err)
+                *err = 1;
+        } else
+            strcpy(buf, s.c_str());
+        return len;
+    } else {
+        if (! lastValue.buf) {
+            if (buf && (0 < maxSize))
+                strcpy(buf, "");
+            return 0;
+        } else {
+            int len = strlen(lastValue.buf);
+            if (maxSize < len + 1) {
+                if (err)
+                    *err = 1;
+            } else
+                strcpy(buf, lastValue.buf);
+            return len;
+        }
+    }
+}
+
+
+int PropValue::setString(const char *newValue)
+{
+    if (! newValue)
+        newValue = "";
+
+    switch (type) {
+        case PROP_INT: lastValue.intValue = strToInt(newValue); break;
+        case PROP_FLOAT: lastValue.floatValue = strToFloat(newValue);  break;
+        case PROP_DOUBLE: lastValue.doubleValue = strToDouble(newValue); break;
+        case PROP_STRING: 
+            int len = strlen(newValue);
+            if ((! lastValue.buf) || (len + 1 > lastValue.maxBufSize)) {
+                lastValue.maxBufSize = len + 20;
+                if (lastValue.buf)
+                    free(lastValue.buf);
+                lastValue.buf = (char*)malloc(lastValue.maxBufSize);
+            }
+            strcpy(lastValue.buf, newValue);
+            break;
+    }
+    return sendPropUpdate();
+}
+
+        
         
 void PropValue::parse(const unsigned char *data, int revision)
 {
@@ -236,20 +335,32 @@ void PropValue::parse(const unsigned char *data, int revision)
         case PROP_DOUBLE: 
             lastValue.doubleValue = netToDouble(data); 
             break;
+        case PROP_STRING: 
+            int len = netToInt16(data);
+            if ((! lastValue.buf) || (len + 1 > lastValue.maxBufSize)) {
+                lastValue.maxBufSize = len + 20;
+                if (lastValue.buf)
+                    free(lastValue.buf);
+                lastValue.buf = (char*)malloc(lastValue.maxBufSize);
+            }
+            memcpy(lastValue.buf, data + 2, len);
+            lastValue.buf[len] = 0;
+            break;
     }
 }
 
 
 
 /// Returns reference to property
-static PropRef createPropRef(Props props, const char *name, int type, int cmd)
+static PropRef createPropRef(Props props, const char *name, int type, 
+        int maxSize, int cmd)
 {
     NetProps *p = (NetProps*)props;
     if (! p)
         return NULL;
 
     int id = p->values.size() + 1;
-    if ((255 < id) || (PROP_INT > type) || (PROP_DOUBLE < type)) {
+    if ((255 < id) || (PROP_INT > type) || (PROP_STRING < type)) {
         printf("invalid property type %i\n", type);
         return NULL;
     }
@@ -268,6 +379,7 @@ static PropRef createPropRef(Props props, const char *name, int type, int cmd)
     buf.addUint8(type);
     buf.addUint8(id);
     buf.addUint8(len);
+    buf.addUint8(maxSize);
     buf.add((unsigned char*)name, len);
 
     return p->values[id - 1];
@@ -277,18 +389,18 @@ static PropRef createPropRef(Props props, const char *name, int type, int cmd)
 /// Get reference to property
 static PropRef getPropRef(Props props, const char *name, int type)
 {
-    return createPropRef(props, name, type, 1);
+    return createPropRef(props, name, type, 1, 0);
 }
 
 /// Get reference to property or create new property
-static PropRef createProp(Props props, const char *name, int type)
+static PropRef createProp(Props props, const char *name, int type, int maxSize)
 {
-    return createPropRef(props, name, type, 5);
+    return createPropRef(props, name, type, 5, maxSize);
 }
 
 /// create functional propert
 static PropRef createFuncProp(Props props, const char *name, 
-            int type, xa_prop_getter_callback getter, 
+            int type, int maxSize, xa_prop_getter_callback getter, 
             xa_prop_setter_callback setter, 
             void *ref)
 {
@@ -382,6 +494,32 @@ static int setPropDouble(PropRef prop, double newValue)
 }
 
 
+/// Returns property value as string
+static int getPropString(PropRef prop, char *buf, int maxSize, int *err)
+{
+    PropValue *value = (PropValue*)prop;
+    if (! value) {
+        if (err)
+            *err = 1;
+        return 0;
+    }
+
+    return value->getString(buf, maxSize, err);
+}
+
+
+/// Sets value of property as string
+/// Returns zero on cuccess or non-zero on error
+static int setPropString(PropRef prop, const char *newValue)
+{
+    PropValue *value = (PropValue*)prop;
+    if (! value)
+        return -1;
+    
+    return value->setString(newValue);
+}
+
+
 /// destroy properties
 static void doneProps(Props props)
 {
@@ -428,6 +566,10 @@ static int updateProps(Props props)
         int sz = getPropTypeSize(v->getType());
         if (buf.getFilled() < (unsigned)sz + 1)
             break;
+        if (PROP_STRING == v->getType())
+            sz += netToInt16(buf.getData() + 1);
+        if (buf.getFilled() < (unsigned)sz + 1)
+            break;
         v->parse(buf.getData() + 1, p->curSetSerial);
         buf.remove(1 + sz);
         p->propsToGo--;
@@ -442,7 +584,9 @@ static int updateProps(Props props)
 
 static PropsCallbacks callbacks = { getPropRef, freePropRef, createProp, 
         createFuncProp, getPropInt, setPropInt, getPropFloat, 
-        setPropFloat, getPropDouble, setPropDouble, updateProps, doneProps };
+        setPropFloat, getPropDouble, setPropDouble, 
+        getPropString, setPropString,
+        updateProps, doneProps };
 
 
 int xa_connect_to_server(XA xa, const char *host, int port, 
@@ -458,7 +602,7 @@ printf("connecting...\n");
     AsyncCon &con = np->con;
 
 printf("sending handshake...\n");
-    con.send((unsigned char*)"NP1\n", 4);
+    con.send((unsigned char*)"NP2\n", 4);
     if (con.sendAll()) {
         delete np;
         return -1;

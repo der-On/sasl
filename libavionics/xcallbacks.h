@@ -53,16 +53,28 @@ typedef double (*xa_get_prop_double_callback)(PropRef prop, int *err);
 /// Returns zero on cuccess or non-zero on error
 typedef int (*xa_set_prop_double_callback)(PropRef prop, double value);
 
+/// Returne value of property as string
+/// returns size of string
+typedef int (*xa_get_prop_string_callback)(PropRef prop, 
+        char *buf, int maxSize, int *err);
+
+/// Sets value of property as string
+/// Returns zero on cuccess or non-zero on error
+typedef int (*xa_set_prop_string_callback)(PropRef prop, const char *value);
+
+
 
 #define PROP_INT 1
 #define PROP_FLOAT 2
 #define PROP_DOUBLE 3
+#define PROP_STRING 4
 
 
 /// Create new propery and returns reference to it.
 /// If property already exists just returns reference to it.
+/// maxSize is maximum size for string properties, ignored for other types
 typedef PropRef (*xa_create_prop_callback)(Props props, const char *name, 
-            int type);
+            int type, int maxSize);
 
 /// Get value of functional property.
 /// type - type of requested value
@@ -82,7 +94,7 @@ typedef void (*xa_prop_setter_callback)(int type, void *value,
 /// Create new functional propery and returns reference to it.
 /// If property already exists just returns reference to it.
 typedef PropRef (*xa_create_func_prop_callback)(Props props, const char *name, 
-            int type, xa_prop_getter_callback getter, 
+            int type, int maxSize, xa_prop_getter_callback getter, 
             xa_prop_setter_callback setter, void *ref);
 
 /// Update properties.
@@ -103,6 +115,8 @@ struct PropsCallbacks {
     xa_set_prop_float_callback set_prop_float;
     xa_get_prop_double_callback get_prop_double;
     xa_set_prop_double_callback set_prop_double;
+    xa_get_prop_string_callback get_prop_string;
+    xa_set_prop_string_callback set_prop_string;
     xa_update_props_callback update_props;
     xa_props_done props_done;
 };
@@ -135,7 +149,7 @@ typedef void (*xa_add_command_handler_callback)(XaCommand command,
 typedef void (*xa_remove_command_handler_callback)(XaCommand command,
         xa_command_callback handler, int before, void *data, void *cmdDta);
 
-/// Start command
+// start command
 typedef void (*xa_command_begin_callback)(XaCommand command, void *cmdDta);
 
 /// Finish command

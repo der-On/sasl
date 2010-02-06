@@ -165,6 +165,7 @@ int xa::getPropTypeSize(int type)
         case PROP_INT: return 4;
         case PROP_FLOAT: return sizeof(float);
         case PROP_DOUBLE: return sizeof(double);
+        case PROP_STRING: return 2;
         default: return 0;
     }
 }

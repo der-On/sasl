@@ -7,12 +7,24 @@
 
 using namespace xa;
 
+ClientProp::ClientProp()
+{
+    memset(&lastValue, 0, sizeof(lastValue));
+}
+
 
 ClientProp::ClientProp(int id, int type, const std::string &name, 
         Properties *properties, PropRef ref):
        id(id), type(type), name(name), properties(properties), ref(ref)
 {
     sendNext = true;
+    memset(&lastValue, 0, sizeof(lastValue));
+}
+
+ClientProp::~ClientProp()
+{
+    if (lastValue.buf)
+        free(lastValue.buf);
 }
 
 
@@ -28,6 +40,11 @@ bool ClientProp::isChanged()
             return properties->getPropf(ref) != lastValue.floatValue;
         case PROP_DOUBLE:
             return properties->getPropd(ref) != lastValue.doubleValue;
+        case PROP_STRING:
+            {
+                std::string s = properties->getProps(ref);
+                return (! lastValue.buf) || (strcmp(s.c_str(), lastValue.buf));
+            }
         default:
             return false;
     }
@@ -52,6 +69,21 @@ void ClientProp::send(NetBuf &buffer)
             lastValue.doubleValue = properties->getPropf(ref);
             buffer.addDouble(lastValue.doubleValue);
             break;
+        case PROP_STRING:
+            {
+                std::string s = properties->getProps(ref);
+                int len = s.length();
+                if ((! lastValue.buf) || (len + 1 > lastValue.maxBufSize)) {
+                    lastValue.maxBufSize = len + 20;
+                    if (lastValue.buf)
+                        free(lastValue.buf);
+                    lastValue.buf = (char*)malloc(lastValue.maxBufSize);
+                }
+                strcpy(lastValue.buf, s.c_str());
+                buffer.addUint16(len);
+                buffer.add((const unsigned char*)s.c_str(), len);
+            }
+            break;
     }
 }
 
@@ -69,6 +101,11 @@ void ClientProp::setFloat(float value)
 
 
 void ClientProp::setDouble(double value)
+{
+    properties->setProp(ref, value);
+}
+
+void ClientProp::setString(const std::string &value)
 {
     properties->setProp(ref, value);
 }
@@ -197,7 +234,7 @@ printf("checking handshake...\n");
         return;
 
 printf("data received...\n");
-    if (memcmp(buffer.getData(), "NP1\n", 4)) {
+    if (memcmp(buffer.getData(), "NP2\n", 4)) {
 printf("invalid protocol!\n");
         stop();
         return;
@@ -226,7 +263,7 @@ printf("verifying...\n");
 printf("calculating md5...\n");
     md5_state_t md5;
     md5_init(&md5);
-    md5_append(&md5, (const md5_byte_t*)"NP1\n", 4);
+    md5_append(&md5, (const md5_byte_t*)"NP2\n", 4);
     md5_append(&md5, seed, 16);
     md5_append(&md5, (const md5_byte_t*)secret.c_str(), secret.length());
     unsigned char digest[16];
@@ -252,17 +289,18 @@ void PropsClient::handleSubscription(NetBuf &buffer)
 {
     if (4 > buffer.getFilled())
         return;
-    unsigned int size = buffer.getData()[3];
-    if (size + 4 > buffer.getFilled())
+    unsigned int nameSize = buffer.getData()[3];
+    if (nameSize + 6 > buffer.getFilled())
         return;
 
     int command = buffer.getData()[0];
     int type = buffer.getData()[1];
     int id = buffer.getData()[2];
-    std::string name((char*)buffer.getData() + 4, size);
-    buffer.remove(size + 4);
+    int maxSize = netToInt16(buffer.getData() + 4);
+    std::string name((char*)buffer.getData() + 6, nameSize);
+    buffer.remove(nameSize + 6);
 
-    if ((1 > type) || (3 < type)) {
+    if ((1 > type) || (4 < type)) {
         printf("Invalid property type %i\n", type);
         stop();
         return;
@@ -271,7 +309,7 @@ void PropsClient::handleSubscription(NetBuf &buffer)
     PropRef prop;
 
     if (5 == command)
-        prop = properties.createProp(name, type);
+        prop = properties.createProp(name, type, maxSize);
     else
         prop = properties.getProp(name, type);
 
@@ -330,6 +368,13 @@ void PropsClient::handleSetProp(NetBuf &buffer)
     if (buffer.getFilled() < sz)
         return;
 
+    if (PROP_STRING == getPropTypeSize(command[2])) {
+        dataSz = netToInt16(command + 5);
+        sz += dataSz;
+    }
+    if (buffer.getFilled() < sz)
+        return;
+
     lastSetSerial = netToInt16(command + 3);
 
     std::map<int, ClientProp>::iterator i = propRefs.find(command[1]);
@@ -345,6 +390,9 @@ void PropsClient::handleSetProp(NetBuf &buffer)
         case PROP_INT: prop.setInt(netToInt32(command + 5)); break;
         case PROP_FLOAT: prop.setFloat(netToFloat(command + 5)); break;
         case PROP_DOUBLE: prop.setDouble(netToDouble(command + 5)); break;
+        case PROP_STRING:
+            prop.setString(std::string((const char*)command + 7, dataSz));
+            break;
         default:
             printf("invalid property type %i\n", command[2]);
             stop();

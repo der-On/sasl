@@ -2,11 +2,14 @@
 #include <map>
 #include <string>
 #include <stdlib.h>
+#include <string.h>
+
+#include "xpsdk.h"
 
 #include "props.h"
 #include "xavionics.h"
+#include "utils.h"
 
-#include "xpsdk.h"
 
 
 using namespace xap;
@@ -29,7 +32,7 @@ struct Property {
 
 
 /// Value of property
-union Value {
+struct Value {
     /// Property as int
     int intValue;
 
@@ -38,6 +41,9 @@ union Value {
 
     /// Property as double
     double doubleValue;
+
+    /// property as string
+    std::string stringValue;
 };
 
 
@@ -109,6 +115,12 @@ struct SetPropCmd
         property = prop;
         type = PROP_DOUBLE;
         data.doubleValue = value;
+    };
+    
+    SetPropCmd(Property *prop, const std::string &value) {
+        property = prop;
+        type = PROP_STRING;
+        data.stringValue = value;
     };
 };
 
@@ -272,6 +284,17 @@ static int getPropInt(PropRef property, int *err)
         return (int)val;
     }
 
+    if (xplmType_Data & type) {
+        int len = XPLMGetDatab(prop->ref, NULL, 0, 0);
+        if (0 < len) {
+            char buf[len + 1];
+            XPLMGetDatab(prop->ref, buf, 0, len);
+            buf[len] = 0;
+            return strToInt(buf);
+        } else
+            return 0;
+    }
+
     if (err)
         *err = 1;
 
@@ -322,6 +345,12 @@ static int setPropInt(PropRef property, int value)
         return 0;
     }
 
+    if (xplmType_Data & type) {
+        std::string s = toString(value);
+        XPLMSetDatab(prop->ref, (void*)s.c_str(), 0, s.length() + 1);
+        return 0;
+    }
+
     return -2;
 }
 
@@ -360,6 +389,17 @@ static float getPropFloat(PropRef property, int *err)
         int val = 0;
         XPLMGetDatavi(prop->ref, &val, prop->index, 1);
         return val;
+    }
+    
+    if (xplmType_Data & type) {
+        int len = XPLMGetDatab(prop->ref, NULL, 0, 0);
+        if (0 < len) {
+            char buf[len + 1];
+            XPLMGetDatab(prop->ref, buf, 0, len);
+            buf[len] = 0;
+            return strToFloat(buf);
+        } else
+            return 0;
     }
     
     if (err)
@@ -411,6 +451,12 @@ static int setPropFloat(PropRef property, float value)
         XPLMSetDatavi(prop->ref, &val, prop->index, 1);
         return 0;
     }
+
+    if (xplmType_Data & type) {
+        std::string s = toString(value);
+        XPLMSetDatab(prop->ref, (void*)s.c_str(), 0, s.length() + 1);
+        return 0;
+    }
     
     return -2;
 }
@@ -449,6 +495,17 @@ static double getPropDouble(PropRef property, int *err)
         int val = 0;
         XPLMGetDatavi(prop->ref, &val, prop->index, 1);
         return val;
+    }
+    
+    if (xplmType_Data & type) {
+        int len = XPLMGetDatab(prop->ref, NULL, 0, 0);
+        if (0 < len) {
+            char buf[len + 1];
+            XPLMGetDatab(prop->ref, buf, 0, len);
+            buf[len] = 0;
+            return strToDouble(buf);
+        } else
+            return 0;
     }
     
     if (err)
@@ -498,6 +555,139 @@ static int setPropDouble(PropRef property, double value)
 
     if (xplmType_IntArray & type) {
         int val = (int)value;
+        XPLMSetDatavi(prop->ref, &val, prop->index, 1);
+        return 0;
+    }
+
+    if (xplmType_Data & type) {
+        std::string s = toString(value);
+        XPLMSetDatab(prop->ref, (void*)s.c_str(), 0, s.length() + 1);
+        return 0;
+    }
+    
+    return -2;
+}
+
+
+static int copyStr(char *dest, int maxSize, const std::string &src, int *err)
+{
+    int len = src.length();
+    if (dest && maxSize) {
+        int flen = len + 1;
+        int toCopy = flen < maxSize ? flen : maxSize;
+        memcpy(dest, src.c_str(), toCopy);
+        dest[toCopy - 1] = 0;
+        if ((flen < maxSize) && (err))
+            *err = 1;
+    }
+    return src.length();
+}
+
+
+/// Returne value of property as string
+/// returns length of string
+static int getPropString(PropRef property, char *buf, int maxSize, int *err)
+{
+    if (err)
+        *err = 0;
+
+    Property *prop = (Property*)property;
+    if (! prop) {
+        if (err)
+            *err = 1;
+        return 0;
+    }
+
+    std::string s;
+
+    XPLMDataTypeID type = XPLMGetDataRefTypes(prop->ref);
+    
+    if (xplmType_Data & type) {
+        int sz = XPLMGetDatab(prop->ref, NULL, 0, 0);
+        int res = XPLMGetDatab(prop->ref, buf, 0, maxSize);
+        if (res <= sz)
+            if (err) *err = 1;
+        if (buf && maxSize) {
+            if (res < maxSize)
+                buf[res] = 0;
+            else
+                buf[maxSize] = 0;
+        }
+    }
+    
+    if (xplmType_Double & type)
+        return copyStr(buf, maxSize, toString(XPLMGetDatad(prop->ref)), err);
+
+    if (xplmType_Float & type)
+        return copyStr(buf, maxSize, toString(XPLMGetDataf(prop->ref)), err);
+    
+    if (xplmType_Int & type)
+        return copyStr(buf, maxSize, toString(XPLMGetDatai(prop->ref)), err);
+    
+    if (xplmType_FloatArray & type) {
+        float val = 0;
+        XPLMGetDatavf(prop->ref, &val, prop->index, 1);
+        return copyStr(buf, maxSize, toString(val), err);
+    }
+
+    if (xplmType_IntArray & type) {
+        int val = 0;
+        XPLMGetDatavi(prop->ref, &val, prop->index, 1);
+        return copyStr(buf, maxSize, toString(val), err);
+    }
+    
+    if (err)
+        *err = 1;
+
+    return 0;
+}
+
+
+/// Sets value of property as string
+/// Returns zero on cuccess or non-zero on error
+static int setPropString(PropRef property, const char *value)
+{
+    Property *prop = (Property*)property;
+    if ((! prop) || (! value))
+        return -1;
+    
+    XPlaneProps *props = prop->parent;
+    if (! props->initialized) 
+        props->propsToSet.push_back(SetPropCmd(prop, value));
+
+    if (! XPLMCanWriteDataRef(prop->ref))
+        return -1;
+
+    XPLMDataTypeID type = XPLMGetDataRefTypes(prop->ref);
+
+    if (xplmType_Data & type) {
+        XPLMSetDatab(prop->ref, (void*)value, 0, strlen(value) + 1);
+        return 0;
+    }
+
+    if (xplmType_Double & type) {
+        XPLMSetDatad(prop->ref, strToDouble(value));
+        return 0;
+    }
+
+    if (xplmType_Float & type) {
+        XPLMSetDataf(prop->ref, strToFloat(value));
+        return 0;
+    }
+    
+    if (xplmType_Int & type) {
+        XPLMSetDatai(prop->ref, strToInt(value));
+        return 0;
+    }
+    
+    if (xplmType_FloatArray & type) {
+        float val = strToFloat(value);
+        XPLMSetDatavf(prop->ref, &val, prop->index, 1);
+        return 0;
+    }
+
+    if (xplmType_IntArray & type) {
+        int val = strToInt(value);
         XPLMSetDatavi(prop->ref, &val, prop->index, 1);
         return 0;
     }
@@ -616,9 +806,62 @@ static PropRef createDoubleProp(XPlaneProps *props, const char *name)
     return getPropRef(props, name, PROP_DOUBLE);
 }
 
+
+/// Returns value of custom string property
+static long readString(void *refcon, void *value, int offset, long maxSize)
+{
+    CustomProperty *p = (CustomProperty*)refcon;
+    if (p) {
+        int len = p->data.stringValue.length();
+        if (value) {
+            int sz = len + 1 - offset;
+            int realSz = sz > maxSize ? maxSize : sz;
+            memcpy(value, p->data.stringValue.c_str() + offset, realSz);
+            return realSz;
+        } else
+            return len;
+    } else
+        return 0;
+}
+
+
+/// Set value of custom string property
+static void writeString(void *refcon, void *value, int offset, long size)
+{
+    CustomProperty *p = (CustomProperty*)refcon;
+    if (p) {
+        if (! offset)
+            p->data.stringValue = std::string((const char*)value, size);
+        else 
+            p->data.stringValue = p->data.stringValue.substr(0, offset) + 
+                std::string((const char*)value, size);
+    }
+}
+
+
+
+/// Create string property
+static PropRef createStringProp(XPlaneProps *props, const char *name, 
+        int maxSize)
+{
+    CustomProperty *prop = new CustomProperty;
+    prop->data.intValue = 0;
+    prop->ref = XPLMRegisterDataAccessor(name, xplmType_Data, 1, 
+            NULL, NULL, NULL, NULL, NULL, NULL,
+            NULL, NULL, NULL, NULL, readString, writeString,
+            prop, prop);
+    if (! prop->ref) {
+        delete prop;
+        return NULL;
+    }
+    props->customProps[name] = prop;
+    return getPropRef(props, name, PROP_DOUBLE);
+}
+
+
 /// Create new propery and returns reference to it.
 /// If property already exists just returns reference to it.
-static PropRef createProp(Props props, const char *name, int type)
+static PropRef createProp(Props props, const char *name, int type, int maxSize)
 {
     XPlaneProps *p = (XPlaneProps*)props;
     if (! (p && name))
@@ -632,6 +875,7 @@ static PropRef createProp(Props props, const char *name, int type)
         case PROP_INT: return createIntProp(p, name);
         case PROP_FLOAT: return createFloatProp(p, name);
         case PROP_DOUBLE: return createDoubleProp(p, name);
+        case PROP_STRING: return createStringProp(p, name, maxSize);
     }
 
     return NULL;
@@ -725,7 +969,7 @@ static void setDoubleCallback(void *refcon, double value)
 
 // create functional property
 static PropRef createFuncProp(Props props, const char *name, 
-            int type, xa_prop_getter_callback getter, 
+            int type, int size, xa_prop_getter_callback getter, 
             xa_prop_setter_callback setter, void *ref)
 {
     XPlaneProps *p = (XPlaneProps*)props;
@@ -765,7 +1009,8 @@ static PropRef createFuncProp(Props props, const char *name,
 
 static PropsCallbacks callbacks = { getPropRef, freePropRef, createProp, 
         createFuncProp, getPropInt, setPropInt, getPropFloat, 
-        setPropFloat, getPropDouble, setPropDouble, updateProps, NULL };
+        setPropFloat, getPropDouble, setPropDouble, getPropString,
+        setPropString, updateProps, NULL };
 
 
 PropsCallbacks* xap::getPropsCallbacks()

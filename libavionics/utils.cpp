@@ -21,6 +21,33 @@ int xa::strToInt(const std::string &str, int dflt)
         return n;
 }
 
+
+float xa::strToFloat(const std::string &str, float dflt)
+{
+    float n;
+    char *endptr;
+
+    n = strtof(str.c_str(), &endptr);
+    if ((! str.c_str()[0]) || (endptr[0])) 
+        return dflt;
+    else
+        return n;
+}
+
+
+double xa::strToDouble(const std::string &str, double dflt)
+{
+    double n;
+    char *endptr;
+
+    n = strtod(str.c_str(), &endptr);
+    if ((! str.c_str()[0]) || (endptr[0])) 
+        return dflt;
+    else
+        return n;
+}
+
+
 std::string xa::getDirectory(const std::string &fileName)
 {
     int idx = fileName.find_last_of('/');
