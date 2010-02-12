@@ -26,7 +26,11 @@ float xap::strToFloat(const std::string &str, float dflt)
     float n;
     char *endptr;
 
+#ifdef WINDOWS
+    n = (float)strtod(str.c_str(), &endptr);
+#else
     n = strtof(str.c_str(), &endptr);
+#endif
     if ((! str.c_str()[0]) || (endptr[0])) 
         return dflt;
     else

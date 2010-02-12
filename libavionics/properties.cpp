@@ -510,7 +510,11 @@ std::string Properties::getProps(PropRef prop, const std::string &dflt,
     }
 
     int sz = propsCallbacks->get_prop_string(prop, NULL, 0, err);
+#ifdef WINDOWS
+    char *buf = (char*)alloca(sz + 1);
+#else
     char buf[sz + 1];
+#endif
     propsCallbacks->get_prop_string(prop, buf, sz, err);
     if (*err) {
         if (! ignorePropsErrors)

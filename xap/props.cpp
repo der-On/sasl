@@ -287,7 +287,11 @@ static int getPropInt(PropRef property, int *err)
     if (xplmType_Data & type) {
         int len = XPLMGetDatab(prop->ref, NULL, 0, 0);
         if (0 < len) {
+#ifdef WINDOWS
+            char *buf = (char*)alloca(len + 1);
+#else
             char buf[len + 1];
+#endif
             XPLMGetDatab(prop->ref, buf, 0, len);
             buf[len] = 0;
             return strToInt(buf);
@@ -394,7 +398,11 @@ static float getPropFloat(PropRef property, int *err)
     if (xplmType_Data & type) {
         int len = XPLMGetDatab(prop->ref, NULL, 0, 0);
         if (0 < len) {
+#ifdef WINDOWS
+            char *buf = (char*)alloca(len + 1);
+#else
             char buf[len + 1];
+#endif
             XPLMGetDatab(prop->ref, buf, 0, len);
             buf[len] = 0;
             return strToFloat(buf);
@@ -500,7 +508,11 @@ static double getPropDouble(PropRef property, int *err)
     if (xplmType_Data & type) {
         int len = XPLMGetDatab(prop->ref, NULL, 0, 0);
         if (0 < len) {
+#ifdef WINDOWS
+            char *buf = (char*)alloca(len + 1);
+#else
             char buf[len + 1];
+#endif
             XPLMGetDatab(prop->ref, buf, 0, len);
             buf[len] = 0;
             return strToDouble(buf);

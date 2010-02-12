@@ -2,7 +2,9 @@
 #include <string>
 #include <vector>
 #include <string.h>
+#ifndef WINDOWS
 #include <stdint.h>
+#endif
 #include <stdio.h>
 #include "lownet.h"
 #include "md5.h"

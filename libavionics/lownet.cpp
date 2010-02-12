@@ -274,7 +274,7 @@ static bool canReceive(int sock)
 
 
 /// wait until socket can send data
-static bool waitForCanSend(int sock)
+static int waitForCanSend(int sock)
 {
     fd_set set;
 
