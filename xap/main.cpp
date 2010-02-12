@@ -15,6 +15,7 @@ extern "C" {
 #include "commands.h"
 #include "gui.h"
 #include "options.h"
+#include "xplua.h"
 
 
 // version of plug-in
@@ -498,38 +499,6 @@ static std::string getDataDir()
         "plugins" + sep + "xap" + sep + "data";
 }
 
-// pring log message
-static int luaLog(lua_State *L)
-{
-    std::string res;
-    int n = lua_gettop(L);  /* number of arguments */
-    lua_getglobal(L, "tostring");
-    for (int i = 1; i <= n; i++) {
-        lua_pushvalue(L, -1);  /* function to be called */
-        lua_pushvalue(L, i);   /* value to print */
-        lua_call(L, 1, 1);
-        const char *s = lua_tostring(L, -1);  /* get result */
-        if (! s)
-            return luaL_error(L, "tostring must return a string to print");
-        if (i > 1)
-           res += "\t";
-        res += s;
-        lua_pop(L, 1);  /* pop result */
-    }
-
-    printf("XAP: %s\n", res.c_str());
-    res += "\n";
-    XPLMDebugString(res.c_str());
-
-    return 0;
-}
-
-/// Export Lua functions
-static void exportToLua(lua_State *L)
-{
-    lua_register(L, "print", luaLog);
-}
-
 
 /// Destroy avionics
 /// \param keepProps if true, do not destroy properties
@@ -617,7 +586,7 @@ static void reloadPanel(bool keepProps)
                 XPLMDebugString("XAP: error starting server\n");
         }
 
-        exportToLua(xa_get_lua(xa));
+        exportLuaFunctions(xa_get_lua(xa));
         xa_set_props(xa, getPropsCallbacks(), props);
         xa_set_texture2d_binder_callback(xa, bindTexture2dCallback);
         xa_set_gen_tex_name_callback(xa, genTexNameCallback);
