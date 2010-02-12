@@ -979,6 +979,58 @@ static void setDoubleCallback(void *refcon, double value)
 }
 
 
+/// Returns value of string callback property
+static long getStringCallback(void *refcon, void *buf, int offset, long maxLen)
+{
+    FuncProperty *p = (FuncProperty*)refcon;
+    if (p && p->getter) {
+        if ((! offset) || (! buf))
+            return p->getter(PROP_STRING, buf, maxLen, p->data);
+        else {
+            int len = p->getter(PROP_STRING, NULL, 0, p->data);
+            if (len) {
+#ifdef WINDOWS
+                void *tbuf = alloca(len);
+#else
+                void *tbuf[len];
+#endif
+                p->getter(PROP_STRING, tbuf, len, p->data);
+                int realSz = len - offset;
+                if (realSz > maxLen)
+                    realSz = maxLen;
+                memcpy(buf, tbuf, realSz);
+                return realSz;
+            } else
+                return 0;
+        }
+    } else
+        return 0;
+}
+
+/// Set value of double callback property
+static void setStringCallback(void *refcon, void *value, int offset, long len)
+{
+    FuncProperty *p = (FuncProperty*)refcon;
+    if (p && p->setter) {
+        if (! offset)
+            p->setter(PROP_STRING, value, len, p->data);
+        else {
+            int newSize = offset + len;
+            int oldSize = p->getter(PROP_STRING, NULL, 0, p->data);
+            int bufSize = newSize > oldSize ? newSize : oldSize;
+#ifdef WINDOWS
+            void *buf = alloca(bufSize);
+#else
+            void *buf[bufSize];
+#endif
+            p->getter(PROP_STRING, buf, bufSize, p->data);
+            memcpy(buf + offset, value, len);
+            p->setter(PROP_STRING, &value, bufSize, p->data);
+        }
+    }
+}
+
+
 // create functional property
 static PropRef createFuncProp(Props props, const char *name, 
             int type, int size, xa_prop_getter_callback getter, 
@@ -1010,6 +1062,11 @@ static PropRef createFuncProp(Props props, const char *name,
             funcProp->ref = XPLMRegisterDataAccessor(name, xplmType_Double, 1,
                     NULL, NULL, NULL, NULL, getDoubleCallback, setDoubleCallback,
                     NULL, NULL, NULL, NULL, NULL, NULL, funcProp, funcProp);
+            break;
+        case PROP_STRING:
+            funcProp->ref = XPLMRegisterDataAccessor(name, xplmType_Data, 1,
+                    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                    getStringCallback, setStringCallback, funcProp, funcProp);
             break;
     }
 
