@@ -1019,7 +1019,7 @@ static void setStringCallback(void *refcon, void *value, int offset, long len)
             int oldSize = p->getter(PROP_STRING, NULL, 0, p->data);
             int bufSize = newSize > oldSize ? newSize : oldSize;
 #ifdef WINDOWS
-            void *buf = alloca(bufSize);
+            char *buf = (char*)alloca(bufSize);
 #else
             void *buf[bufSize];
 #endif
