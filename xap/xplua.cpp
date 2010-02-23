@@ -47,10 +47,56 @@ static int reloadScenery(lua_State *L)
 }
 
 
+// Lua wrapper for XPLMWorldToLocal function
+// takes 3 double values (lat, lon, alt)
+// returns 3 double values: x, y and z
+static int worldToLocal(lua_State *L)
+{
+    double lat, lon, alt;
+    double x, y, z;
+
+    lat = lua_tonumber(L, 1);
+    lon = lua_tonumber(L, 2);
+    alt = lua_tonumber(L, 3);
+
+    XPLMWorldToLocal(lat, lon, alt, &x, &y, &z);
+
+    lua_pushnumber(L, x);
+    lua_pushnumber(L, y);
+    lua_pushnumber(L, z);
+
+    return 3;
+}
+
+// Lua wrapper for XPLMLocalToWorld function
+// takes 3 double values (x, y and z)
+// returns 3 double values:lat, lon, alt
+static int localToWorld(lua_State *L)
+{
+    double lat, lon, alt;
+    double x, y, z;
+
+    x = lua_tonumber(L, 1);
+    y = lua_tonumber(L, 2);
+    z = lua_tonumber(L, 3);
+
+    XPLMLocalToWorld(x, y, z, &lat, &lon, &alt);
+
+    lua_pushnumber(L, lat);
+    lua_pushnumber(L, lon);
+    lua_pushnumber(L, alt);
+
+    return 3;
+}
+
+
+
 void xap::exportLuaFunctions(lua_State *L)
 {
     lua_register(L, "print", luaLog);
     lua_register(L, "reloadScenery", reloadScenery);
+    lua_register(L, "worldToLocal", worldToLocal);
+    lua_register(L, "localToWorld", localToWorld);
 }
 
 
