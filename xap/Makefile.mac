@@ -7,8 +7,8 @@ SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)
 
 SDKROOT=/Developer/SDKs/MacOSX10.4u.sdk
-OSXC=-arch i386 -arch ppc -universal -mmacosx-version-min=10.4 -isysroot $(SDKROOT)
-OSXL=-arch i386 -arch ppc -syslibroot=$(SDKROOT)
+OSXC=-arch i386 -mmacosx-version-min=10.4 -isysroot $(SDKROOT)
+OSXL=-arch i386 -syslibroot=$(SDKROOT)
 
 DEFS= -DAPL=1 -fPIC -m32 -fno-stack-protector -DXPLM200 -ggdb
 

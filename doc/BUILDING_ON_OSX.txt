@@ -1,5 +1,5 @@
-# Prerequisites: Developer tools INCLUDING the 10.4 SDK, an Intel mac.
-# This will get you a UNIVERSAL (!) plugin.
+# Prerequisites: Developer tools INCLUDING the 10.5 SDK, an Intel mac.
+# This will get you a i386 (32 bit) plugin.
 mkdir /tmp/xap-parts
 
 # Grab the X-Plane SDK and install it into /opt/x-plane
@@ -15,20 +15,18 @@ curl http://www.lua.org/ftp/lua-5.1.4.tar.gz | tar xfz -; cd lua-5.1.4
 # Alter the macosx build target for lua so that it gives you 10.4 compatible libraries
 # The line is in the src/Makefile for lua under macosx. Here is the explanation of what we need
 # http://lua-users.org/lists/lua-l/2008-08/msg00553.html
+cd src
 # Replace it just like so: 
 # macosx:
-#  $(MAKE) all MYCFLAGS="-DLUA_USE_POSIX -mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch i386 -arch ppc -universal" 
+#  $(MAKE) all MYCFLAGS="-DLUA_USE_POSIX -mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch i386" 
+cd ../
 make && sudo make install
 
 # 2. Grab, build and install SDL (from source, not the framework version!)
 cd /tmp/xap-parts
-curl http://www.libsdl.org/release/SDL-1.2.13.tar.gz | tar xfz -
-cd SDL-1.2.13
-# You can do ./configure && make && sudo make install but this will NOT be Universal. If you want to go Universal
-# then go to build-scripts/fatbuild.sh and replace all occurences of MacOSX10.3.9 with MacOSX10.4u (to build against the 10.4 SDK)
-# After the build is complete, 
-sudo build-scripts/fatbuild.sh install 
-# as usual. This way you obtain a linkable Universal SDL library that is not a MacOS framework
+curl http://www.libsdl.org/release/SDL-1.2.14.tar.gz | tar xfz -
+cd SDL-1.2.14
+./configure CFLAGS="-mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch i386" 
 
 # 3. Install and build SOIL (from source)
 cd /tmp/xap-parts
@@ -37,9 +35,9 @@ unzip soil.zip
 cd "Simple OpenGL Image Library/projects/makefile"
 mkdir obj # The author has forgotten
 # Now the same for SOIL - build for 10.4 and universal
-make CXXFLAGS="-mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch i386 -arch ppc -universal" && make install
+make CXXFLAGS="-mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch i386" LDFLAGS="-arch i836" && make install
 
-# Now build Slava, libavionics and xap
+# Now build libavionics, Slava and xap
 cd libavionics; make -f Makefile.mac
 cd ../slava; make -f Makefile.mac
 cd ../xap; make -f Makefile.mac

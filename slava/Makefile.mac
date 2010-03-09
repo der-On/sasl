@@ -3,9 +3,9 @@ HEADERS=$(wildcard *.h)
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)
 
-SDKROOT=/Developer/SDKs/MacOSX10.4u.sdk
-OSXC=-mmacosx-version-min=10.4 -isysroot $(SDKROOT) -arch ppc -arch i386 -universal
-OSXL=-syslibroot=$(SDKROOT) -arch ppc -arch i386
+SDKROOT=/Developer/SDKs/MacOSX10.5.sdk
+OSXC=-mmacosx-version-min=10.5 -isysroot $(SDKROOT)-arch i386
+OSXL=-syslibroot=$(SDKROOT) -arch i386
 
 # Add OS X Frameworks to linker paths too, assume SOIL and SDL are installed from source and into /usr/local (as is by default)
 CXXFLAGS+=-Wall -I/usr/local/include -I/usr/local/include/SDL -I/usr/include `sdl-config --cflags` -I../libavionics -m32 -ggdb $(OSXC)
