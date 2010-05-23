@@ -510,7 +510,6 @@ static int createSocket(int port)
 
 int TcpServer::start(int port)
 {
-printf("really starting\n");
     if (sock)
         stop();
 

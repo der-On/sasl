@@ -743,7 +743,8 @@ PLUGIN_API int XPluginEnable(void)
 PLUGIN_API void XPluginReceiveMessage(XPLMPluginID fromWho, 
         long message, void *param)
 {
-    if ((XPLM_MSG_PLANE_LOADED == message) && (! param))
+    if ((XPLM_MSG_PLANE_CRASHED == message) || 
+            ((XPLM_MSG_PLANE_LOADED == message) && (! param)))
         reloadPanel(false);
 }
 

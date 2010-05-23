@@ -611,7 +611,7 @@ function runHandler(component, name, x, y, button, path)
     local mx = (x - position[1]) * size[1] / position[3]
     local my = (y - position[2]) * size[2] / position[4]
     for i = #component.components, 1, -1 do
-        v = component.components[i]
+        local v = component.components[i]
         if get(v.visible) and isInRect(get(v.position), mx, my) then
             local res = runHandler(v, name, mx, my, button, path)
             if res then
@@ -911,5 +911,22 @@ function subpanel(tbl)
     popup(c)
 
     return c
+end
+
+-- call 'onAvionicsDone' function
+function doneComponent(component)
+    local handler = rawget(component, 'onAvionicsDone')
+    if handler then
+        return handler()
+    end
+    for i = #component.components, 1, -1 do
+        doneComponent(component.components[i])
+    end
+end
+
+-- called when avionics about to unload
+function doneAvionics()
+    doneComponent(popups)
+    doneComponent(panel)
 end
 

@@ -44,6 +44,9 @@ Avionics::Avionics(const std::string &path): path(path), clickEmulator(timer),
 
 Avionics::~Avionics()
 {
+    lua_State *L = lua.getLua();
+    lua_getglobal(L, "doneAvionics");        
+    lua_pcall(L, 0, 0, 0);
 }
 
 void Avionics::setPanelResolution(int width, int height)
@@ -80,7 +83,7 @@ void Avionics::setPopupResolution(int width, int height)
 void Avionics::loadPanel(const std::string &fileName)
 {
     std::string panelDir = getDirectory(fileName);
-    
+
     addSearchPath(panelDir);
     addSearchPath(panelDir + "/Custom Avionics");
     addSearchImagePath(panelDir + "/Custom Avionics/images");
