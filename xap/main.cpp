@@ -124,6 +124,21 @@ static XPLMDataRef screenHeight;
 /// type of panel view
 static XPLMDataRef viewType;
 
+// view camera orientation
+static XPLMDataRef viewX;
+static XPLMDataRef viewY;
+static XPLMDataRef viewZ;
+static XPLMDataRef viewPitch;
+static XPLMDataRef viewRoll;
+static XPLMDataRef viewHeading;
+
+// last mouse position
+static int lastMouseX = -1;
+static int lastMouseY = -1;
+static float lastPanelX = -1;
+static float lastPanelY = -1;
+
+
 /// Convert a Mac-style path with double colons to a POSIX path. Google for "FSRef to POSIX path"
 // if you want to know the ass-backwards way of doing it properly, but we won't link to Carbon
 // only for this mmkay?
@@ -444,23 +459,18 @@ static XPLMCursorStatus handleCursor(XPLMWindowID inWindowID, int x, int y,
     if (! xa)
         return xplm_CursorDefault;
 
-    static int lastX = -1;
-    static int lastY = -1;
-    static float lastPanelX = -1;
-    static float lastPanelY = -1;
-
-    if ((x != lastX) || (y != lastY)) {
-        lastX = x;
-        lastY = y;
+    if ((x != lastMouseX) || (y != lastMouseY)) {
+        lastMouseX = x;
+        lastMouseY = y;
         if (! xa_mouse_move(xa, x, y, 1)) {
             float px, py;
             getPanelCoords(x, y, px, py);
-            if ((px == lastPanelX) && (py == lastPanelY)) {
+/*            if ((px == lastPanelX) && (py == lastPanelY)) {
                 // 2d coords changed but panel position doesn't
                 // looks like mouse out of panel and x-plane bug in action
                 // let's move mouse to -1 -1 and hope it will be ok
                 xa_mouse_move(xa, -1, -1, 2);
-            } else
+            } else*/
                 xa_mouse_move(xa, (int)px, (int)py, 2);
             lastPanelX = px;
             lastPanelY = py;
@@ -627,15 +637,56 @@ static int reloadPanelCallback(XPLMCommandRef command, int phase, void *data)
     return 1;
 }
 
+
+// returns true if view changed since last function call
+static bool isViewTheSame()
+{
+    static float lastViewX = -1;
+    static float lastViewY = -1;
+    static float lastViewZ = -1;
+    static float lastViewPitch = -1;
+    static float lastViewRoll = -1;
+    static float lastViewHeading = -1;
+
+    bool same = true;
+
+    if ((lastViewX != XPLMGetDataf(viewX)) || 
+            (lastViewY != XPLMGetDataf(viewY)) ||
+            (lastViewZ != XPLMGetDataf(viewZ)) ||
+            (lastViewPitch != XPLMGetDataf(viewPitch)) ||
+            (lastViewRoll != XPLMGetDataf(viewRoll)) ||
+            (lastViewHeading != XPLMGetDataf(viewHeading)))
+        same = false;
+
+    lastViewX = XPLMGetDataf(viewX);
+    lastViewY = XPLMGetDataf(viewY);
+    lastViewZ = XPLMGetDataf(viewZ);
+    lastViewPitch = XPLMGetDataf(viewPitch);
+    lastViewRoll = XPLMGetDataf(viewRoll);
+    lastViewHeading = XPLMGetDataf(viewHeading);
+
+    return same;
+}
+
+
 static float updateAvionics(float elapsedSinceLastCall,    
                  float elapsedTimeSinceLastFlightLoop,  int counter,    
                  void *refcon)
 {
     if (xa && (! disabled)) {
-        
-        if (clicked) {
-        }
+        // try to fix clickable variables mess
+        // clickX and clickY doesn't updated by x-plane when cursor leaves
+        // current view.  let's reset it
+        XPLMSetDataf(clickX, -1);
+        XPLMSetDataf(clickY, -1);
 
+        // if camera position changed make 'virtual' mouse move to reset 
+        // cursor shape
+        if (! isViewTheSame()) {
+            lastMouseX = lastMouseY = -1;
+            handleCursor(fakeWindow, lastMouseX, lastMouseY, NULL);
+        }
+        
         xa_update(xa);
         return -1;
     }
@@ -705,6 +756,13 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc)
     cockpitGreen = XPLMFindDataRef("sim/graphics/misc/cockpit_light_level_g");
     cockpitBlue = XPLMFindDataRef("sim/graphics/misc/cockpit_light_level_b");
     cockpitTransparent = XPLMFindDataRef("sim/graphics/settings/transparent_panel");
+
+    viewX = XPLMFindDataRef("sim/graphics/view/view_x");
+    viewY = XPLMFindDataRef("sim/graphics/view/view_y");
+    viewZ = XPLMFindDataRef("sim/graphics/view/view_z");
+    viewPitch = XPLMFindDataRef("sim/graphics/view/view_pitch");
+    viewRoll = XPLMFindDataRef("sim/graphics/view/view_roll");
+    viewHeading = XPLMFindDataRef("sim/graphics/view/view_heading");
 
     return 1;
 }
