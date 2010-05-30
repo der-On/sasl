@@ -446,6 +446,8 @@ static XPLMCursorStatus handleCursor(XPLMWindowID inWindowID, int x, int y,
 
     static int lastX = -1;
     static int lastY = -1;
+    static float lastPanelX = -1;
+    static float lastPanelY = -1;
 
     if ((x != lastX) || (y != lastY)) {
         lastX = x;
@@ -453,7 +455,15 @@ static XPLMCursorStatus handleCursor(XPLMWindowID inWindowID, int x, int y,
         if (! xa_mouse_move(xa, x, y, 1)) {
             float px, py;
             getPanelCoords(x, y, px, py);
-            xa_mouse_move(xa, (int)px, (int)py, 2);
+            if ((px == lastPanelX) && (py == lastPanelY)) {
+                // 2d coords changed but panel position doesn't
+                // looks like mouse out of panel and x-plane bug in action
+                // let's move mouse to -1 -1 and hope it will be ok
+                xa_mouse_move(xa, -1, -1, 2);
+            } else
+                xa_mouse_move(xa, (int)px, (int)py, 2);
+            lastPanelX = px;
+            lastPanelY = py;
         }
     }
 
