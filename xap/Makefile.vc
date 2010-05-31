@@ -4,7 +4,7 @@ TARGET=win.xpl
 HEADERS=$(wildcard *.h)
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.obj)
-SDK=d:/x-plane\ 9/SDK
+SDK=e:/x-plane\ 9/SDK
 
 CXX=cl
 LD=link

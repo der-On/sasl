@@ -1,6 +1,7 @@
 #include <string>
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 
 extern "C" {
 #include <lua.h>
@@ -137,6 +138,9 @@ static int lastMouseX = -1;
 static int lastMouseY = -1;
 static float lastPanelX = -1;
 static float lastPanelY = -1;
+
+// disable processing of clicks in 3D panel
+static bool disablePanelClicks = false;
 
 
 /// Convert a Mac-style path with double colons to a POSIX path. Google for "FSRef to POSIX path"
@@ -443,14 +447,17 @@ static int handleMouseClick(XPLMWindowID window, int panelX, int panelY,
     }
 
     // process panel layer
-    float x, y;
-    getPanelCoords(panelX, panelY, x, y);
-    int res = handleMouseLayerClick((int)x, (int)y, status, 2);
-    if (res && (xplm_MouseDown == status))
-        clicked = true;
-    if ((! res) && (xplm_MouseDown == status))
-        handleMouseLayerClick((int)x, (int)y, xplm_MouseUp, 2);
-    return res;
+    if (! disablePanelClicks) {
+        float x, y;
+        getPanelCoords(panelX, panelY, x, y);
+        int res = handleMouseLayerClick((int)x, (int)y, status, 2);
+        if (res && (xplm_MouseDown == status))
+            clicked = true;
+        if ((! res) && (xplm_MouseDown == status))
+            handleMouseLayerClick((int)x, (int)y, xplm_MouseUp, 2);
+        return res;
+    } else
+        return 0;
 }
 
 static XPLMCursorStatus handleCursor(XPLMWindowID inWindowID, int x, int y, 
@@ -465,15 +472,18 @@ static XPLMCursorStatus handleCursor(XPLMWindowID inWindowID, int x, int y,
         if (! xa_mouse_move(xa, x, y, 1)) {
             float px, py;
             getPanelCoords(x, y, px, py);
-/*            if ((px == lastPanelX) && (py == lastPanelY)) {
+            if ((px == lastPanelX) && (py == lastPanelY)) {
                 // 2d coords changed but panel position doesn't
                 // looks like mouse out of panel and x-plane bug in action
                 // let's move mouse to -1 -1 and hope it will be ok
                 xa_mouse_move(xa, -1, -1, 2);
-            } else*/
+                disablePanelClicks = true;
+            } else {
+                disablePanelClicks = false;
                 xa_mouse_move(xa, (int)px, (int)py, 2);
-            lastPanelX = px;
-            lastPanelY = py;
+                lastPanelX = px;
+                lastPanelY = py;
+            }
         }
     }
 
@@ -650,13 +660,15 @@ static bool isViewTheSame()
 
     bool same = true;
 
-    if ((lastViewX != XPLMGetDataf(viewX)) || 
-            (lastViewY != XPLMGetDataf(viewY)) ||
-            (lastViewZ != XPLMGetDataf(viewZ)) ||
-            (lastViewPitch != XPLMGetDataf(viewPitch)) ||
-            (lastViewRoll != XPLMGetDataf(viewRoll)) ||
-            (lastViewHeading != XPLMGetDataf(viewHeading)))
+    if ((fabs(lastViewX - XPLMGetDataf(viewX)) > 0.001) || 
+            (fabs(lastViewY - XPLMGetDataf(viewY)) > 0.001) ||
+            (fabs(lastViewZ - XPLMGetDataf(viewZ)) > 0.001) ||
+            (fabs(lastViewPitch - XPLMGetDataf(viewPitch)) > 0.001) ||
+            (fabs(lastViewRoll - XPLMGetDataf(viewRoll)) > 0.001) ||
+            (fabs(lastViewHeading - XPLMGetDataf(viewHeading)) > 0.001))
+    {
         same = false;
+    }
 
     lastViewX = XPLMGetDataf(viewX);
     lastViewY = XPLMGetDataf(viewY);
@@ -677,14 +689,15 @@ static float updateAvionics(float elapsedSinceLastCall,
         // try to fix clickable variables mess
         // clickX and clickY doesn't updated by x-plane when cursor leaves
         // current view.  let's reset it
-        XPLMSetDataf(clickX, -1);
-        XPLMSetDataf(clickY, -1);
+/*        XPLMSetDataf(clickX, -1);
+        XPLMSetDataf(clickY, -1);*/
 
         // if camera position changed make 'virtual' mouse move to reset 
         // cursor shape
         if (! isViewTheSame()) {
-            lastMouseX = lastMouseY = -1;
-            handleCursor(fakeWindow, lastMouseX, lastMouseY, NULL);
+            lastMouseX = -10;
+            lastMouseY = -10;
+            handleCursor(fakeWindow, -1, -1, NULL);
         }
         
         xa_update(xa);
@@ -734,6 +747,8 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc)
     sprintf(outDesc, "X-Plane scriptable avionics library plugin v%i.%i.%i", 
             VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
 #endif
+    XPLMDebugString(outDesc);
+    XPLMDebugString("\n");
 
     viewType = XPLMFindDataRef("sim/graphics/view/view_type");
     //windowLeft = XPLMFindDataRef("sim/graphics/view/panel_total_win_l");
