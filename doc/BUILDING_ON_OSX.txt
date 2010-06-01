@@ -17,7 +17,7 @@ curl http://www.lua.org/ftp/lua-5.1.4.tar.gz | tar xfz -; cd lua-5.1.4
 # http://lua-users.org/lists/lua-l/2008-08/msg00553.html
 cd src
 make macosx CFLAGS="-DLUA_USE_POSIX -mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch i386 -arch ppc -universal" 
-sudo make install
+cd ../; sudo make install
 
 # 2. Grab, build and install SDL (from source, not the framework version since we will be making a Mach-O dylib!)
 cd /tmp/xap-parts
