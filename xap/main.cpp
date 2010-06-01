@@ -661,15 +661,17 @@ static bool isViewTheSame()
     static float lastViewPitch = -1;
     static float lastViewRoll = -1;
     static float lastViewHeading = -1;
+    static int lastViewType = -1;
 
     bool same = true;
 
-    if ((fabs(lastViewX - XPLMGetDataf(viewX)) > 0.001) || 
-            (fabs(lastViewY - XPLMGetDataf(viewY)) > 0.001) ||
-            (fabs(lastViewZ - XPLMGetDataf(viewZ)) > 0.001) ||
-            (fabs(lastViewPitch - XPLMGetDataf(viewPitch)) > 0.001) ||
-            (fabs(lastViewRoll - XPLMGetDataf(viewRoll)) > 0.001) ||
-            (fabs(lastViewHeading - XPLMGetDataf(viewHeading)) > 0.001))
+    if ((fabs(lastViewX - XPLMGetDataf(viewX)) > 0.01) || 
+            (fabs(lastViewY - XPLMGetDataf(viewY)) > 0.01) ||
+            (fabs(lastViewZ - XPLMGetDataf(viewZ)) > 0.01) ||
+            (fabs(lastViewPitch - XPLMGetDataf(viewPitch)) > 0.01) ||
+            (fabs(lastViewRoll - XPLMGetDataf(viewRoll)) > 0.01) ||
+            (fabs(lastViewHeading - XPLMGetDataf(viewHeading)) > 0.01) ||
+            (lastViewType != XPLMGetDatai(viewType)))
     {
         same = false;
     }
@@ -680,6 +682,7 @@ static bool isViewTheSame()
     lastViewPitch = XPLMGetDataf(viewPitch);
     lastViewRoll = XPLMGetDataf(viewRoll);
     lastViewHeading = XPLMGetDataf(viewHeading);
+    lastViewType = XPLMGetDatai(viewType);
 
     return same;
 }
@@ -776,12 +779,13 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc)
     cockpitBlue = XPLMFindDataRef("sim/graphics/misc/cockpit_light_level_b");
     cockpitTransparent = XPLMFindDataRef("sim/graphics/settings/transparent_panel");
 
-    viewX = XPLMFindDataRef("sim/graphics/view/view_x");
-    viewY = XPLMFindDataRef("sim/graphics/view/view_y");
-    viewZ = XPLMFindDataRef("sim/graphics/view/view_z");
-    viewPitch = XPLMFindDataRef("sim/graphics/view/view_pitch");
-    viewRoll = XPLMFindDataRef("sim/graphics/view/view_roll");
-    viewHeading = XPLMFindDataRef("sim/graphics/view/view_heading");
+    viewX = XPLMFindDataRef("sim/graphics/view/pilots_head_x");
+    viewY = XPLMFindDataRef("sim/graphics/view/pilots_head_y");
+    viewZ = XPLMFindDataRef("sim/graphics/view/pilots_head_z");
+    viewPitch = XPLMFindDataRef("sim/graphics/view/pilots_head_the");
+    viewRoll = XPLMFindDataRef("sim/graphics/view/pilots_head_psi");
+    viewHeading = XPLMFindDataRef("sim/graphics/view/cockpit_heading");
+    viewType = XPLMFindDataRef("sim/graphics/view/view_type");
 
     return 1;
 }
