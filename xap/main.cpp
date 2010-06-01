@@ -444,7 +444,11 @@ static int handleMouseClick(XPLMWindowID window, int panelX, int panelY,
         if (xplm_MouseDown == status)
             clicked = true;
         return 1;
-    }
+    } else
+        if (disablePanelClicks) {
+            handleMouseLayerClick(panelX, panelY, xplm_MouseUp, 1);
+            return 0;
+        }
 
     // process panel layer
     if (! disablePanelClicks) {
