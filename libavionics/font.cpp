@@ -310,17 +310,17 @@ void xa::drawFont(Font* font, int x, int y, const char *str,
             GLfloat gXO = glyph.xOffset;
             GLfloat gYO = font->base - (glyph.yOffset + gH);
 
-            glTexCoord2f(gX / tW, (gY + gH) / tH);
-            glVertex2f(posX + gXO, y + gYO);
-
-            glTexCoord2f((gX + gW) / tW, (gY + gH) / tH);
-            glVertex2f(posX + gW + gXO, y + gYO);
-
-            glTexCoord2f((gX + gW) / tW, gY / tH);
-            glVertex2f(posX + gW + gXO, y + gH + gYO);
-
-            glTexCoord2f(gX / tW, gY / tH);
+            glTexCoord2f(gX / tW, gY / tH); 
             glVertex2f(posX + gXO, y + gH + gYO);
+            
+            glTexCoord2f((gX + gW) / tW, gY / tH); 
+            glVertex2f(posX + gW + gXO, y + gH + gYO);
+            
+            glTexCoord2f((gX + gW) / tW, (gY + gH) / tH); 
+            glVertex2f(posX + gW + gXO, y + gYO);
+            
+            glTexCoord2f(gX / tW, (gY + gH) / tH); 
+            glVertex2f(posX + gXO, y + gYO);
 
             posX += glyph.xAdvance;
         }
