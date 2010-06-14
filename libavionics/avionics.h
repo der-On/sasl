@@ -66,6 +66,9 @@ class Avionics
         /// Commands API
         Commands commands;
 
+        /// Graphics functions
+        XaGraphicsCallbacks *graphics;
+
     public:
         /// Initialize avionics internal data
         Avionics(const std::string &path);
@@ -149,6 +152,12 @@ class Avionics
 
         /// Returns lua wrapper
         Luna& getLuna() { return lua; };
+
+        /// Set graphics callbacks
+        void setGraphicsCallbacks(XaGraphicsCallbacks *callbacks);
+
+        /// Returns grpahics callbacks.
+        struct XaGraphicsCallbacks* getGraphics() { return graphics; };
 
     private:
         /// Add path to components search list

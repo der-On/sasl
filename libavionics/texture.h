@@ -5,7 +5,6 @@
 #include <string>
 #include "luna.h"
 #include "xcallbacks.h"
-#include "glheaders.h"
 
 namespace xa {
 
@@ -23,28 +22,25 @@ class Texture
         int id;
 
         /// Width of texture
-        GLint width;
+        int width;
 
         /// Height of texture
-        GLint height;
-        
-        /// Texture binder callback
-        xa_bind_texture_2d_callback binderCallback;
+        int height;
+ 
+        /// Reference to texture manager
+        TextureManager *manager;
 
     private:
-        /// Create empty texture object
-        Texture();
-
         /// Create texture object
-        Texture(int id, xa_bind_texture_2d_callback binderCallback);
+        Texture(int id, int width, int height, TextureManager *manager);
 
     public:
         /// Destroy texture
         ~Texture();
 
     public:
-        /// Make texture active.
-        void bind();
+        /// returns texture ID.
+        int getId() const { return id; }
 
         /// Returns width of texture
         int getWidth() const { return width; }
@@ -103,11 +99,8 @@ class TextureManager
         /// Textures parts cache
         TexturesParts parts;
 
-        /// Texture binder callback
-        xa_bind_texture_2d_callback binderCallback;
-
-        /// Texture ID generator callback
-        xa_gen_tex_name_callback genTexNameCallback;
+        /// Graphics funtions
+        XaGraphicsCallbacks *graphics;
         
     public:
         /// Create texture manager
@@ -129,12 +122,12 @@ class TextureManager
 
         /// Unload all textures
         void unloadAll();
-        
-        /// Setup texture binder callback
-        void setBinder(xa_bind_texture_2d_callback binderCallback);
 
-        /// Setup texture ID generator callback
-        void setTexNameGenerator(xa_gen_tex_name_callback genTexNameCallback);
+        /// set graphics callbacks
+        void setGraphicsCallbacks(struct XaGraphicsCallbacks *graphics);
+
+        /// Returns graphics API
+        XaGraphicsCallbacks* getGraphics() { return graphics; }
 
     private:
         /// Load image from file or return cached image if already loaded.

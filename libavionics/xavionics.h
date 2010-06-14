@@ -5,7 +5,7 @@
 /// It contains basic features for avionics modeling.
 
 
-#ifndef __cplusplus
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -114,17 +114,11 @@ int xa_update(XA xa);
 /// \param stage what to draw: STAGE_GAUGES, STAGE_POPUPS or STAGE_ALL
 int xa_draw_panel(XA xa, int stage);
 
-/// Setup texture binder function
+/// Setup graphics functions
 /// \param xa X-Avionics handler.
-/// \param binder texture binder. if NULL default OpenGL function will be used
-void xa_set_texture2d_binder_callback(XA xa, 
-        xa_bind_texture_2d_callback binder);
-
-/// Setup texture name generator function.
-/// \param xa X-Avionics handler.
-/// \param generator ID generator. if NULL default OpenGL function will be used
-void xa_set_gen_tex_name_callback(XA xa, xa_gen_tex_name_callback generator);
-
+/// \param callbacks graphics callbacks functions.
+void xa_set_graphics_callbacks(XA xa, 
+        struct XaGraphicsCallbacks *callbacks);
 
 /// Returns pointer to LUA machine
 /// \param xa X-Avionics handler.
@@ -253,8 +247,8 @@ int xa_connect_to_server(XA xa, const char *host, int port,
         const char *secret);
 
 
-#ifndef __cplusplus
-extern "C" {
+#if defined(__cplusplus)
+}  /* extern "C" */
 #endif
 
 

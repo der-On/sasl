@@ -1,5 +1,4 @@
 #include "avionics.h"
-#include "glheaders.h"
 
 #include "exception.h"
 #include "graph.h"
@@ -7,6 +6,7 @@
 #include "xconsts.h"
 #include "propsserv.h"
 #include "utils.h"
+#include "graphstub.h"
 
 
 using namespace xa;
@@ -19,6 +19,7 @@ Avionics::Avionics(const std::string &path): path(path), clickEmulator(timer),
 {
     panelWidth = popupWidth = 1024;
     panelHeight = popupHeight = 768;
+    setGraphicsCallbacks(getGraphicsStub());
 
     bgR = bgG = bgB = 1.0f;
     bgA = 0.0f;
@@ -134,10 +135,9 @@ void Avionics::update()
 
 void Avionics::draw(int stage)
 {
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
     lua_State *L = lua.getLua();
+
+    graphics->draw_begin(graphics);
 
     const char *drawFunc;
     switch (stage) {
@@ -159,6 +159,8 @@ void Avionics::draw(int stage)
         lua_pop(L, 1);
         EXCEPTION("Error drawing panel: " + msg);
     }
+    
+    graphics->draw_end(graphics);
 }
 
 void Avionics::addSearchPath(const std::string &path)
@@ -303,5 +305,11 @@ void Avionics::setCommandsCallbacks(XaCommandCallbacks *callbacks,
         void *data)
 {
     commands.setCallbacks(callbacks, data);
+}
+
+void Avionics::setGraphicsCallbacks(XaGraphicsCallbacks *callbacks)
+{
+    graphics = callbacks;
+    textureManager.setGraphicsCallbacks(callbacks);
 }
 

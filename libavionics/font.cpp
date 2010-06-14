@@ -8,8 +8,6 @@
 #include "unicode.h"
 #include "avionics.h"
 
-#include "glheaders.h"
-
 
 
 using namespace xa;
@@ -277,8 +275,8 @@ int xa::getFontWidth(struct Font* font, const char *str)
 }
 
 
-void xa::drawFont(Font* font, int x, int y, const char *str,
-        float r, float g, float b, float a)
+void xa::drawFont(Font* font, XaGraphicsCallbacks *graphics, double x, double y, 
+        const char *str, double r, double g, double b, double a)
 {
     if (! font)
         return;
@@ -288,45 +286,38 @@ void xa::drawFont(Font* font, int x, int y, const char *str,
     if (! len)
         return;
 
-    GLfloat tW = font->texture->getTexture()->getWidth();
-    GLfloat tH = font->texture->getTexture()->getHeight();
-
-    glEnable(GL_TEXTURE_2D);
-    font->texture->getTexture()->bind();
-    glColor4f(r, g, b, a);
-    glBegin(GL_QUADS);
+    double tW = font->texture->getTexture()->getWidth();
+    double tH = font->texture->getTexture()->getHeight();
 
     int posX = x;
     for (int i = 0; i < len; i++) {
         int chr = ws[i];
-        std::map<int, Glyph>::iterator g = font->glyphs.find(chr);
-        if (g != font->glyphs.end()) {
-            Glyph &glyph = (*g).second;
+        std::map<int, Glyph>::iterator gl = font->glyphs.find(chr);
+        if (gl != font->glyphs.end()) {
+            Glyph &glyph = (*gl).second;
 
-            GLfloat gX = glyph.x;
-            GLfloat gY = glyph.y;
-            GLfloat gW = glyph.width;
-            GLfloat gH = glyph.height;
-            GLfloat gXO = glyph.xOffset;
-            GLfloat gYO = font->base - (glyph.yOffset + gH);
+            double gX = glyph.x;
+            double gY = glyph.y;
+            double gW = glyph.width;
+            double gH = glyph.height;
+            double gXO = glyph.xOffset;
+            double gYO = font->base - (glyph.yOffset + gH);
 
-            glTexCoord2f(gX / tW, gY / tH); 
-            glVertex2f(posX + gXO, y + gH + gYO);
-            
-            glTexCoord2f((gX + gW) / tW, gY / tH); 
-            glVertex2f(posX + gW + gXO, y + gH + gYO);
-            
-            glTexCoord2f((gX + gW) / tW, (gY + gH) / tH); 
-            glVertex2f(posX + gW + gXO, y + gYO);
-            
-            glTexCoord2f(gX / tW, (gY + gH) / tH); 
-            glVertex2f(posX + gXO, y + gYO);
+            graphics->draw_textured_triangle(graphics, 
+                font->texture->getTexture()->getId(),
+                posX + gXO, y + gH + gYO, gX / tW, gY / tH, r, g, b, a,
+                posX + gXO + gW, y + gH + gYO, (gX + gW) / tW, gY / tH, r, g, b, a,
+                posX + gW + gXO, y + gYO, (gX + gW) / tW, (gY + gH) / tH, r, g, b, a);
+            graphics->draw_textured_triangle(graphics, 
+                font->texture->getTexture()->getId(),
+                posX + gW + gXO, y + gYO, (gX + gW) / tW, (gY + gH) / tH, r, g, b, a,
+                posX + gXO, y + gYO, gX / tW, (gY + gH) / tH, r, g, b, a,
+                posX + gXO, y + gH + gYO, gX / tW, gY / tH, r, g, b, a);
 
             posX += glyph.xAdvance;
         }
     }
 
-    glEnd();
 }
 
 

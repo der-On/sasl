@@ -176,18 +176,13 @@ int xa_enable_click_emulator(XA xa, int enable)
     return 0;
 }
 
-void xa_set_gen_tex_name_callback(XA xa, xa_gen_tex_name_callback generator)
+void xa_set_graphics_callbacks(XA xa, 
+        struct XaGraphicsCallbacks *callbacks)
 {
     assert(xa && xa->avionics);
-    xa->avionics->getTextureManager()->setTexNameGenerator(generator);
+    xa->avionics->setGraphicsCallbacks(callbacks);
 }
 
-void xa_set_texture2d_binder_callback(XA xa, 
-        xa_bind_texture_2d_callback binder)
-{
-    assert(xa && xa->avionics);
-    xa->avionics->getTextureManager()->setBinder(binder);
-}
 
 struct lua_State* xa_get_lua(XA xa)
 {

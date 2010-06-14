@@ -27,6 +27,15 @@ if [ $? != 0 ] ; then
     exit -1
 fi
 
+# build opengl graphics
+cd libogl
+make clean
+make 
+if [ $? != 0 ] ; then
+    echo "Can't build libogl!"
+    exit -1
+fi
+
 # build x-plane plugin
 cd ../xap
 make clean
@@ -52,7 +61,7 @@ cp -r ../doc $DIR/
 mkdir $DIR/xap
 cp ../xap/lin.xpl $DIR/xap/
 strip --strip-all $DIR/xap/lin.xpl
-cp /mnt/windows/asso/sasl/xap/win.xpl $DIR/xap/
+cp /mnt/space/asso/sasl/xap/win.xpl $DIR/xap/
 cp -r ../data $DIR/xap
 find $DIR -name .svn -exec rm -rf {} ';'
 
@@ -96,7 +105,7 @@ cp -r ../panels ${DIR}
 strip --strip-all ${DIR}/slava
 cp ../slava/slava-dist.sh ${DIR}/slava.sh
 cp ../slava/slava-dist.bat ${DIR}/slava.bat
-cp /mnt/windows/asso/sasl/slava/slava.exe ${DIR}
+cp /mnt/space/asso/sasl/slava/slava.exe ${DIR}
 cp ../../SDL.dll ${DIR}
 cp -r ../data ${DIR}
 find ${DIR} -name .svn -exec rm -rf {} ';'

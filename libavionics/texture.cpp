@@ -1,46 +1,23 @@
 #include "texture.h"
-#include "glheaders.h"
 
 #include "utils.h"
 #include "luna.h"
 #include "avionics.h"
-#include "texloader.h"
 
 
 using namespace xa;
 
 
-TextureManager textureManager;
 
-
-
-Texture::Texture(): id(0)
+Texture::Texture(int id, int width, int height, TextureManager *manager):
+    id(id), width(width), height(height), manager(manager)
 {
-    binderCallback = NULL;
-}
-
-Texture::Texture(int id, xa_bind_texture_2d_callback binder): id(id)
-{
-    binderCallback = binder;
-    bind();
-    
-    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width); 
-    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height); 
 }
 
 Texture::~Texture()
 {
-    glDeleteTextures(1, (const GLuint*)&id);
+    manager->getGraphics()->free_texture(manager->getGraphics(), id);
 }
-
-void Texture::bind()
-{
-    if (binderCallback)
-        binderCallback(id);
-    else
-        glBindTexture(GL_TEXTURE_2D, id);
-}
-
 
 
 
@@ -58,8 +35,6 @@ TexturePart::TexturePart(Texture *tex, double x1, double y1,
 
 TextureManager::TextureManager()
 {
-    binderCallback = NULL;
-    genTexNameCallback = NULL;
 }
 
 TextureManager::~TextureManager()
@@ -75,22 +50,13 @@ Texture* TextureManager::loadImage(const std::string &fileName)
     if (i != cache.end()) {
         return (*i).second;
     } else {
-        GLuint id = 0;
-        if (genTexNameCallback)
-            id = genTexNameCallback();
-        else
-            glGenTextures(1, &id);
-        id = loadTexture(fileName.c_str(), id);
-        if (! id)
+        int width, height;
+        int id = graphics->load_texture(graphics, fileName.c_str(), 
+                &width, &height);
+        if (-1 == id)
             return NULL;
         
-        // it is wrong, but i don't want patch SOIL
-        if (binderCallback)
-            binderCallback(id);
-        else
-            glBindTexture(GL_TEXTURE_2D, id);
-
-        Texture *tex = new Texture(id, binderCallback);
+        Texture *tex = new Texture(id, width, height, this);
         cache[fileName] = tex;
         return tex;
     }
@@ -200,15 +166,11 @@ void TextureManager::unloadAll()
     cache.clear();
 }
 
-void TextureManager::setBinder(xa_bind_texture_2d_callback c)
+void TextureManager::setGraphicsCallbacks(struct XaGraphicsCallbacks *callbacks)
 {
-    binderCallback = c;
+    graphics = callbacks;
 }
 
-void TextureManager::setTexNameGenerator(xa_gen_tex_name_callback c)
-{
-    genTexNameCallback = c;
-}
 
 /// Lua wrapper for texture manager
 static int luaLoadImage(lua_State *L)

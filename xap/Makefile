@@ -9,9 +9,9 @@ SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)
 
 DEFS= -DLIN=1 -fPIC -m32 -fno-stack-protector -DXPLM200 -ggdb
-CXXFLAGS+=-Wall -I$(SDK)/CHeaders/XPLM -I$(SDK)/CHeaders/Widgets -I/usr/include/lua5.1 -I../libavionics $(DEFS)
-LNFLAGS+=-shared -rdynamic -nodefaultlibs -m32 -ggdb -L/usr/lib32 -L../libavionics
-LIBS+=-llua5.1 -lm -lxavionics -lSOIL32 #$(PLUGINS)/XPLM.so $(PLUGINS)/XPWidgets.so
+CXXFLAGS+=-Wall -I$(SDK)/CHeaders/XPLM -I$(SDK)/CHeaders/Widgets -I/usr/include/lua5.1 -I../libavionics -I../libogl $(DEFS)
+LNFLAGS+=-shared -rdynamic -nodefaultlibs -m32 -ggdb -L/usr/lib32 -L../libavionics -L../libogl
+LIBS+=-llua5.1 -lm -lxavionics -logl -lSOIL32 #$(PLUGINS)/XPLM.so $(PLUGINS)/XPWidgets.so
 
 all: $(TARGET)
 

@@ -1,21 +1,11 @@
 #ifndef __X_CALLBACKS_H__
 #define __X_CALLBACKS_H__
 
-#ifndef __cplusplus
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
     
-/// Texture binder callback.
-/// This is because of X-Plane use strange texture system
-/// \param textureId texture ID
-typedef void (*xa_bind_texture_2d_callback)(int textureId);
-
-
-/// Generates ID for one texture
-typedef int (*xa_gen_tex_name_callback)();
-
-
 // properties related callbacks
 
 // Points to internal properties structures
@@ -171,8 +161,93 @@ struct XaCommandCallbacks {
 };
 
 
-#ifndef __cplusplus
-extern "C" {
+
+//
+// graphics API
+//
+
+/// forward declaration of graphics structure
+struct XaGraphicsCallbacks;
+
+/// initialize graphics before frame start
+typedef void (*xa_draw_begin)(struct XaGraphicsCallbacks *canvas);
+
+/// flush drawed graphics to screen
+typedef void (*xa_draw_end)(struct XaGraphicsCallbacks *canvas);
+
+/// load texture to memory.
+/// Returns texture ID or -1 on failure.  On success returns texture width
+//  and height in pixels
+typedef int (*xa_load_texture)(struct XaGraphicsCallbacks *canvas,
+        const char *name, int *width, int *height);
+
+// Unload texture from video memory.
+typedef void (*xa_free_texture)(struct XaGraphicsCallbacks *canvas, 
+        int textureId);
+
+// draw line of specified color.
+typedef void (*xa_draw_line)(struct XaGraphicsCallbacks *canvas, double x1,
+        double y1, double x2, double y2, double r, double g, double b, double a);
+
+// draw untextured triangle.
+typedef void (*xa_draw_triangle)(struct XaGraphicsCallbacks *canvas, 
+        double x1, double y1, double r1, double g1, double b1, double a1,
+        double x2, double y2, double r2, double g2, double b2, double a2,
+        double x3, double y3, double r3, double g3, double b3, double a3);
+
+// draw textured triangle.
+typedef void (*xa_draw_textured_triangle)(struct XaGraphicsCallbacks *canvas, 
+        int textureId,
+        double x1, double y1, double u1, double v1, double r1, double g1, double b1, double a1,
+        double x2, double y2, double u2, double v2, double r2, double g2, double b2, double a2,
+        double x3, double y3, double u3, double v3, double r3, double g3, double b3, double a3);
+
+// enable clipping to rectangle
+typedef void (*xa_set_clip_area)(struct XaGraphicsCallbacks *canvas, 
+        double x1, double y1, double x2, double y2);
+
+// disable clipping.
+typedef void (*xa_reset_clip_area)(struct XaGraphicsCallbacks *canvas);
+
+// push affine translation state
+typedef void (*xa_push_transform)(struct XaGraphicsCallbacks *canvas);
+
+// pop affine transform state
+typedef void (*xa_pop_transform)(struct XaGraphicsCallbacks *canvas);
+
+// apply move transform to current state
+typedef void (*xa_translate_transform)(struct XaGraphicsCallbacks *canvas, 
+        double x, double y);
+
+// apply scale transform to current state
+typedef void (*xa_scale_transform)(struct XaGraphicsCallbacks *canvas, 
+        double x, double y);
+
+// apply rotate transform to current state
+typedef void (*xa_rotate_transform)(struct XaGraphicsCallbacks *canvas, 
+        double angle);
+
+// grpahics callbacks
+struct XaGraphicsCallbacks {
+    xa_draw_begin draw_begin;
+    xa_draw_end draw_end;
+    xa_load_texture load_texture;
+    xa_free_texture free_texture;
+    xa_draw_line draw_line;
+    xa_draw_triangle draw_triangle;
+    xa_draw_textured_triangle draw_textured_triangle;
+    xa_set_clip_area set_clip_area;
+    xa_reset_clip_area reset_clip_area;
+    xa_push_transform push_transform;
+    xa_pop_transform pop_transform;
+    xa_translate_transform translate_transform;
+    xa_scale_transform scale_transform;
+    xa_rotate_transform rotate_transform;
+};
+
+
+#if defined(__cplusplus)
+}  /* extern "C" */
 #endif
 
 

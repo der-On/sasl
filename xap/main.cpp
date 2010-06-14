@@ -17,6 +17,7 @@ extern "C" {
 #include "gui.h"
 #include "options.h"
 #include "xplua.h"
+#include "ogl.h"
 
 
 // version of plug-in
@@ -141,6 +142,9 @@ static float lastPanelY = -1;
 
 // disable processing of clicks in 3D panel
 static bool disablePanelClicks = false;
+
+// OpenGL graphics functions
+static XaGraphicsCallbacks* graphics;
 
 
 /// Convert a Mac-style path with double colons to a POSIX path. Google for "FSRef to POSIX path"
@@ -354,6 +358,7 @@ static int drawGauges(XPLMDrawingPhase phase, int isBefore, void *refcon)
     
         glPopMatrix();
     }
+
     return 1;
 }
 
@@ -372,6 +377,7 @@ static int drawPopups(XPLMDrawingPhase phase, int isBefore, void *refcon)
     
         glPopMatrix();
     }
+
     return 1;
 }
 
@@ -604,6 +610,7 @@ static void reloadPanel(bool keepProps)
 
         xa = xa_init(dataDir.c_str());
         xa_enable_click_emulator(xa, 1);
+        xa_set_graphics_callbacks(xa, graphics);
         registerCommandsApi(xa);
 
         if (! props)
@@ -622,8 +629,6 @@ static void reloadPanel(bool keepProps)
 
         exportLuaFunctions(xa_get_lua(xa));
         xa_set_props(xa, getPropsCallbacks(), props);
-        xa_set_texture2d_binder_callback(xa, bindTexture2dCallback);
-        xa_set_gen_tex_name_callback(xa, genTexNameCallback);
         if (xa_load_panel(xa, panelPath.c_str())) {
             XPLMDebugString("XAP: Can't load avionics\n");
             freeAvionics(keepProps);
@@ -693,12 +698,6 @@ static float updateAvionics(float elapsedSinceLastCall,
                  void *refcon)
 {
     if (xa && (! disabled)) {
-        // try to fix clickable variables mess
-        // clickX and clickY doesn't updated by x-plane when cursor leaves
-        // current view.  let's reset it
-/*        XPLMSetDataf(clickX, -1);
-        XPLMSetDataf(clickY, -1);*/
-
         // if camera position changed make 'virtual' mouse move to reset 
         // cursor shape
         if (! isViewTheSame()) {
@@ -787,13 +786,18 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc)
     viewHeading = XPLMFindDataRef("sim/graphics/view/cockpit_heading");
     viewType = XPLMFindDataRef("sim/graphics/view/view_type");
 
+    graphics = xagl_init_graphics();
+    xagl_set_texture2d_binder_callback(graphics, bindTexture2dCallback);
+    xagl_set_gen_tex_name_callback(graphics, genTexNameCallback);
+
     return 1;
 }
 
 // clean up before die
 PLUGIN_API void	XPluginStop(void)
 {
-    /// Clean up
+    xagl_done_graphics(graphics);
+    graphics = NULL;
 }
 
 
