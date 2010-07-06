@@ -15,6 +15,7 @@
 #endif
 
 #include "xavionics.h"
+#include "ogl.h"
 #include "cmdline.h"
 #include "fps.h"
 
@@ -66,20 +67,21 @@ static void initScreen(int width, int height, bool fullscreen)
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_COLOR_MATERIAL);
     glDisable(GL_LIGHTING);
-    glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
 }
 
 
-XA createPanel(int width, int height, const std::string &data,
-        const std::string &panel, const std::string &host, int port,
-        const std::string &secret)
+XA createPanel(XaGraphicsCallbacks* graphics, int width, int height, 
+        const std::string &data, const std::string &panel, 
+        const std::string &host, int port, const std::string &secret)
 {
     XA xa = xa_init(data.c_str());
     if (! xa) {
         fprintf(stderr, "Unable to initialize avionics library\n");
         exit(1);
     }
+        
+    xa_set_graphics_callbacks(xa, graphics);
     
     xa_set_panel_size(xa, width, height);
     xa_set_popup_size(xa, width, height);
@@ -127,7 +129,9 @@ int main(int argc, char *argv[])
     std::string title = "SLAVA - " + cmdLine.getPanel();
     SDL_WM_SetCaption(title.c_str(), title.c_str());
 
-    XA xa = createPanel(width, height, cmdLine.getDataDir(), 
+    XaGraphicsCallbacks* graphics = xagl_init_graphics();
+
+    XA xa = createPanel(graphics, width, height, cmdLine.getDataDir(), 
             cmdLine.getPanel(), cmdLine.getNetHost(), cmdLine.getNetPort(),
             cmdLine.getNetSecret());
 
@@ -175,7 +179,7 @@ int main(int argc, char *argv[])
 
                         case SDLK_F8:
                             xa_done(xa);
-                            xa = createPanel(width, height, 
+                            xa = createPanel(graphics, width, height, 
                                     cmdLine.getDataDir(), cmdLine.getPanel(), 
                                     cmdLine.getNetHost(), cmdLine.getNetPort(),
                                     cmdLine.getNetSecret());
@@ -205,6 +209,7 @@ int main(int argc, char *argv[])
         fps.update();
     }
 
+    xagl_done_graphics(graphics);
     xa_done(xa);
     return 0;
 }
