@@ -1,5 +1,7 @@
 #include "ogl.h"
 
+#include <stdio.h>
+#include <assert.h>
 #include <string.h>
 #include <SOIL.h>
 #include "glheaders.h"
@@ -11,6 +13,11 @@ struct OglCanvas
     struct XaGraphicsCallbacks callbacks;
     xagl_bind_texture_2d_callback binderCallback;
     xagl_gen_tex_name_callback genTexNameCallback;
+
+    int triangles;
+    int lines;
+    int textures;
+    int texturesSize;
 };
 
 
@@ -18,14 +25,25 @@ struct OglCanvas
 /// initialize graphics before frame start
 static void drawBegin(struct XaGraphicsCallbacks *canvas)
 {
+    OglCanvas *c = (OglCanvas*)canvas;
+    assert(canvas);
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    c->triangles = 0;
+    c->lines = 0;
 }
 
 
 /// flush drawed graphics to screen
 static void drawEnd(struct XaGraphicsCallbacks *canvas)
 {
+/*    OglCanvas *c = (OglCanvas*)canvas;
+    assert(canvas);
+
+    printf("textures: %i %i triangles: %i lines: %i\n", 
+            c->textures, c->texturesSize / 1024, c->triangles, c->lines);*/
 }
 
 
@@ -44,9 +62,11 @@ static int loadTexture(struct XaGraphicsCallbacks *canvas,
         texId = c->genTexNameCallback();
 
     unsigned id = SOIL_load_OGL_texture(name, 0, texId, SOIL_FLAG_POWER_OF_TWO);
-    if (! id)
+    if (! id) 
         return -1;
-    
+ 
+    texId = id;
+
     // because of SOIL issue
     if (c->binderCallback)
         c->binderCallback(id);
@@ -64,6 +84,9 @@ static int loadTexture(struct XaGraphicsCallbacks *canvas,
         *height = h;
     }
 
+    c->textures++;
+    c->texturesSize += (*width) * (*height);
+
     return texId;
 }
 
@@ -80,6 +103,11 @@ static void freeTexture(struct XaGraphicsCallbacks *canvas, int textureId)
 static void drawLine(struct XaGraphicsCallbacks *canvas, double x1,
         double y1, double x2, double y2, double r, double g, double b, double a)
 {
+    OglCanvas *c = (OglCanvas*)canvas;
+    assert(canvas);
+
+    c->lines++;
+
     glDisable(GL_TEXTURE_2D);
 
     glColor4f(r, g, b, a);
@@ -98,6 +126,11 @@ static void drawTriangle(struct XaGraphicsCallbacks *canvas,
         double x2, double y2, double r2, double g2, double b2, double a2,
         double x3, double y3, double r3, double g3, double b3, double a3)
 {
+    OglCanvas *c = (OglCanvas*)canvas;
+    assert(canvas);
+
+    c->triangles++;
+
     glDisable(GL_TEXTURE_2D);
 
     glBegin(GL_TRIANGLES);
@@ -120,6 +153,8 @@ static void drawTexturedTriangle(struct XaGraphicsCallbacks *canvas,
     OglCanvas *c = (OglCanvas*)canvas;
     if (! c)
         return;
+    
+    c->triangles++;
 
     if (c->binderCallback)
         c->binderCallback(textureId);

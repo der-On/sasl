@@ -3,7 +3,7 @@ HEADERS=$(wildcard *.h)
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)
 
-CXXFLAGS+=-Wall -fPIC -m32 -ggdb -fno-stack-protector
+CXXFLAGS+=-Wall -fPIC -m32 -ggdb -fno-stack-protector -O5
 
 all: $(TARGET)
 
