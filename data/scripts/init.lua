@@ -107,7 +107,7 @@ function defaultOnMouseMove(comp, x, y, button, parentX, parentY)
 end
 
 -- create basic component
-function createComponent(name)
+function createComponent(name, parent)
     local data = { 
         components = { },
         componentsByName = { },
@@ -125,6 +125,9 @@ function createComponent(name)
         onMouseMove = defaultOnMouseMove,
     }
     data._C = data
+    if parent then
+        data._P = parent
+    end
     addComponentFunc(data)
     return data
 end
@@ -317,16 +320,21 @@ end
 -- look in global table if key doesn't exists in local table
 -- try to load component from file if it doesn't exists in global table
 function compIndex(table, key)
-    local v = rawget(table, key)
-    if v ~= nil then 
-        return v 
-    else
-        v = _G[key]
-        if nil == v then
-            return loadComponent(key)
+    local comp = table
+    while nil ~= comp do
+        local v = rawget(table, key)
+        if nil ~= v then 
+            return v 
         else
-            return v
+            comp = rawget(comp, '_P')
         end
+    end
+
+    v = _G[key]
+    if nil == v then
+        return loadComponent(key, table)
+    else
+        return v
     end
 end
 
@@ -424,7 +432,7 @@ function setupComponent(component, args)
 end
 
 -- load component from file and create constructor
-function loadComponent(name, fileName)
+function loadComponent(name, parent, fileName)
     print("loading", name)
 
     if not fileName then
@@ -441,7 +449,7 @@ function loadComponent(name, fileName)
         if subdir then
             addSearchPath(subdir)
         end
-        local t = createComponent(name)
+        local t = createComponent(name, parent)
         setupComponent(t, args)
         setfenv(f, t)
         f()
@@ -475,7 +483,7 @@ function loadPanel(fileName, panelWidth, panelHeight, popupWidth, popupHeight)
     popups.position = createProperty { 0, 0, popupWidth, popupHeight }
     popups.size = { popupWidth, popupHeight }
 
-    local c = loadComponent("panel", fileName)
+    local c = loadComponent("panel", nil, fileName)
     if not c then
         print("Error loading panel", fileName)
         return nil
@@ -805,7 +813,7 @@ end
 
 -- create popup movable resizable subpanel hidden by default
 function subpanel(tbl)
-    local c = createComponent('subpanel')
+    local c = createComponent('subpanel', popups)
     set(c.position, tbl.position)
     c.size = { tbl.position[3], tbl.position[4] }
     c.onMouseClick = function (comp, x, y, button, parentX, parentY)
@@ -827,7 +835,7 @@ function subpanel(tbl)
 
     if not get(tbl.noBackground) then
         if not rectangle then
-            rectangle = loadComponent('rectangle')
+            rectangle = loadComponent('rectangle', c)
         end
     
         table.insert(c.components, 1,
@@ -840,7 +848,7 @@ function subpanel(tbl)
         local btnHeight = c.size[2] / pos[4] * 16
 
         if not button then
-            button = loadComponent('button')
+            button = loadComponent('button', c)
         end
 
         c.component('closeButton', button { 
@@ -861,7 +869,7 @@ function subpanel(tbl)
         c.resizeHeight = c.size[2] / pos[4] * 10
         
         if not rectangle then
-            rectangle = loadComponent('rectangle')
+            rectangle = loadComponent('rectangle', c)
         end
         
         c.resizeRect = { c.size[1] - c.resizeWidth, 0, 
@@ -873,7 +881,7 @@ function subpanel(tbl)
         });
         
         if not clickable then
-            clickable = loadComponent('clickable')
+            clickable = loadComponent('clickable', c)
         end
 
         c.component('resizeClickable', clickable {

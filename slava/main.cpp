@@ -63,7 +63,6 @@ static void initScreen(int width, int height, bool fullscreen)
     updateScreenSettings(width, height);
 
     glColor3f(1.0f, 1.0f, 1.0f);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_COLOR_MATERIAL);
     glDisable(GL_LIGHTING);
