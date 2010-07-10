@@ -172,11 +172,16 @@ function globalPropertyd(name, default)
     }
 end
 
-
--- create new float property and set default value
+-- create new double property and set default value
 function createGlobalPropertyd(name, default)
     local ref = createProp(name, 'double', default)
     return globalPropertyd(name, default)
+end
+
+-- create new global functional double property
+function createFuncPropertyd(name, getter, setter)
+    local ref = createFuncProp(name, 'double', getter, setter)
+    return globalPropertyd(name)
 end
 
 
@@ -196,6 +201,13 @@ function createGlobalPropertyf(name, default)
     return globalPropertyf(name, default)
 end
 
+-- create new global functional float property
+function createFuncPropertyf(name, getter, setter)
+    local ref = createFuncProp(name, 'float', getter, setter)
+    return globalPropertyf(name)
+end
+
+
 -- returns simulator int property
 function globalPropertyi(name, default)
     local ref = findProp(name, "int")
@@ -212,6 +224,12 @@ function createGlobalPropertyi(name, default)
     return globalPropertyi(name, default)
 end
 
+-- create new global functional int property
+function createFuncPropertyi(name, getter, setter)
+    local ref = createFuncProp(name, 'int', getter, setter)
+    return globalPropertyi(name)
+end
+
 -- returns simulator string property
 function globalPropertys(name, default)
     local ref = findProp(name, "string")
@@ -226,6 +244,12 @@ end
 function createGlobalPropertys(name, maxLen, default)
     local ref = createProp(name, 'string', maxLen, default)
     return globalPropertys(name, default)
+end
+
+-- create new global functional string property
+function createFuncPropertys(name, getter, setter, maxSize)
+    local ref = createFuncProp(name, 'string', getter, setter, maxSize)
+    return globalPropertys(name)
 end
 
 

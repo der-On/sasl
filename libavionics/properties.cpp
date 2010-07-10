@@ -107,8 +107,8 @@ static int luaCreateProp(lua_State *L)
 /// Lua wrapper for createProp
 static int luaCreateFuncProp(lua_State *L)
 {
-    if (lua_isnil(L, 1) || lua_isnil(L, 2) || lua_isfunction(L, 3) ||
-            lua_isfunction(L, 4)) {
+    if (lua_isnil(L, 1) || lua_isnil(L, 2) || (! lua_isfunction(L, 3)) ||
+            (! lua_isfunction(L, 4))) {
         lua_pushnil(L);
         return 1;
     }
