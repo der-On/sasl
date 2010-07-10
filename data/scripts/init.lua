@@ -212,6 +212,23 @@ function createGlobalPropertyi(name, default)
     return globalPropertyi(name, default)
 end
 
+-- returns simulator string property
+function globalPropertys(name, default)
+    local ref = findProp(name, "string")
+    return {
+        __property = 1;
+        get = function(doNotCall) return getProps(ref, default); end;
+        set = function(self, value) setProps(ref, value); end;
+    }
+end
+
+-- create new string property and set default value
+function createGlobalPropertys(name, maxLen, default)
+    local ref = createProp(name, 'string', maxLen, default)
+    return globalPropertys(name, default)
+end
+
+
 -- returns value of property
 -- traverse recursive properties
 function get(property, doNotCall)
@@ -322,7 +339,7 @@ end
 function compIndex(table, key)
     local comp = table
     while nil ~= comp do
-        local v = rawget(table, key)
+        local v = rawget(comp, key)
         if nil ~= v then 
             return v 
         else

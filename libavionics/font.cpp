@@ -278,7 +278,7 @@ int xa::getFontWidth(struct Font* font, const char *str)
 void xa::drawFont(Font* font, XaGraphicsCallbacks *graphics, double x, double y, 
         const char *str, double r, double g, double b, double a)
 {
-    if (! font)
+    if ((! font) || (! str))
         return;
     
     std::wstring ws = fromUtf8(str);

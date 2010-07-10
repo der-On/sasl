@@ -64,7 +64,7 @@ static int luaCreateProp(lua_State *L)
     int type = getPropType(lua_tostring(L, 2));
     int maxLen = 0;
     int valArg = 3;
-    if (4 == type) {
+    if (PROP_STRING == type) {
         maxLen = lua_tonumber(L, 3);
         valArg++;
     }
@@ -91,7 +91,8 @@ static int luaCreateProp(lua_State *L)
                     }
                 case PROP_STRING: {
                         const char *value = lua_tostring(L, valArg);
-                        getAvionics(L)->getProps().setProp(prop, value);
+                        if (value) 
+                            getAvionics(L)->getProps().setProp(prop, value);
                         break;
                     }
             }

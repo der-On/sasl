@@ -101,10 +101,14 @@ void Avionics::loadPanel(const std::string &fileName)
     lua_pushnumber(L, popupWidth);
     lua_pushnumber(L, popupHeight);
     if (lua_pcall(L, 5, 0, 0)) {
-        std::string s = std::string("Error loading panel: ") + 
-            std::string(lua_tostring(L, -1));
+        const char* msg = lua_tostring(L, -1);
+        std::string reason;
+        if (msg)
+            reason = std::string("Error loading panel: ") + msg;
+        else
+            reason = std::string("Error loading panel");
         lua_pop(L, 1);
-        throw Exception(s);
+        throw Exception(reason);
     }
 }
 
@@ -157,9 +161,14 @@ void Avionics::draw(int stage)
 
     if (lua_pcall(L, 0, 0, 0)) {
         // panel error message
-        std::string msg(lua_tostring(L, -1));
+        const char* msg = lua_tostring(L, -1);
         lua_pop(L, 1);
-        EXCEPTION("Error drawing panel: " + msg);
+        std::string reason;
+        if (msg)
+            reason = std::string("Error drawing panel: ") + msg;
+        else
+            reason = std::string("Error drawing panel");
+        EXCEPTION(reason);
     }
     
     graphics->draw_end(graphics);

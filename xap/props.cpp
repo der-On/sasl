@@ -3,6 +3,7 @@
 #include <string>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "xpsdk.h"
 
@@ -610,21 +611,20 @@ static int getPropString(PropRef property, char *buf, int maxSize, int *err)
         return 0;
     }
 
-    std::string s;
-
     XPLMDataTypeID type = XPLMGetDataRefTypes(prop->ref);
     
     if (xplmType_Data & type) {
         int sz = XPLMGetDatab(prop->ref, NULL, 0, 0);
-        int res = XPLMGetDatab(prop->ref, buf, 0, maxSize);
-        if (res <= sz)
-            if (err) *err = 1;
-        if (buf && maxSize) {
-            if (res < maxSize)
-                buf[res] = 0;
-            else
-                buf[maxSize] = 0;
+        if (buf) {
+            int res = XPLMGetDatab(prop->ref, buf, 0, maxSize);
+            if (maxSize) {
+                if (res < maxSize)
+                    buf[res] = 0;
+                else
+                    buf[maxSize] = 0;
+            }
         }
+        return sz;
     }
     
     if (xplmType_Double & type)
@@ -867,7 +867,7 @@ static PropRef createStringProp(XPlaneProps *props, const char *name,
         return NULL;
     }
     props->customProps[name] = prop;
-    return getPropRef(props, name, PROP_DOUBLE);
+    return getPropRef(props, name, PROP_STRING);
 }
 
 
@@ -909,6 +909,7 @@ static int updateProps(Props props)
                 case PROP_INT: setPropInt(v.property, v.data.intValue); break;
                 case PROP_FLOAT: setPropFloat(v.property, v.data.floatValue); break;
                 case PROP_DOUBLE: setPropDouble(v.property, v.data.doubleValue); break;
+                case PROP_STRING: setPropString(v.property, v.data.stringValue.c_str()); break;
             }
         }
         p->propsToSet.clear();
