@@ -159,7 +159,7 @@ end
 panel = createComponent("panel")
 
 -- popups layer
-popups = createComponent("popups")
+popups = createComponent("popups", panel)
 
 
 -- returns simulator double property
@@ -332,7 +332,7 @@ function compIndex(table, key)
 
     v = _G[key]
     if nil == v then
-        return loadComponent(key, table)
+        return loadComponent(key)
     else
         return v
     end
@@ -431,8 +431,22 @@ function setupComponent(component, args)
     addComponentFunc(component)
 end
 
+local creatingComponents = { }
+
+
+-- call it before creation of components
+function startComponentsCreation(parent)
+    table.insert(creatingComponents, parent)
+end
+
+-- call it after creation of components
+function finishComponentsCreation()
+    table.remove(creatingComponents)
+end
+
+
 -- load component from file and create constructor
-function loadComponent(name, parent, fileName)
+function loadComponent(name, fileName)
     print("loading", name)
 
     if not fileName then
@@ -446,13 +460,22 @@ function loadComponent(name, parent, fileName)
     end
 
     local constr = function(args)
+        local parent = creatingComponents[#creatingComponents]
         if subdir then
             addSearchPath(subdir)
         end
         local t = createComponent(name, parent)
+
+        -- ugly hack to solve popups parent problem
+        if ('panel' == name) and (nil == parent) then
+            popups._P = t
+        end
+
         setupComponent(t, args)
+        startComponentsCreation(t)
         setfenv(f, t)
         f()
+        finishComponentsCreation()
         if subdir then
             popSearchPath()
         end
@@ -483,7 +506,7 @@ function loadPanel(fileName, panelWidth, panelHeight, popupWidth, popupHeight)
     popups.position = createProperty { 0, 0, popupWidth, popupHeight }
     popups.size = { popupWidth, popupHeight }
 
-    local c = loadComponent("panel", nil, fileName)
+    local c = loadComponent("panel", fileName)
     if not c then
         print("Error loading panel", fileName)
         return nil
@@ -696,7 +719,7 @@ function getCursorShape(component, x, y)
     local mx = (x - position[1]) * size[1] / position[3]
     local my = (y - position[2]) * size[2] / position[4]
     for i = #component.components, 1, -1 do
-        v = component.components[i]
+        local v = component.components[i]
         if get(v.visible) and isInRect(get(v.position), mx, my) then
             local res = getCursorShape(v, mx, my)
             if res then
@@ -833,9 +856,10 @@ function subpanel(tbl)
     c.cursor = { x = 0; y = 0; shape = loadImage("none.png") }
     c.components = tbl.components
 
+    startComponentsCreation(tbl)
     if not get(tbl.noBackground) then
         if not rectangle then
-            rectangle = loadComponent('rectangle', c)
+            rectangle = loadComponent('rectangle')
         end
     
         table.insert(c.components, 1,
@@ -848,7 +872,7 @@ function subpanel(tbl)
         local btnHeight = c.size[2] / pos[4] * 16
 
         if not button then
-            button = loadComponent('button', c)
+            button = loadComponent('button')
         end
 
         c.component('closeButton', button { 
@@ -869,7 +893,7 @@ function subpanel(tbl)
         c.resizeHeight = c.size[2] / pos[4] * 10
         
         if not rectangle then
-            rectangle = loadComponent('rectangle', c)
+            rectangle = loadComponent('rectangle')
         end
         
         c.resizeRect = { c.size[1] - c.resizeWidth, 0, 
@@ -881,7 +905,7 @@ function subpanel(tbl)
         });
         
         if not clickable then
-            clickable = loadComponent('clickable', c)
+            clickable = loadComponent('clickable')
         end
 
         c.component('resizeClickable', clickable {
@@ -895,6 +919,7 @@ function subpanel(tbl)
             }
         });
     end
+    finishComponentsCreation()
 
     if get(tbl.command) then
         -- register navigator panel popup command
