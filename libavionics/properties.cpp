@@ -236,7 +236,7 @@ static int luaGetProps(lua_State *L)
 }
 
 
-/// Lua wrapper for setPropf
+/// Lua wrapper for setProps
 static int luaSetProps(lua_State *L)
 {
     PropRef prop = (PropRef)lua_touserdata(L, 1);

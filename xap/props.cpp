@@ -617,12 +617,10 @@ static int getPropString(PropRef property, char *buf, int maxSize, int *err)
         int sz = XPLMGetDatab(prop->ref, NULL, 0, 0);
         if (buf) {
             int res = XPLMGetDatab(prop->ref, buf, 0, maxSize);
-            if (maxSize) {
-                if (res < maxSize)
-                    buf[res] = 0;
-                else
-                    buf[maxSize] = 0;
-            }
+            if (res < maxSize)
+                buf[res] = 0;
+            else
+                buf[maxSize - 1] = 0;
         }
         return sz;
     }
@@ -767,7 +765,7 @@ static void writeFloat(void *refcon, float value)
 static PropRef createFloatProp(XPlaneProps *props, const char *name)
 {
     CustomProperty *prop = new CustomProperty;
-    prop->data.intValue = 0;
+    prop->data.floatValue = 0;
     prop->ref = XPLMRegisterDataAccessor(name, xplmType_Float, 1, 
             NULL, NULL, readFloat, writeFloat,
             NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
@@ -805,7 +803,7 @@ static void writeDouble(void *refcon, double value)
 static PropRef createDoubleProp(XPlaneProps *props, const char *name)
 {
     CustomProperty *prop = new CustomProperty;
-    prop->data.intValue = 0;
+    prop->data.doubleValue = 0;
     prop->ref = XPLMRegisterDataAccessor(name, xplmType_Double, 1, 
             NULL, NULL, NULL, NULL, readDouble, writeDouble,
             NULL, NULL, NULL, NULL, NULL, NULL,
@@ -831,7 +829,7 @@ static long readString(void *refcon, void *value, int offset, long maxSize)
             memcpy(value, p->data.stringValue.c_str() + offset, realSz);
             return realSz;
         } else
-            return len;
+            return len + 1;
     } else
         return 0;
 }
@@ -843,10 +841,10 @@ static void writeString(void *refcon, void *value, int offset, long size)
     CustomProperty *p = (CustomProperty*)refcon;
     if (p) {
         if (! offset)
-            p->data.stringValue = std::string((const char*)value, size);
+            p->data.stringValue = std::string((const char*)value, size - 1);
         else 
             p->data.stringValue = p->data.stringValue.substr(0, offset) + 
-                std::string((const char*)value, size);
+                std::string((const char*)value, size - 1);
     }
 }
 
@@ -857,7 +855,6 @@ static PropRef createStringProp(XPlaneProps *props, const char *name,
         int maxSize)
 {
     CustomProperty *prop = new CustomProperty;
-    prop->data.intValue = 0;
     prop->ref = XPLMRegisterDataAccessor(name, xplmType_Data, 1, 
             NULL, NULL, NULL, NULL, NULL, NULL,
             NULL, NULL, NULL, NULL, readString, writeString,
