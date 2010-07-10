@@ -101,8 +101,10 @@ void Avionics::loadPanel(const std::string &fileName)
     lua_pushnumber(L, popupWidth);
     lua_pushnumber(L, popupHeight);
     if (lua_pcall(L, 5, 0, 0)) {
-        printf("Error loading panel: %s\n", lua_tostring(L, -1));
+        std::string s = std::string("Error loading panel: ") + 
+            std::string(lua_tostring(L, -1));
         lua_pop(L, 1);
+        throw Exception(s);
     }
 }
 
