@@ -410,6 +410,21 @@ static int handleMouseLayerClick(int x, int y, XPLMMouseStatus status,
 }
 
 
+// handle keyboard events
+static int handleKeyboardEvent(char charCode, XPLMKeyFlags flags,
+        char keyCode, void *refcon)
+{
+    if (! xa)
+        return 0;
+
+    if (flags & xplm_DownFlag)
+        return ! xa_key_down(xa, charCode, keyCode);
+    if (flags & xplm_UpFlag)
+        return ! xa_key_up(xa, charCode, keyCode);
+    return 0;
+}
+
+
 /// Convert coords passed to x-plane callback to something more sensible
 static void getPanelCoords(int mouseX, int mouseY, float &x, float &y)
 {
@@ -806,6 +821,7 @@ PLUGIN_API void XPluginDisable(void)
 {
     XPLMUnregisterCommandHandler(reloadCommand, reloadPanelCallback, 0, NULL);
     XPLMUnregisterFlightLoopCallback(updateAvionics, NULL);
+    XPLMUnregisterKeySniffer(handleKeyboardEvent, 0, NULL);
     disabled = true;
     XPLMDestroyWindow(fakeWindow);
     freeAvionics(false);
@@ -826,6 +842,8 @@ PLUGIN_API int XPluginEnable(void)
     
     reloadCommand = XPLMCreateCommand("xap/reload", "Reload SASL avionics");
     XPLMRegisterCommandHandler(reloadCommand, reloadPanelCallback, 0, NULL);
+
+    XPLMRegisterKeySniffer(handleKeyboardEvent, 0, NULL);
     
     reloadPanel(false);
 

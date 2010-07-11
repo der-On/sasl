@@ -106,6 +106,17 @@ function defaultOnMouseMove(comp, x, y, button, parentX, parentY)
     end
 end
 
+-- default key down handler
+function defaultOnKeyDown(comp, char, key)
+    return false
+end
+
+-- default key up handler
+function defaultOnKeyUp(comp, char, key)
+    return false
+end
+
+
 -- create basic component
 function createComponent(name, parent)
     local data = { 
@@ -119,10 +130,13 @@ function createComponent(name, parent)
         visible = createProperty(true),
         movable = createProperty(false),
         resizeble = createProperty(false),
+        focused = createProperty(false),
         onMouseUp = defaultOnMouseUp,
         onMouseDown = defaultOnMouseDown,
         onMouseClick = defaultOnMouseClick,
         onMouseMove = defaultOnMouseMove,
+        onKeyDown = defaultOnKeyDown,
+        onKeyUp = defaultOnKeyUp,
     }
     data._C = data
     if parent then
@@ -703,9 +717,44 @@ function runHandler(component, name, x, y, button, path)
     return res
 end
 
+-- returns path to component under mouse
+function getFocusedPath(component, x, y, path)
+    table.insert(path, component)
+    local position = get(component.position)
+    local size = component.size
+    if (not (position and size)) then
+        return
+    end
+    local mx = (x - position[1]) * size[1] / position[3]
+    local my = (y - position[2]) * size[2] / position[4]
+    for i = #component.components, 1, -1 do
+        local v = component.components[i]
+        if get(v.visible) and isInRect(get(v.position), mx, my) then
+            getFocusedPath(v, mx, my, path)
+        end
+    end
+end
 
--- run handler of focused component
-function runFocusedHandler(path, name, x, y, button)
+
+-- returns path to component under mouse
+function getTopFocusedPath(layer, x, y)
+    local path = { }
+    if (1 == layer) or (3 == layer) then
+        getFocusedPath(popups, x, y, path)
+        if 1 < #path then
+            return path
+        end
+        path = { }
+    end
+    if (2 == layer) or (3 == layer) then
+        getFocusedPath(panel, x, y, path)
+    end
+    return path
+end
+
+
+-- run handler of pressed component
+function runPressedHandler(path, name, x, y, button)
     local mx = x
     local my = y
     local px = x
@@ -795,20 +844,49 @@ end
 -- pressed button number
 local pressedButton = 0
 
+-- path to component after mouse press
+local pressedComponentPath = nil
+
+-- update pressed component path
+function setPressedPath(path)
+    pressedComponentPath = path
+end
+
+-- path to focused component
+local focusedComponentPath = nil
+
+-- update focused component path
+function setFocusedPath(path)
+    if path and (0 == #path) then
+        path = nil
+    end
+    if focusedComponentPath then
+        for _, c in pairs(focusedComponentPath) do
+            set(c.focused, false)
+        end
+    end
+    focusedComponentPath = path
+    if focusedComponentPath then
+        for _, c in ipairs(focusedComponentPath) do
+            set(c.focused, true)
+        end
+    end
+end
 
 -- Called when mouse button was pressed
 function onMouseDown(x, y, button, layer)
+    setFocusedPath(getTopFocusedPath(layer, x, y))
     pressedButton = button
     local handled, path = runTopHandler(layer, "onMouseDown", x, y, button)
     if handled then
-        focusedComponentPath = path
+        setPressedPath(path)
         if (1 == layer) or (3 == layer) then
             local comp = path[1]
             for i, v in pairs(popups.components) do
                 if v == comp then
                     table.remove(popups.components, i)
                     table.insert(popups.components, comp)
-                    focusedComponentPath = nil
+                    setPressedPath(nil)
                     return handled
                 end
             end
@@ -820,11 +898,11 @@ end
 
 -- Called when mouse button was released
 function onMouseUp(x, y, button, layer)
-    if focusedComponentPath then
-        local res = runFocusedHandler(focusedComponentPath, "onMouseUp", 
+    if pressedComponentPath then
+        local res = runPressedHandler(pressedComponentPath, "onMouseUp", 
                 x, y, button)
         pressedButton = 0
-        focusedComponentPath = nil
+        setPressedPath(nil)
         return res
     else
         return runTopHandler(layer, "onMouseUp", x, y, button)
@@ -833,15 +911,15 @@ end
 
 -- Called when mouse click event was processed
 function onMouseClick(x, y, button, layer)
-    if focusedComponentPath then
+    if pressedComponentPath then
         setCursor(x, y, cursor.shape, layer)
-        return runFocusedHandler(focusedComponentPath, "onMouseClick", 
+        return runPressedHandler(pressedComponentPath, "onMouseClick", 
                 x, y, button)
     else
         pressedButton = button
         local handled, path = runTopHandler(layer, "onMouseClick", x, y, button)
         if handled then
-            focusedComponentPath = path
+            setPressedPath(path)
         end
         return handled
     end
@@ -849,9 +927,9 @@ end
 
 -- Called when mouse motion event was processed
 function onMouseMove(x, y, layer)
-    if focusedComponentPath then
+    if pressedComponentPath then
         setCursor(x, y, cursor.shape, layer)
-        local res = runFocusedHandler(focusedComponentPath, "onMouseMove", 
+        local res = runPressedHandler(pressedComponentPath, "onMouseMove", 
                 x, y, pressedButton)
         return res
     else
@@ -1003,4 +1081,33 @@ function doneAvionics()
     doneComponent(popups)
     doneComponent(panel)
 end
+
+
+-- called when button pressed
+function onKeyDown(char, key)
+    if focusedComponentPath then
+        for i = #focusedComponentPath, 1, -1 do
+            local c = focusedComponentPath[i]
+            local res = c:onKeyDown(char, key)
+            if res then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+-- called when button released
+function onKeyUp(char, key)
+    if focusedComponentPath then
+        for i = #focusedComponentPath, 1, -1 do
+            local res = focusedComponentPath[i]:onKeyUp(char, key)
+            if res then
+                return true
+            end
+        end
+    end
+    return false
+end
+
 

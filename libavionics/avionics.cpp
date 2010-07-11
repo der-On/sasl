@@ -198,6 +198,22 @@ void Avionics::addSearchImagePath(const std::string &path)
     }
 }
 
+static bool call2(Luna &lua, const std::string &name, int a1, int a2)
+{
+    lua_State *L = lua.getLua();
+    lua_getglobal(L, name.c_str());
+    lua_pushnumber(L, a1);
+    lua_pushnumber(L, a2);
+    if (lua_pcall(L, 2, 1, 0)) {
+        std::string msg = lua_tostring(L, -1);
+        lua_pop(L, 1);
+        EXCEPTION("Error calling " + name + ": " + msg);
+    }
+    bool res = lua_toboolean(L, -1);
+    lua_pop(L, 1);
+    return res;
+}
+
 static bool call3(Luna &lua, const std::string &name, int a1, int a2, int a3)
 {
     lua_State *L = lua.getLua();
@@ -275,6 +291,15 @@ void Avionics::enableClickEmulator(bool enable)
     clickEmulation = enable;
 }
 
+bool Avionics::onKeyUp(int charCode, int keyCode)
+{
+    return call2(lua, "onKeyUp", charCode, keyCode);
+}
+
+bool Avionics::onKeyDown(int charCode, int keyCode)
+{
+    return call2(lua, "onKeyDown", charCode, keyCode);
+}
 
 void Avionics::setBackgroundColor(float r, float g, float b, float a)
 {

@@ -53,13 +53,17 @@ int xa_load_panel(XA xa, const char *path);
 
 /// Handle key down event
 /// \param xa X-Avionics handler.
+/// \param charcode code of character.
 /// \param keycode code of key.
-void xa_key_down(XA xa, int keycode);
+/// returns non-zero if event was handled
+int xa_key_down(XA xa, int charcode, int keycode);
 
 /// Handle key up event.
 /// \param xa X-Avionics handler.
+/// \param charcode code of character.
 /// \param keycode code of key.
-void xa_key_up(XA xa, int keycode);
+/// returns non-zero if event was handled
+int xa_key_up(XA xa, int charcode, int keycode);
 
 /// Handle mouse down event
 /// \param xa X-Avionics handler.

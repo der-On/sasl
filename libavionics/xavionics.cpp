@@ -54,14 +54,30 @@ int xa_load_panel(XA xa, const char *path)
     return 0;
 }
 
-void xa_key_down(XA xa, int keycode)
+int xa_key_down(XA xa, int charcode, int keycode)
 {
     assert(xa && xa->avionics);
+    try {
+        return xa->avionics->onKeyDown(charcode, keycode);
+    } catch (std::exception &e) {
+        printf("ERROR: %s\n", e.what());
+        return 0;
+    } catch (...) {
+        return 0;
+    }
 }
 
-void xa_key_up(XA xa, int keycode)
+int xa_key_up(XA xa, int charcode, int keycode)
 {
     assert(xa && xa->avionics);
+    try {
+        return xa->avionics->onKeyUp(charcode, keycode);
+    } catch (std::exception &e) {
+        printf("ERROR: %s\n", e.what());
+        return 0;
+    } catch (...) {
+        return 0;
+    }
 }
 
 int xa_mouse_button_down(XA xa, int x, int y, int button, int layer)

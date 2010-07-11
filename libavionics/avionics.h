@@ -113,6 +113,18 @@ class Avionics
         /// \param period number of milliseconds before third and other click events
         void setClickParams(int delay, int period);
 
+        /// Called on keyboard press event.
+        /// \param charCode code of pressed character
+        /// \param keyCode scan code of pressed button
+        /// Returns true of event was handled
+        bool onKeyDown(int charCode, int keyCode);
+
+        /// Called on keyboard up event.
+        /// \param charCode code of pressed character
+        /// \param keyCode scan code of pressed button
+        /// Returns true of event was handled
+        bool onKeyUp(int charCode, int keyCode);
+
         /// Returns texture manager
         TextureManager* getTextureManager() { return &textureManager; }
 
