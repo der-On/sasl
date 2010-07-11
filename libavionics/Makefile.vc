@@ -10,7 +10,7 @@ LD=lib
 
 CXXFLAGS+=/EHsc /DWINDOWS /nologo /MT /O2 /GL /DNDEBUG /D_LIB /fp:precise /TP /DWIN32
 LNFLAGS=/nologo /LTCG
-LIBS=soil.lib lua5.1.lib opengl32.lib ws2_32.lib
+LIBS=lua5.1.lib
 
 all: $(TARGET)
 
