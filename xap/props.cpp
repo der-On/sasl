@@ -185,6 +185,21 @@ void xap::propsDone(Props props)
         delete p;
 }
 
+void xap::funcPropsDone(Props props)
+{
+    XPlaneProps *p = (XPlaneProps*)props;
+    if (! p)
+        return;
+
+    for (FuncPropsList::iterator i = p->funcProps.begin(); 
+            i != p->funcProps.end(); ++i)
+    {
+        XPLMUnregisterDataAccessor((*i)->ref);
+        delete *i;
+    }
+    p->funcProps.clear();
+}
+
 
 /// cut array index from string (if exists)
 /// returns stripped index in index variable.

@@ -564,9 +564,13 @@ static void freeAvionics(bool keepProps)
         return;
     xa_done(xa);
     xa = NULL;
-    if ((! keepProps) && props) {
-        propsDone(props);
-        props = NULL;
+    if (props) {
+        if (! keepProps) {
+            propsDone(props);
+            props = NULL;
+        } else {
+            funcPropsDone(props);
+        }
     }
 }
 

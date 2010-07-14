@@ -14,6 +14,8 @@ Props propsInit();
 /// Free properties structure
 void propsDone(Props props);
 
+/// Free func properties only
+void funcPropsDone(Props props);
 };
 
 #endif
