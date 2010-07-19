@@ -1,7 +1,4 @@
-PLUGINS="../plugin/xap"
-SDK=/opt/x-plane/SDK
-
-TARGET=mac.xpl
+TARGET=libogl.dylib
 HEADERS=$(wildcard *.h)
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)
@@ -28,8 +25,4 @@ $(TARGET): $(OBJECTS)
 
 clean:
 	rm -f $(OBJECTS) $(TARGET)
-
-install: $(TARGET)
-	cp -f $(TARGET) $(PLUGINS)
-
 
