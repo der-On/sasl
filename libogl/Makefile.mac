@@ -1,4 +1,4 @@
-TARGET=libogl.dylib
+TARGET=libogl.a
 HEADERS=$(wildcard *.h)
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)
@@ -21,7 +21,7 @@ all: $(TARGET)
 	$(CXX) $(CXXFLAGS) -c $<
 	
 $(TARGET): $(OBJECTS)
-	$(CXX) -o $(TARGET) $(LNFLAGS) $(OBJECTS) $(LIBS)
+	$(AR) rs $(TARGET) $(OBJECTS)
 
 clean:
 	rm -f $(OBJECTS) $(TARGET)
