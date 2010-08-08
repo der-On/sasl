@@ -483,6 +483,10 @@ function setupComponent(component, args)
         end
     end
 
+    component.include = function(name)
+        include(component, name)
+    end
+
     addComponentFunc(component)
 end
 
@@ -1083,31 +1087,58 @@ function doneAvionics()
 end
 
 
--- called when button pressed
-function onKeyDown(char, key)
+-- traverse visible focused components and call specified function
+function traverseFocused(char, key, func)
     if focusedComponentPath then
-        for i = #focusedComponentPath, 1, -1 do
+        local maxVisible = 0
+        for i = 1, #focusedComponentPath, 1 do
             local c = focusedComponentPath[i]
-            local res = c:onKeyDown(char, key)
+            if get(c.visible) then
+                maxVisible = i
+            else
+                break;
+            end
+        end
+        for i = maxVisible, 1, -1 do
+            local c = focusedComponentPath[i]
+            local res = c[func](c, char, key)
             if res then
                 return true
             end
         end
     end
     return false
+end
+
+-- called when button pressed
+function onKeyDown(char, key)
+    return traverseFocused(char, key, 'onKeyDown')
 end
 
 -- called when button released
 function onKeyUp(char, key)
-    if focusedComponentPath then
-        for i = #focusedComponentPath, 1, -1 do
-            local res = focusedComponentPath[i]:onKeyUp(char, key)
-            if res then
-                return true
-            end
-        end
-    end
-    return false
+    return traverseFocused(char, key, 'onKeyUp')
 end
 
+
+-- load script inside component environment
+function include(component, name)
+    print("including", name)
+
+    local f, subdir = openFile(name)
+    if not f then
+        print("can't include script", name)
+    else
+        if subdir then
+            addSearchPath(subdir)
+        end
+            
+        setfenv(f, component)
+        f()
+
+        if subdir then
+            popSearchPath()
+        end
+    end
+end
 
