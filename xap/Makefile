@@ -1,5 +1,3 @@
-#PLUGINS="/opt/x-plane/X-Plane/Resources/plugins/xap"
-#PLUGINS="../../yk40/plane/plugins/xap"
 PLUGINS="../plugin/xap"
 SDK=/opt/x-plane/SDK
 
@@ -9,7 +7,7 @@ SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)
 
 DEFS= -DLIN=1 -fPIC -m32 -fno-stack-protector -DXPLM200 -ggdb
-CXXFLAGS+=-Wall -I$(SDK)/CHeaders/XPLM -I$(SDK)/CHeaders/Widgets -I/usr/include/lua5.1 -I../libavionics -I../libogl $(DEFS) -O5
+CXXFLAGS+=-Wall -I$(SDK)/CHeaders/XPLM -I$(SDK)/CHeaders/Widgets -I/usr/include/lua5.1 -I../libavionics -I../libogl $(DEFS) -O2
 LNFLAGS+=-shared -rdynamic -nodefaultlibs -m32 -ggdb -L/usr/lib32 -L../libavionics -L../libogl
 LIBS+=-llua5.1 -lm -lxavionics -logl -lSOIL32 #$(PLUGINS)/XPLM.so $(PLUGINS)/XPWidgets.so
 
