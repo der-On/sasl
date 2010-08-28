@@ -9,9 +9,9 @@ extern "C" {
 #define lib_init_c
 #define LUA_LIB
 
-#include "lua.h"
-#include "lauxlib.h"
-#include "lualib.h"
+#include "luajit-2.0/lua.h"
+#include "luajit-2.0/lauxlib.h"
+#include "luajit-2.0/lualib.h"
 
 static const luaL_Reg lualibs[] = {
   { "",			luaopen_base },

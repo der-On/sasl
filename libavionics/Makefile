@@ -3,8 +3,8 @@ HEADERS=$(wildcard *.h)
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)
 
-LUAJIT=/opt/luajit/
-CXXFLAGS+=-Wall -I$(LUAJIT)/include/luajit-2.0 -fPIC -m32 -ggdb -fno-stack-protector 
+LUAJIT=/opt
+CXXFLAGS+=-Wall -I$(LUAJIT)/include -fPIC -m32 -ggdb -fno-stack-protector 
 LNFLAGS+=-shared -rdynamic -nodefaultlibs -fPIC -m32 -ggdb -L/opt/luajit/lib
 LIBS+=-lluajit-5.1 -lm -lIL -lILU -lILUT
 
