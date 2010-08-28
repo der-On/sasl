@@ -67,7 +67,7 @@ static int luaBitXor(lua_State *L)
 
 Luna::Luna()
 {
-    lua = lua_open();
+    lua = luaL_newstate();
     luaL_openlibs(lua);
     lua_register(lua, "print", luaPrint);
     lua_register(lua, "bitand", luaBitAnd);

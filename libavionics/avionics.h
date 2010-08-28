@@ -69,6 +69,9 @@ class Avionics
         /// Graphics functions
         XaGraphicsCallbacks *graphics;
 
+        /// Time passed since last garbage collection
+        long lastGcTime;
+
     public:
         /// Initialize avionics internal data
         Avionics(const std::string &path);

@@ -20,6 +20,7 @@ Avionics::Avionics(const std::string &path): path(path), clickEmulator(timer),
     panelWidth = popupWidth = 1024;
     panelHeight = popupHeight = 768;
     setGraphicsCallbacks(getGraphicsStub());
+    lastGcTime = 0;
 
     bgR = bgG = bgB = 1.0f;
     bgA = 0.0f;
@@ -137,6 +138,12 @@ void Avionics::update()
         }
     } else
         lua_pop(L, 1);
+
+    long currentTime = timer.getTime();
+    if (currentTime - lastGcTime > 3000) {
+        lua_gc(L, LUA_GCCOLLECT, 0);
+        lastGcTime = currentTime;
+    }
 }
 
 void Avionics::draw(int stage)
