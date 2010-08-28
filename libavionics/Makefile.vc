@@ -10,7 +10,7 @@ LD=lib
 
 CXXFLAGS+=/EHsc /DWINDOWS /nologo /MT /O2 /GL /DNDEBUG /D_LIB /fp:precise /TP /DWIN32
 LNFLAGS=/nologo /LTCG
-LIBS=lua5.1.lib
+LIBS=lua51.lib
 
 all: $(TARGET)
 
