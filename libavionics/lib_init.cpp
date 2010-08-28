@@ -9,9 +9,16 @@ extern "C" {
 #define lib_init_c
 #define LUA_LIB
 
-#include "luajit-2.0/lua.h"
-#include "luajit-2.0/lauxlib.h"
-#include "luajit-2.0/lualib.h"
+#ifdef APL
+	/* Prevent conflicts with standard Lua and enforce luajit on OS X */
+	#include "luajit-2.0/lua.h"
+	#include "luajit-2.0/lauxlib.h"
+	#include "luajit-2.0/lualib.h"
+#else
+	#include "lua.h"
+	#include "lauxlib.h"
+	#include "lualib.h"
+#endif
 
 static const luaL_Reg lualibs[] = {
   { "",			luaopen_base },
