@@ -391,11 +391,28 @@ static void rewindSound(struct XaSoundCallbacks *s, int sampleId)
 }
 
 
+// Test if sample playing now
+static int isPlaying(struct XaSoundCallbacks *s, int sampleId)
+{
+    if ((! sound.device) || (! sound.context) || (! sampleId) ||
+            (sound.sources.size() < (unsigned)sampleId))
+        return 0;
+    
+    ContextChanger changer(sound.context);
+
+    ALuint source = sound.sources[sampleId - 1];
+
+    ALenum state;
+    alGetSourcei(source, AL_SOURCE_STATE, &state);
+    return (state == AL_PLAYING);
+}
+
+
 // initialize sound engined
 void xap::initSound(XA xa)
 {
     struct XaSoundCallbacks cb = { loadSound, playSound, stopSound, setGain, 
-        setPitch, rewindSound };
+        setPitch, rewindSound, isPlaying };
     sound.callbacks = cb;
     sound.device = alcOpenDevice(NULL);
     sound.context = alcCreateContext(sound.device, NULL);

@@ -50,6 +50,15 @@ static int luaSampleStop(lua_State *L)
 }
 
 
+static int luaIsSamplePlaying(lua_State *L)
+{
+    int playing = getAvionics(L)->sampleIsPlaying(lua_tonumber(L, 1));
+    lua_pushboolean(L, playing);
+    return 1;
+}
+
+
+
 
 void xa::exportSoundToLua(Luna &lua)
 {
@@ -61,5 +70,6 @@ void xa::exportSoundToLua(Luna &lua)
     lua_register(L, "setSampleGain", luaSampleSetGain);
     lua_register(L, "setSamplePitch", luaSampleSetPitch);
     lua_register(L, "rewindSample", luaSampleRewind);
+    lua_register(L, "isSamplePlaying", luaIsSamplePlaying);
 }
 

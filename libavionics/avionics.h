@@ -209,6 +209,10 @@ class Avionics
         /// \param sampleId sample handler
         void sampleRewind(int sampleId);
 
+        /// Returns true if sample playing now
+        /// \param sampleId sample handler
+        bool sampleIsPlaying(int sampleId);
+
     private:
         /// Add path to components search list
         void addSearchPath(const std::string &path);

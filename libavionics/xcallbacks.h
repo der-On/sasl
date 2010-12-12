@@ -293,6 +293,11 @@ typedef void (*xa_sample_set_pitch_callback)(struct XaSoundCallbacks *sound,
 typedef void (*xa_sample_rewind_callback)(struct XaSoundCallbacks *sound, 
         int sampleId);
 
+/// Returns non-zero if sample is playing now or zero if not
+/// \param sound sound callbacks structure.
+/// \param sampleId sample handler
+typedef int (*xa_sample_is_playing_callback)(struct XaSoundCallbacks *sound, 
+        int sampleId);
 
 // sound callbacks
 struct XaSoundCallbacks {
@@ -302,6 +307,7 @@ struct XaSoundCallbacks {
     xa_sample_set_gain_callback set_gain;
     xa_sample_set_pitch_callback set_pitch;
     xa_sample_rewind_callback rewind;
+    xa_sample_is_playing_callback is_playing;
 };
 
 

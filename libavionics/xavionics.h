@@ -292,6 +292,11 @@ void xa_sample_set_pitch(XA xa, int sampleId, int pitch);
 /// \param sampleId sample handler
 void xa_sample_rewind(XA xa, int sampleId);
 
+/// Returns non-zero if sample is playing now or zero if not
+/// \param xa X-Avionics handler.
+/// \param sampleId sample handler
+int xa_sample_is_playing(XA xa, int sampleId);
+
 
 #if defined(__cplusplus)
 }  /* extern "C" */

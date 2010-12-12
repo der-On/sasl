@@ -409,3 +409,12 @@ void Avionics::sampleRewind(int sampleId)
         sound->rewind(sound, sampleId);
 }
 
+
+bool Avionics::sampleIsPlaying(int sampleId)
+{
+    if (sound)
+        return sound->is_playing(sound, sampleId);
+    else
+        return false;
+}
+

@@ -385,3 +385,9 @@ void xa_sample_rewind(XA xa, int sampleId)
     xa->avionics->sampleRewind(sampleId);
 }
 
+int xa_sample_is_playing(XA xa, int sampleId)
+{
+    assert(xa && xa->avionics);
+    xa->avionics->sampleIsPlaying(sampleId);
+}
+
