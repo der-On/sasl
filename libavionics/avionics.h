@@ -71,6 +71,9 @@ class Avionics
 
         /// Time passed since last garbage collection
         long lastGcTime;
+        
+        /// sound functions
+        XaSoundCallbacks *sound;
 
     public:
         /// Initialize avionics internal data
@@ -173,6 +176,38 @@ class Avionics
 
         /// Returns grpahics callbacks.
         struct XaGraphicsCallbacks* getGraphics() { return graphics; };
+
+        /// Setup sound callbacks
+        /// \param callbacks sound engine callbacks.
+        /// \param data custom data for sound engine
+        void setSoundCallbacks(XaSoundCallbacks *callbacks, void *data);
+
+        /// Load sample into memory.  Returns sample handler or 0 if can't load sample
+        /// \param fileName path to sample on disk
+        int sampleLoad(const char *fileName);
+
+        // Play loaded sample
+        /// \param sampleId sample handler
+        /// \param loop if non-zero sound will be looped
+        void samplePlay(int sampleId, int loop);
+
+        /// Stop playing sample
+        /// \param sampleId sample handler
+        void sampleStop(int sampleId);
+
+        /// Set gain of sample
+        /// \param sampleId sample handler
+        /// \param gain gain ration for 0 to 1000
+        void sampleSetGain(int sampleId, int gain);
+
+        /// Set pitch of sample
+        /// \param sampleId sample handler
+        /// \param pitch pitch ration for 0 to 1000
+        void sampleSetPitch(int sampleId, int pitch);
+
+        /// Rewind sample to beginning
+        /// \param sampleId sample handler
+        void sampleRewind(int sampleId);
 
     private:
         /// Add path to components search list

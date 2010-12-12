@@ -1142,3 +1142,24 @@ function include(component, name)
     end
 end
 
+-- load sample from file
+-- find file using the same rules as for textures
+function loadSample(fileName)
+    for _, v in ipairs(searchImagePath) do
+        local f = v .. '/' .. fileName
+        if isFileExists(f) then
+            return loadSampleFromFile(f)
+        end
+    end
+
+    if not isFileExists(fileName) then
+        print("Can't find sound", fileName)
+    end
+
+    local s = loadSampleFromFile(fileName)
+    if 0 == s then
+        print("Can't load sound", fileName)
+    end
+    return s
+end
+

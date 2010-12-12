@@ -7,6 +7,7 @@
 #include "propsserv.h"
 #include "utils.h"
 #include "graphstub.h"
+#include "sound.h"
 
 
 using namespace xa;
@@ -21,6 +22,7 @@ Avionics::Avionics(const std::string &path): path(path), clickEmulator(timer),
     panelHeight = popupHeight = 768;
     setGraphicsCallbacks(getGraphicsStub());
     lastGcTime = 0;
+    sound = NULL;
 
     bgR = bgG = bgB = 1.0f;
     bgA = 0.0f;
@@ -30,6 +32,7 @@ Avionics::Avionics(const std::string &path): path(path), clickEmulator(timer),
     exportTextureToLua(lua);
     exportFontToLua(lua);
     exportPropsToLua(lua);
+    exportSoundToLua(lua);
 
     if (lua.runScript(path + "/scripts/init.lua")) {
         std::string msg(std::string("Error running init script: ") + 
@@ -354,5 +357,55 @@ void Avionics::setGraphicsCallbacks(XaGraphicsCallbacks *callbacks)
 {
     graphics = callbacks;
     textureManager.setGraphicsCallbacks(callbacks);
+}
+
+
+void Avionics::setSoundCallbacks(XaSoundCallbacks *callbacks, void *data)
+{
+    sound = callbacks;
+}
+
+
+int Avionics::sampleLoad(const char *fileName)
+{
+    if (sound)
+        return sound->load(sound, fileName);
+    else
+        return 0;
+}
+
+
+void Avionics::samplePlay(int sampleId, int loop)
+{
+    if (sound)
+        sound->play(sound, sampleId, loop);
+}
+
+
+void Avionics::sampleStop(int sampleId)
+{
+    if (sound)
+        sound->stop(sound, sampleId);
+}
+
+
+void Avionics::sampleSetGain(int sampleId, int gain)
+{
+    if (sound)
+        sound->set_gain(sound, sampleId, gain);
+}
+
+
+void Avionics::sampleSetPitch(int sampleId, int pitch)
+{
+    if (sound)
+        sound->set_pitch(sound, sampleId, pitch);
+}
+
+
+void Avionics::sampleRewind(int sampleId)
+{
+    if (sound)
+        sound->rewind(sound, sampleId);
 }
 

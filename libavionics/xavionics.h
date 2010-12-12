@@ -251,6 +251,48 @@ int xa_connect_to_server(XA xa, const char *host, int port,
         const char *secret);
 
 
+// Sound API
+
+/// Setup sound engine
+/// \param xa X-Avionics handler.
+/// \param callbacks sound engine callbacks.
+/// \param data custom data for sound engine
+void xa_set_sound_engine(XA xa, struct XaSoundCallbacks *callbacks, void *data);
+
+/// Load sample into memory.  Returns sample handler or 0 if can't load sample
+/// \param xa X-Avionics handler.
+/// \param fileName path to sample on disk
+int xa_sample_load(XA xa, const char *fileName);
+
+// Play loaded sample
+/// \param xa X-Avionics handler.
+/// \param sampleId sample handler
+/// \param loop if non-zero sound will be looped
+void xa_sample_play(XA xa, int sampleId, int loop);
+
+/// Stop playing sample
+/// \param xa X-Avionics handler.
+/// \param sampleId sample handler
+void xa_sample_stop(XA xa, int sampleId);
+
+/// Set gain of sample
+/// \param xa X-Avionics handler.
+/// \param sampleId sample handler
+/// \param gain gain ration for 0 to 1000
+void xa_sample_set_gain(XA xa, int sampleId, int gain);
+
+/// Set pitch of sample
+/// \param xa X-Avionics handler.
+/// \param sampleId sample handler
+/// \param pitch pitch ration for 0 to 1000
+void xa_sample_set_pitch(XA xa, int sampleId, int pitch);
+
+/// Rewind sample to beginning
+/// \param xa X-Avionics handler.
+/// \param sampleId sample handler
+void xa_sample_rewind(XA xa, int sampleId);
+
+
 #if defined(__cplusplus)
 }  /* extern "C" */
 #endif

@@ -18,6 +18,7 @@ extern "C" {
 #include "options.h"
 #include "xplua.h"
 #include "ogl.h"
+#include "sound.h"
 
 
 // version of plug-in
@@ -562,6 +563,7 @@ static void freeAvionics(bool keepProps)
     doneGui();
     if (! xa)
         return;
+    doneSound(xa);
     xa_done(xa);
     xa = NULL;
     if (props) {
@@ -630,6 +632,7 @@ static void reloadPanel(bool keepProps)
         xa = xa_init(dataDir.c_str());
         xa_enable_click_emulator(xa, 1);
         xa_set_graphics_callbacks(xa, graphics);
+        initSound(xa);
         registerCommandsApi(xa);
 
         if (! props)

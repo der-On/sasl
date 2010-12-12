@@ -246,6 +246,65 @@ struct XaGraphicsCallbacks {
 };
 
 
+//
+// sound API
+//
+
+/// forward declaration of graphics structure
+struct XaSoundCallbacks;
+
+
+/// Load sample into memory.  Returns sample handler or 0 if can't load sample
+/// \param sound sound callbacks structure.
+/// \param fileName path to sample on disk
+typedef int (*xa_sample_load_callback)(struct XaSoundCallbacks *sound, 
+        const char *fileName);
+
+// Play loaded sample
+/// \param sound sound callbacks structure.
+/// \param sampleId sample handler
+/// \param loop if non-zero sound will be looped
+typedef void (*xa_sample_play_callback)(struct XaSoundCallbacks *sound, 
+        int sampleId, int loop);
+
+/// Stop playing sample
+/// \param sound sound callbacks structure.
+/// \param sampleId sample handler
+typedef void (*xa_sample_stop_callback)(struct XaSoundCallbacks *sound, 
+        int sampleId);
+
+/// Set gain of sample
+/// \param sound sound callbacks structure.
+/// \param sampleId sample handler
+/// \param gain gain ration for 0 to 1000
+typedef void (*xa_sample_set_gain_callback)(struct XaSoundCallbacks *sound, 
+        int sampleId, int gain);
+
+/// Set pitch of sample
+/// \param sound sound callbacks structure.
+/// \param sampleId sample handler
+/// \param pitch pitch ration for 0 to 1000
+typedef void (*xa_sample_set_pitch_callback)(struct XaSoundCallbacks *sound, 
+        int sampleId, int pitch);
+
+/// Rewind sample to beginning
+/// \param sound sound callbacks structure.
+/// \param sampleId sample handler
+typedef void (*xa_sample_rewind_callback)(struct XaSoundCallbacks *sound, 
+        int sampleId);
+
+
+// sound callbacks
+struct XaSoundCallbacks {
+    xa_sample_load_callback load;
+    xa_sample_play_callback play;
+    xa_sample_stop_callback stop;
+    xa_sample_set_gain_callback set_gain;
+    xa_sample_set_pitch_callback set_pitch;
+    xa_sample_rewind_callback rewind;
+};
+
+
 #if defined(__cplusplus)
 }  /* extern "C" */
 #endif

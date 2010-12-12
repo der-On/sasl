@@ -338,3 +338,50 @@ void xa_set_commands(XA xa, struct XaCommandCallbacks *callbacks, void *data)
 }
 
 
+void xa_set_sound_engine(XA xa, struct XaSoundCallbacks *callbacks, void *data)
+{
+    assert(xa && xa->avionics);
+    xa->avionics->setSoundCallbacks(callbacks, data);
+}
+
+
+int xa_sample_load(XA xa, const char *fileName)
+{
+    assert(xa && xa->avionics);
+    return xa->avionics->sampleLoad(fileName);
+}
+
+
+void xa_sample_play(XA xa, int sampleId, int loop)
+{
+    assert(xa && xa->avionics);
+    xa->avionics->samplePlay(sampleId, loop);
+}
+
+
+void xa_sample_stop(XA xa, int sampleId)
+{
+    assert(xa && xa->avionics);
+    xa->avionics->sampleStop(sampleId);
+}
+
+void xa_sample_set_gain(XA xa, int sampleId, int gain)
+{
+    assert(xa && xa->avionics);
+    xa->avionics->sampleSetGain(sampleId, gain);
+}
+
+
+void xa_sample_set_pitch(XA xa, int sampleId, int pitch)
+{
+    assert(xa && xa->avionics);
+    xa->avionics->sampleSetPitch(sampleId, pitch);
+}
+
+
+void xa_sample_rewind(XA xa, int sampleId)
+{
+    assert(xa && xa->avionics);
+    xa->avionics->sampleRewind(sampleId);
+}
+
