@@ -10,7 +10,7 @@ LUAJIT=/opt/luajit/
 DEFS= -DLIN=1 -fPIC -m32 -fno-stack-protector -DXPLM200 -ggdb
 CXXFLAGS+=-Wall -I$(SDK)/CHeaders/XPLM -I$(SDK)/CHeaders/Widgets -I$(LUAJIT)/include/luajit-2.0 -I../libavionics -I../libogl $(DEFS) -O2
 LNFLAGS+=-shared -rdynamic -nodefaultlibs -m32 -ggdb -L/usr/lib32 -L../libavionics -L../libogl -L$(LUAJIT)/lib
-LIBS+=-lm -lxavionics -lluajit-5.1 -logl -lSOIL32 -lopenal -lalut #$(PLUGINS)/XPLM.so $(PLUGINS)/XPWidgets.so
+LIBS+=-lm -lxavionics -lluajit-5.1 -logl -lSOIL32 -lopenal #$(PLUGINS)/XPLM.so $(PLUGINS)/XPWidgets.so
 
 all: $(TARGET)
 
