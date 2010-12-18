@@ -7,11 +7,14 @@
 #include <stdlib.h>
 
 #if APL
-#include <Carbon/Carbon.h>
+	#include <Carbon/Carbon.h>
+	#include <OpenAL/al.h>
+	#include <OpenAL/alc.h>
+#else
+	#include <AL/al.h>
+	#include <AL/alc.h>
 #endif
 
-#include <AL/al.h>
-#include <AL/alc.h>
 
 #include "xpsdk.h"
 
