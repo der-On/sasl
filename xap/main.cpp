@@ -4,9 +4,15 @@
 #include <math.h>
 
 extern "C" {
-#include <lua.h>
-#include <lauxlib.h>
-#include <lualib.h>
+    #include <lua.h>
+    #include <lauxlib.h>
+    #include <lualib.h>
+    
+    #ifdef APL
+        // for path translation
+        #include <CoreFoundation/CFString.h>
+        #include <CoreFoundation/CFURL.h>
+    #endif
 }
 
 #include "main.h"
@@ -148,24 +154,34 @@ static bool disablePanelClicks = false;
 static XaGraphicsCallbacks* graphics;
 
 
-/// Convert a Mac-style path with double colons to a POSIX path. Google for "FSRef to POSIX path"
-// if you want to know the ass-backwards way of doing it properly, but we won't link to Carbon
-// only for this mmkay?
+/// Convert a Mac-style path with double colons to a POSIX path.
+// Since Carbon is not available on other paltfornms we can safely bypass this
 static std::string carbonPathToPosixPath(const std::string &carbonPath)
 {
-    // Check if we are on a Mac first, could be also #ifdef APL
-    std::string sep = XPLMGetDirectorySeparator();
-    if(sep != std::string(":")) return carbonPath;
+#ifdef APL
+    char outPathBuf[PATH_MAX]; //gothic
     
-    // Prepend the "Volumes" superdir to the path
-    std::string posixPath = std::string("/Volumes/") + carbonPath;
-    // Replace dots with slashes
-    for(unsigned int i = 0; i < posixPath.length(); i++) {
-        if(posixPath[i] == ':') posixPath[i] = '/';
-    }
-    XPLMDebugString("XAP: Translated path\n");
-    XPLMDebugString(posixPath.c_str());
-    return posixPath;
+    CFStringRef urlString_CF, resultString_CF;
+    CFURLRef url;
+    
+    urlString_CF = CFStringCreateWithCStringNoCopy(NULL, carbonPath.c_str(), kCFStringEncodingMacRoman, NULL);
+    url = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, urlString_CF, kCFURLHFSPathStyle, 1);
+    
+    resultString_CF = CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle);
+    CFStringGetCString(resultString_CF, outPathBuf, PATH_MAX, kCFStringEncodingUTF8);
+    
+    CFRelease(urlString_CF);
+    CFRelease(resultString_CF);
+    CFRelease(url);
+    
+    XPLMDebugString("XAP: Translated Mac path\n");
+    XPLMDebugString(outPathBuf);
+    XPLMDebugString("\n");
+    
+    return std::string(outPathBuf);
+#else
+    return carbonPath;
+#endif
 }
 
 // Overrides XPLMGetDirectorySeparator() to return the POSIX / instead of : for paths on OS X
