@@ -7,10 +7,74 @@ searchImagePath = { ".", "" }
 -- show areas on which clicking is possible
 showClickableAreas = false
 
+-- saved panelsPositions
+panelsPositions = nil
+
 -- returns true if argument is property
 function isProperty(value)
     return ("table" == type(value)) and (1 == value.__property)
 end
+
+
+-- load stands from cache
+local function loadTableFromFile(fileName, name)
+    local chunk = loadfile(fileName)
+    if nil ~= chunk then
+        local t = { }
+        setfenv(chunk, t)
+        chunk()
+        return t[name]
+    else
+        print('file not exists', fileName)
+        return nil
+    end
+end
+
+-- save table to file
+local function saveTableToFile(f, table, name)
+    if name then
+        f:write(name .. ' = ')
+    end
+    f:write('{\n')
+
+    for k, v in pairs(table) do
+        f:write('["' .. k .. '"] = ')
+        if ('number' == type(v)) or ('boolean' == type(v)) then
+            f:write(tostring(v) .. ';\n')
+        elseif ('string' == type(v)) then
+            f:write('"' .. v .. '";\n')
+        elseif ('table' == type(v)) then
+            saveTableToFile(f, v)
+        end
+    end
+
+    f:write('};\n')
+end
+
+-- save table to file
+local function savePositionsToFile(f, table, name)
+    if name then
+        f:write(name .. ' = ')
+    end
+    f:write('{\n')
+
+    for k, v in pairs(table) do
+        f:write('["' .. k .. '"] = { ')
+        for i = 1, 4 do
+            f:write(v[i])
+            if 4 ~= i then
+                f:write(', ')
+            else
+                f:write(' ')
+            end
+        end
+        f:write('};\n')
+    end
+
+    f:write('};\n')
+end
+
+
 
 
 -- create new property table
@@ -131,6 +195,7 @@ function createComponent(name, parent)
         movable = createProperty(false),
         resizeble = createProperty(false),
         focused = createProperty(false),
+        savePosition = createProperty(false),
         onMouseUp = defaultOnMouseUp,
         onMouseDown = defaultOnMouseDown,
         onMouseClick = defaultOnMouseClick,
@@ -565,6 +630,8 @@ function loadPanel(fileName, panelWidth, panelHeight, popupWidth, popupHeight)
     popups.position = createProperty { 0, 0, popupWidth, popupHeight }
     popups.size = { popupWidth, popupHeight }
 
+    panelsPositions = loadTableFromFile(panelDir .. '/panels.txt', 'positions')
+
     local c = loadComponent("panel", fileName)
     if not c then
         print("Error loading panel", fileName)
@@ -959,7 +1026,11 @@ end
 
 -- create popup movable resizable subpanel hidden by default
 function subpanel(tbl)
-    local c = createComponent('subpanel', popups)
+    local name = tbl.name
+    if nil == name then
+        name = 'subanel'
+    end
+    local c = createComponent(name, popups)
     set(c.position, tbl.position)
     c.size = { tbl.position[3], tbl.position[4] }
     c.onMouseClick = function (comp, x, y, button, parentX, parentY)
@@ -976,6 +1047,9 @@ function subpanel(tbl)
     end
     set(c.visible, false)
     set(c.movable, true)
+    if get(tbl.savePosition) then
+        set(c.savePosition, true);
+    end
     c.cursor = { x = 0; y = 0; shape = loadImage("none.png") }
     c.components = tbl.components
 
@@ -1063,11 +1137,43 @@ function subpanel(tbl)
         -- register created commandhandler
         registerCommandHandler(command, 0, commandHandler)
     end
+    
+    if panelsPositions and get(c.savePosition) and ('subpanel' ~= name) then
+        local pos = panelsPositions[name]
+        if pos then
+            set(c.position, pos)
+        end
+    end
 
     popup(c)
 
     return c
 end
+
+-- save positions of popup components
+function savePopupsPositions()
+    local positions = { }
+    for _k, c in pairs(popups.components) do
+        if get(c.savePosition) and ('subpanel' ~= get(c.name)) then
+            positions[get(c.name)] = get(c.position)
+        end
+    end
+
+    if not #positions then
+        return
+    end
+
+    local fileName = panelDir .. '/panels.txt'
+    print('saving panels positions', fileName)
+    local f = io.open(fileName, 'w+')
+    if nil ~= f then
+        savePositionsToFile(f, positions, 'positions')
+        f:close()
+    else
+        print("Can't open file '" .. fileName .. "' for writing")
+    end
+end
+
 
 -- call 'onAvionicsDone' function
 function doneComponent(component)
@@ -1080,10 +1186,12 @@ function doneComponent(component)
     end
 end
 
+
 -- called when avionics about to unload
 function doneAvionics()
     doneComponent(popups)
     doneComponent(panel)
+    savePopupsPositions()
 end
 
 
@@ -1162,4 +1270,5 @@ function loadSample(fileName)
     end
     return s
 end
+
 
