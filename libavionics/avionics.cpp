@@ -144,7 +144,7 @@ void Avionics::update()
 
     long currentTime = timer.getTime();
     if (currentTime - lastGcTime > 3000) {
-        lua_gc(L, LUA_GCCOLLECT, 0);
+//        lua_gc(L, LUA_GCCOLLECT, 0);
         lastGcTime = currentTime;
     }
 }
