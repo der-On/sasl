@@ -228,12 +228,16 @@ static PropRef getPropRef(Props props, const char *name, int type)
         return NULL;
 
     int index = 0;
-    std::string realName = name;
-    cutArrayIndex(realName, index);
+    XPLMDataRef ref = XPLMFindDataRef(name);
 
-    XPLMDataRef ref = XPLMFindDataRef(realName.c_str());
-    if (! ref)
-        return NULL;
+    if (! ref) {
+        std::string realName = name;
+        cutArrayIndex(realName, index);
+
+        XPLMDataRef ref = XPLMFindDataRef(realName.c_str());
+        if (! ref)
+            return NULL;
+    }
 
     Property *prop = new Property;
     prop->ref = ref;
