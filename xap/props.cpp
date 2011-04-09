@@ -234,7 +234,7 @@ static PropRef getPropRef(Props props, const char *name, int type)
         std::string realName = name;
         cutArrayIndex(realName, index);
 
-        XPLMDataRef ref = XPLMFindDataRef(realName.c_str());
+        ref = XPLMFindDataRef(realName.c_str());
         if (! ref)
             return NULL;
     }
