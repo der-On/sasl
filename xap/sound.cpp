@@ -11,8 +11,14 @@
 	#include <OpenAL/al.h>
 	#include <OpenAL/alc.h>
 #else
-	#include <AL/al.h>
-	#include <AL/alc.h>
+	#ifdef WIN32
+		#include <al.h>
+		#include <alc.h>
+		#include <alut.h>
+	#else
+		#include <AL/al.h>
+		#include <AL/alc.h>
+	#endif
 #endif
 
 
