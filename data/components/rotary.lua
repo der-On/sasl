@@ -8,6 +8,8 @@ defineProperty("value", 0)
 -- default step
 defineProperty("step", 1)
 
+defineProperty('autoRepeat', true)
+
 -- function for adjusting value to near suitable
 --defineProperty("adjuster")
 
@@ -39,9 +41,22 @@ components = {
             shape = loadImage("rotateleft.png")
         },
 
+        onMouseDown = function(x, y, button)
+            if not get(autoRepeat) then
+                updateValue(get(value) - get(step))
+                return true
+            else
+                return false
+            end
+        end,
+
         onMouseClick = function(x, y, button)
-            updateValue(get(value) - get(step))
-            return true
+            if get(autoRepeat) then
+                updateValue(get(value) - get(step))
+                return true
+            else
+                return false
+            end
         end,
     },
     
@@ -56,9 +71,22 @@ components = {
             shape = loadImage("rotateright.png")
         },
         
+        onMouseDown = function(x, y, button) 
+            if not get(autoRepeat) then
+                updateValue(get(value) + get(step))
+                return true
+            else
+                return false
+            end
+        end,
+
         onMouseClick = function(x, y, button) 
-            updateValue(get(value) + get(step))
-            return true
+            if get(autoRepeat) then
+                updateValue(get(value) + get(step))
+                return true
+            else
+                return false
+            end
         end,
     },
     
