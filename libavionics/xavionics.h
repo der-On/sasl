@@ -278,13 +278,13 @@ void xa_sample_stop(XA xa, int sampleId);
 /// Set gain of sample
 /// \param xa X-Avionics handler.
 /// \param sampleId sample handler
-/// \param gain gain ration for 0 to 1000
+/// \param gain gain ratio from 0 to 1000
 void xa_sample_set_gain(XA xa, int sampleId, int gain);
 
 /// Set pitch of sample
 /// \param xa X-Avionics handler.
 /// \param sampleId sample handler
-/// \param pitch pitch ration for 0 to 1000
+/// \param pitch pitch ratio from 0 to 1000
 void xa_sample_set_pitch(XA xa, int sampleId, int pitch);
 
 /// Rewind sample to beginning
@@ -296,6 +296,12 @@ void xa_sample_rewind(XA xa, int sampleId);
 /// \param xa X-Avionics handler.
 /// \param sampleId sample handler
 int xa_sample_is_playing(XA xa, int sampleId);
+
+
+/// Set gain of all samples
+/// \param xa X-Avionics handler.
+/// \param gain gain ratio from 0 to 1000
+void xa_set_master_gain(XA xa, int gain);
 
 
 #if defined(__cplusplus)

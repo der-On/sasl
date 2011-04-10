@@ -276,14 +276,14 @@ typedef void (*xa_sample_stop_callback)(struct XaSoundCallbacks *sound,
 /// Set gain of sample
 /// \param sound sound callbacks structure.
 /// \param sampleId sample handler
-/// \param gain gain ration for 0 to 1000
+/// \param gain gain ratio from 0 to 1000
 typedef void (*xa_sample_set_gain_callback)(struct XaSoundCallbacks *sound, 
         int sampleId, int gain);
 
 /// Set pitch of sample
 /// \param sound sound callbacks structure.
 /// \param sampleId sample handler
-/// \param pitch pitch ration for 0 to 1000
+/// \param pitch pitch ratio from 0 to 1000
 typedef void (*xa_sample_set_pitch_callback)(struct XaSoundCallbacks *sound, 
         int sampleId, int pitch);
 
@@ -299,6 +299,12 @@ typedef void (*xa_sample_rewind_callback)(struct XaSoundCallbacks *sound,
 typedef int (*xa_sample_is_playing_callback)(struct XaSoundCallbacks *sound, 
         int sampleId);
 
+/// Set gain of all samples
+/// \param sound sound callbacks structure.
+/// \param gain gain ratio from 0 to 1000
+typedef void (*xa_set_master_gain_callback)(struct XaSoundCallbacks *sound, 
+        int gain);
+
 // sound callbacks
 struct XaSoundCallbacks {
     xa_sample_load_callback load;
@@ -308,6 +314,7 @@ struct XaSoundCallbacks {
     xa_sample_set_pitch_callback set_pitch;
     xa_sample_rewind_callback rewind;
     xa_sample_is_playing_callback is_playing;
+    xa_set_master_gain_callback set_master_gain;
 };
 
 

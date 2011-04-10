@@ -391,3 +391,9 @@ int xa_sample_is_playing(XA xa, int sampleId)
     return xa->avionics->sampleIsPlaying(sampleId);
 }
 
+void xa_set_master_gain(XA xa, int gain)
+{
+    assert(xa && xa->avionics);
+    xa->avionics->setMasterGain(gain);
+}
+

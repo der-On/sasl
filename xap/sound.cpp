@@ -411,11 +411,24 @@ static int isPlaying(struct XaSoundCallbacks *s, int sampleId)
 }
 
 
+// set gain of all sound
+static void setMasterGain(struct XaSoundCallbacks *s, int gain)
+{
+    if ((! sound.device) || (! sound.context))
+        return;
+    
+    ContextChanger changer(sound.context);
+
+    alListenerf(AL_GAIN, (float)gain / 1000.0);
+}
+
+
+
 // initialize sound engined
 void xap::initSound(XA xa)
 {
     struct XaSoundCallbacks cb = { loadSound, playSound, stopSound, setGain, 
-        setPitch, rewindSound, isPlaying };
+        setPitch, rewindSound, isPlaying, setMasterGain };
     sound.callbacks = cb;
     sound.device = alcOpenDevice(NULL);
     sound.context = alcCreateContext(sound.device, NULL);

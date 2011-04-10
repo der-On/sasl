@@ -58,6 +58,14 @@ static int luaIsSamplePlaying(lua_State *L)
 }
 
 
+static int luaSetMasterGain(lua_State *L)
+{
+    getAvionics(L)->setMasterGain(lua_tonumber(L, 1));
+    return 0;
+}
+
+
+
 
 
 void xa::exportSoundToLua(Luna &lua)
@@ -71,5 +79,6 @@ void xa::exportSoundToLua(Luna &lua)
     lua_register(L, "setSamplePitch", luaSampleSetPitch);
     lua_register(L, "rewindSample", luaSampleRewind);
     lua_register(L, "isSamplePlaying", luaIsSamplePlaying);
+    lua_register(L, "setMasterGain", luaSetMasterGain);
 }
 

@@ -418,3 +418,9 @@ bool Avionics::sampleIsPlaying(int sampleId)
         return false;
 }
 
+void Avionics::setMasterGain(int gain)
+{
+    if (sound)
+        sound->set_master_gain(sound, gain);
+}
+

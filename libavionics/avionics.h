@@ -197,12 +197,12 @@ class Avionics
 
         /// Set gain of sample
         /// \param sampleId sample handler
-        /// \param gain gain ration for 0 to 1000
+        /// \param gain gain ratio from 0 to 1000
         void sampleSetGain(int sampleId, int gain);
 
         /// Set pitch of sample
         /// \param sampleId sample handler
-        /// \param pitch pitch ration for 0 to 1000
+        /// \param pitch pitch ration from 0 to 1000
         void sampleSetPitch(int sampleId, int pitch);
 
         /// Rewind sample to beginning
@@ -212,6 +212,10 @@ class Avionics
         /// Returns true if sample playing now
         /// \param sampleId sample handler
         bool sampleIsPlaying(int sampleId);
+
+        /// Set gain for all samles
+        /// \param gain gain ratio from 0 to 1000
+        void setMasterGain(int gain);
 
     private:
         /// Add path to components search list
