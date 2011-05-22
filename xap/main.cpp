@@ -159,6 +159,10 @@ static XaGraphicsCallbacks* graphics;
 static std::string carbonPathToPosixPath(const std::string &carbonPath)
 {
 #ifdef APL
+    XPLMDebugString("XAP: Will translate CF path from\n");
+    XPLMDebugString(carbonPath.c_str());
+    XPLMDebugString("\n");
+    
     char outPathBuf[PATH_MAX]; //gothic
     
     CFStringRef urlString_CF, resultString_CF;
@@ -174,7 +178,7 @@ static std::string carbonPathToPosixPath(const std::string &carbonPath)
     CFRelease(resultString_CF);
     CFRelease(url);
     
-    XPLMDebugString("XAP: Translated Mac path\n");
+    XPLMDebugString("XAP: Translated POSIX path will be\n");
     XPLMDebugString(outPathBuf);
     XPLMDebugString("\n");
     
@@ -188,6 +192,7 @@ static std::string carbonPathToPosixPath(const std::string &carbonPath)
 static std::string getDirSeparator()
 {
     std::string sep = XPLMGetDirectorySeparator();
+    
     if(sep == std::string(":")) {
         XPLMDebugString("XAP: Using Mac paths\n");
         return std::string("/");
