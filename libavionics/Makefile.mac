@@ -9,7 +9,7 @@ OSXL=-lobjc -arch i386 -syslibroot=$(SDKROOT) -framework Cocoa -framework OpenGL
 
 CXXFLAGS+=-m32 -Wall -I/usr/local/include -DAPL=1 -fPIC -ggdb -fno-stack-protector $(OSXC)
 LNFLAGS+=-ggdb -L/usr/local/lib $(OSXL) 
-LIBS+=-L/usr/local/lib -lSDLmain -lSDL -lluajit-5.1 -lSOIL
+LIBS+=-L/usr/local/lib -lluajit-5.1
 
 all: $(TARGET)
 
