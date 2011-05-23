@@ -29,7 +29,8 @@ make CFLAGS="-mmacosx-version-min=10.5 -isysroot /Developer/SDKs/MacOSX10.5.sdk 
 sudo make install
 
 # 2. Grab, build and install SDL (from source, not the framework version since we will be making a Mach-O dylib!)
-# This step currently fails on Snow Leopard due to a bug in SDL
+# This step currently fails on Snow Leopard due to a bug in SDL. Note you need SDL only if you also intend to use Slava
+# which is semi-inop on OSX anyway.
 cd /tmp/xap-parts
 curl http://www.libsdl.org/release/SDL-1.2.14.tar.gz | tar xfz -
 cd SDL-1.2.14
@@ -44,7 +45,11 @@ unzip soil.zip
 cd "Simple OpenGL Image Library/projects/makefile" # Obnoxious spaces in dirname
 mkdir obj # The author has forgotten
 # Now the same for SOIL
-make CXXFLAGS="-mmacosx-version-min=10.5 -isysroot /Developer/SDKs/MacOSX10.5.sdk -arch i386" 
+make CXXFLAGS="-m32 -mmacosx-version-min=10.5 -isysroot /Developer/SDKs/MacOSX10.5.sdk -arch i386" 
+# Now there is a problem. SOIL links with ar and it links x64 on OSX 10.6 What we need to do
+# is to relink it manually with libtool
+libtool -static -ggdb -o ../../lib/libSOIL.a obj/*.o
+# And install.
 sudo make install
 
 # Now build libavionics, Slava and xap
