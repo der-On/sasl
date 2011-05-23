@@ -636,6 +636,7 @@ static void reloadPanel(bool keepProps)
     std::string version_name = "XAP: build timestamp ";
     version_name += __DATE__;
     version_name += __TIME__;
+    version_name += "\n";
     
     XPLMDebugString(version_name.c_str());
     XPLMDebugString("XAP: Reload panel signal received\n");
