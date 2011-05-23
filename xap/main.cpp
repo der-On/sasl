@@ -632,31 +632,36 @@ static int getGlobalPanelValue(const char *name, int dflt)
 static void reloadPanel(bool keepProps)
 {
     freeAvionics(keepProps);
-        
+    
+    std::string version_name = "XAP: build timestamp ";
+    version_name += __DATE__;
+    version_name += __TIME__;
+    
+    XPLMDebugString(version_name.c_str());
     XPLMDebugString("XAP: Reload panel signal received\n");
-
+    
     lastShowClickable = -1;
-
+    
     std::string dir = getAircraftDir();
     std::string panelPath = getPanelPath(dir);
-
+    
     XPLMDebugString(panelPath.c_str());
     
     if (fileDoesExist(panelPath)) {
         XPLMDebugString("XAP: Loading avionics...\n");
         panelViewInitialized = false;
-
+        
         std::string dataDir = dir + "/plugins/xap/data";
         if (! fileDoesExist(dataDir + "/scripts/init.lua"))
             dataDir = getDataDir();
-
+        
         xa = xa_init(dataDir.c_str());
         xa_enable_click_emulator(xa, 1);
         xa_set_graphics_callbacks(xa, graphics);
         initSound(xa);
         registerCommandsApi(xa);
 
-        if (! props)
+        if (!props)
             props = propsInit();
 
         options.load();
