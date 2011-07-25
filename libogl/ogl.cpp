@@ -48,13 +48,13 @@ struct OglCanvas
     int numVertices;
 
     /// vertices buffer
-    double *vertexBuffer;
+    float *vertexBuffer;
     
     /// texture coords buffer
-    double *texBuffer;
+    float *texBuffer;
     
     /// vertex colors buffer
-    double *colorBuffer;
+    float *colorBuffer;
 };
 
 
@@ -76,9 +76,9 @@ static void drawBegin(struct XaGraphicsCallbacks *canvas)
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    glVertexPointer(2, GL_DOUBLE, 0, c->vertexBuffer);
-    glTexCoordPointer(2, GL_DOUBLE, 0, c->texBuffer);
-    glColorPointer(4, GL_DOUBLE, 0, c->colorBuffer);
+    glVertexPointer(2, GL_FLOAT, 0, c->vertexBuffer);
+    glTexCoordPointer(2, GL_FLOAT, 0, c->texBuffer);
+    glColorPointer(4, GL_FLOAT, 0, c->colorBuffer);
 
     c->triangles = 0;
     c->lines = 0;
@@ -96,14 +96,14 @@ static void reserveSpace(OglCanvas *c, int qty)
 {
     if (c->numVertices + qty > c->maxVertices) {
         c->maxVertices += (qty / 1024 + 1) * 1024;
-        int s = sizeof(double) * c->maxVertices;
-        c->vertexBuffer = (double*)realloc(c->vertexBuffer, 2 * s);
-        c->texBuffer = (double*)realloc(c->texBuffer, 2 * s);
-        c->colorBuffer = (double*)realloc(c->colorBuffer, 4 * s);
+        int s = sizeof(float) * c->maxVertices;
+        c->vertexBuffer = (float*)realloc(c->vertexBuffer, 2 * s);
+        c->texBuffer = (float*)realloc(c->texBuffer, 2 * s);
+        c->colorBuffer = (float*)realloc(c->colorBuffer, 4 * s);
         
-        glVertexPointer(2, GL_DOUBLE, 0, c->vertexBuffer);
-        glTexCoordPointer(2, GL_DOUBLE, 0, c->texBuffer);
-        glColorPointer(4, GL_DOUBLE, 0, c->colorBuffer);
+        glVertexPointer(2, GL_FLOAT, 0, c->vertexBuffer);
+        glTexCoordPointer(2, GL_FLOAT, 0, c->texBuffer);
+        glColorPointer(4, GL_FLOAT, 0, c->colorBuffer);
     }
 }
 
@@ -399,9 +399,9 @@ struct XaGraphicsCallbacks* xagl_init_graphics()
     c->callbacks.rotate_transform = rotateTransform;
     
     c->maxVertices = 1024;
-    c->vertexBuffer = (double*)malloc(sizeof(double) * 2 * c->maxVertices);
-    c->texBuffer = (double*)malloc(sizeof(double) * 2 * c->maxVertices);
-    c->colorBuffer = (double*)malloc(sizeof(double) * 4 * c->maxVertices);
+    c->vertexBuffer = (float*)malloc(sizeof(float) * 2 * c->maxVertices);
+    c->texBuffer = (float*)malloc(sizeof(float) * 2 * c->maxVertices);
+    c->colorBuffer = (float*)malloc(sizeof(float) * 4 * c->maxVertices);
 
     return (struct XaGraphicsCallbacks*)c;
 }
