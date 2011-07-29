@@ -633,12 +633,6 @@ static void reloadPanel(bool keepProps)
 {
     freeAvionics(keepProps);
     
-    std::string version_name = "XAP: build timestamp ";
-    version_name += __DATE__;
-    version_name += __TIME__;
-    version_name += "\n";
-    
-    XPLMDebugString(version_name.c_str());
     XPLMDebugString("XAP: Reload panel signal received\n");
     
     lastShowClickable = -1;
@@ -790,21 +784,12 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc)
 
     strcpy(outName, "SASL");
     strcpy(outSig, pluginSignature);
-
-#ifdef SNAPSHOT
-#define xstr(s) str(s)
-#define str(s) #s
-    sprintf(outDesc, "X-Plane scriptable avionics library plugin snapshot %i.%i.%i %s", 
-            VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, xstr(SNAPSHOT));
-#undef str
-#undef xstr
-#else
-    sprintf(outDesc, "X-Plane scriptable avionics library plugin v%i.%i.%i", 
-            VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
-#endif
-    XPLMDebugString(outDesc);
-    XPLMDebugString("\n");
-
+    
+    // Describe the plugin version
+    sprintf(outDesc, "X-Plane scriptable avionics library plugin %i.%i.%i built on %s %s", 
+            VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, __DATE__, __TIME__);
+    XPLMDebugString((std::string("XAP:") + std::string(outDesc) + "\n").c_str());
+    
     viewType = XPLMFindDataRef("sim/graphics/view/view_type");
     //windowLeft = XPLMFindDataRef("sim/graphics/view/panel_total_win_l");
     panelLeft = XPLMFindDataRef("sim/graphics/view/panel_total_pnl_l");
