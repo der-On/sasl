@@ -15,13 +15,13 @@ components = {
     -- "on" state texture
     textureLit {
         image = lightOn,
-        visible = function() return get(state); end,
+        visible = function() return toboolean(get(state)); end;
     };
     
     -- "off" state texture
     textureLit {
         image = lightOff,
-        visible = function() return not get(state); end,
+        visible = function() return not toboolean(get(state)); end,
     };
 
 }

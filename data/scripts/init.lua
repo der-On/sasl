@@ -16,6 +16,15 @@ function isProperty(value)
 end
 
 
+-- consider 0 as false
+function toboolean(value)
+    if 0 == value then
+        return false
+    else
+        return value
+    end
+end
+
 -- load stands from cache
 local function loadTableFromFile(fileName, name)
     local chunk = loadfile(fileName)
@@ -196,6 +205,7 @@ function createComponent(name, parent)
         resizeble = createProperty(false),
         focused = createProperty(false),
         savePosition = createProperty(false),
+        resizeProporional = createProperty(false),
         onMouseUp = defaultOnMouseUp,
         onMouseDown = defaultOnMouseDown,
         onMouseClick = defaultOnMouseClick,
@@ -419,7 +429,7 @@ end
 
 -- draw component
 function drawComponent(v)
-    if v and get(v.visible) then
+    if v and toboolean(get(v.visible)) then
         saveGraphicsContext()
         local pos = get(v.position)
         setTranslation(pos[1], pos[2], pos[3], pos[4], v.size[1], v.size[2])
@@ -769,7 +779,7 @@ function runHandler(component, name, x, y, button, path)
     local my = (y - position[2]) * size[2] / position[4]
     for i = #component.components, 1, -1 do
         local v = component.components[i]
-        if get(v.visible) and isInRect(get(v.position), mx, my) then
+        if toboolean(get(v.visible)) and isInRect(get(v.position), mx, my) then
             local res = runHandler(v, name, mx, my, button, path)
             if res then
                 if path then
@@ -800,7 +810,7 @@ function getFocusedPath(component, x, y, path)
     local my = (y - position[2]) * size[2] / position[4]
     for i = #component.components, 1, -1 do
         local v = component.components[i]
-        if get(v.visible) and isInRect(get(v.position), mx, my) then
+        if toboolean(get(v.visible)) and isInRect(get(v.position), mx, my) then
             getFocusedPath(v, mx, my, path)
         end
     end
@@ -881,7 +891,7 @@ function getCursorShape(component, x, y)
     local my = (y - position[2]) * size[2] / position[4]
     for i = #component.components, 1, -1 do
         local v = component.components[i]
-        if get(v.visible) and isInRect(get(v.position), mx, my) then
+        if toboolean(get(v.visible)) and isInRect(get(v.position), mx, my) then
             local res = getCursorShape(v, mx, my)
             if res then
                 return res
@@ -1119,14 +1129,14 @@ function subpanel(tbl)
     finishComponentsCreation()
 
     if get(tbl.command) then
-        -- register navigator panel popup command
+        -- register panel popup command
         local command = createCommand(get(tbl.command), get(tbl.description))
 
-        -- navigator command handler
+        -- show or hide panel on command received
         function commandHandler(phase)
             if 0 == phase then
-                set(c.visible, not get(c.visible))
-                if get(c.visible) then
+                set(c.visible, not toboolean(get(c.visible)))
+                if toboolean(get(c.visible)) then
                     movePanelToTop(c)
                 end
             end
@@ -1201,7 +1211,7 @@ function traverseFocused(char, key, func)
         local maxVisible = 0
         for i = 1, #focusedComponentPath, 1 do
             local c = focusedComponentPath[i]
-            if get(c.visible) then
+            if toboolean(get(c.visible)) then
                 maxVisible = i
             else
                 break;
