@@ -1,6 +1,6 @@
 include ../common.mk
 
-PLUGINS="../plugin/xap"
+PLUGINS="../../plugin/sasl"
 
 TARGET=lin.xpl
 HEADERS=$(wildcard *.h)

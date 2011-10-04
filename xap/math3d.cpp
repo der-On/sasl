@@ -5,7 +5,7 @@
 using namespace xap;
 
 
-double distance(const Vector &v1, const Vector &v2)
+double xap::distance(const Vector &v1, const Vector &v2)
 {
     double mx = v1.x - v2.x;
     double my = v1.y - v2.y;
@@ -14,7 +14,7 @@ double distance(const Vector &v1, const Vector &v2)
 }
 
 
-Vector operator ^ (const Vector& u, const Vector& v)
+Vector xap::operator ^ (const Vector& u, const Vector& v)
 {
     return Vector(u.y*v.z - u.z*v.y, u.z*v.x - u.x*v.z, u.x*v.y - u.y*v.x);
 }
@@ -128,7 +128,7 @@ Matrix& Matrix::operator *= (const Matrix& a)
 }
 
 
-Matrix operator + (const Matrix& a, const Matrix& b)
+Matrix xap::operator + (const Matrix& a, const Matrix& b)
 {
     Matrix res;
     for (int i = 0; i < 4; i++)
@@ -138,7 +138,7 @@ Matrix operator + (const Matrix& a, const Matrix& b)
 }
 
 
-Matrix operator - (const Matrix& a, const Matrix& b)
+Matrix xap::operator - (const Matrix& a, const Matrix& b)
 {
     Matrix res;
     for (int i = 0; i < 4; i++)
@@ -148,7 +148,7 @@ Matrix operator - (const Matrix& a, const Matrix& b)
 }
 
 
-Matrix operator * (const Matrix& a, const Matrix& b)
+Matrix xap::operator * (const Matrix& a, const Matrix& b)
 {
     Matrix res;
     for (int i = 0; i < 4; i++)
@@ -163,7 +163,7 @@ Matrix operator * (const Matrix& a, const Matrix& b)
 }
 
 
-Matrix operator * (const Matrix& a, double v)
+Matrix xap::operator * (const Matrix& a, double v)
 {
     Matrix res;
     for (int i = 0; i < 4; i++)
@@ -173,7 +173,7 @@ Matrix operator * (const Matrix& a, double v)
 }
 
 
-Vector operator * (const Matrix& m, const Vector& v)
+Vector xap::operator * (const Matrix& m, const Vector& v)
 {
     Vector res;
 
@@ -187,7 +187,7 @@ Vector operator * (const Matrix& m, const Vector& v)
 }
 
 
-Matrix translate(const Vector& loc)
+Matrix xap::translate(const Vector& loc)
 {
     Matrix res(1.0);
     res.x[3][0] = loc.x;
@@ -197,7 +197,7 @@ Matrix translate(const Vector& loc)
 }
 
 
-Matrix scale(const Vector& loc)
+Matrix xap::scale(const Vector& loc)
 {
     Matrix res(1.0);
     res.x[0][0] = loc.x;
@@ -207,7 +207,7 @@ Matrix scale(const Vector& loc)
 }
 
 
-Matrix rotateX(double angle)
+Matrix xap::rotateX(double angle)
 {
     Matrix res(1.0);
     double cs = cos(angle);
@@ -220,7 +220,7 @@ Matrix rotateX(double angle)
 }
 
 
-Matrix rotateY(double angle)
+Matrix xap::rotateY(double angle)
 {
     Matrix res(1.0);
     double cs = cos(angle);
@@ -233,7 +233,7 @@ Matrix rotateY(double angle)
 }
 
 
-Matrix rotateZ(double angle)
+Matrix xap::rotateZ(double angle)
 {
     Matrix res(1.0);
     double cs = cos(angle);
@@ -245,50 +245,6 @@ Matrix rotateZ(double angle)
     return res;
 }
 
-
-Matrix rotation(const Vector& axis, double angle)
-{
-    Matrix res(1.0);
-    double cs = cos(angle);
-    double s = sin(angle);
-    res.x[0][0] = axis.x * axis.x + (1.0 - axis.x * axis.x) * cs;
-    res.x[0][1] = axis.x * axis.y * (1.0 - cs) + axis.z * s;
-    res.x[0][2] = axis.x * axis.z * (1.0 - cs) - axis.y * s;
-    res.x[0][3] = 0.0;
-    res.x[1][0] = axis.x * axis.y * (1.0 - cs) - axis.z * s;
-    res.x[1][1] = axis.y * axis.y + (1.0 - axis.y * axis.y) * cs;
-    res.x[1][2] = axis.y * axis.z * (1.0 - cs) + axis.x * s;
-    res.x[1][3] = 0.0;
-    res.x[2][0] = axis.x * axis.z * (1.0 - cs) + axis.y * s;
-    res.x[2][1] = axis.y * axis.z * (1.0 - cs) - axis.x * s;
-    res.x[2][2] = axis.z * axis.z + (1.0 - axis.z * axis.z) * cs;
-    res.x[2][3] = 0.0;
-    res.x[3][0] = res.x[3][1] = res.x[3][2] = 0.0;
-    res.x[3][3] = 1.0;
-    return res;
-}
-
-
-Matrix mirrorX()
-{
-    Matrix res(1.0);
-    res.x[0][0] = -1.0;
-    return res;
-}
-
-Matrix mirrorY()
-{
-    Matrix res(1.0);
-    res.x[1][1] = -1.0;
-    return res;
-}
-
-Matrix mirrorZ()
-{
-    Matrix res(1.0);
-    res.x[2][2] = -1.0;
-    return res;
-}
 
 
 #define EPSILON 1e-10
@@ -366,7 +322,7 @@ Quat& Quat::operator *= (const Quat& q)
 }
 
 
-Quat operator + (const Quat& p, const Quat& q)
+Quat xap::operator + (const Quat& p, const Quat& q)
 {
     double x = p.v[0] + q.v[0];
     double y = p.v[1] + q.v[1];
@@ -375,7 +331,7 @@ Quat operator + (const Quat& p, const Quat& q)
     return Quat(x, y, z, w);
 }
 
-Quat operator * (const Quat& p, const Quat& q)
+Quat xap::operator * (const Quat& p, const Quat& q)
 {
 /*    double x, y, z, w;
     x = p.v[3]*q.v[0] + p.v[0]*q.v[3] + p.v[1]*q.v[2] - p.v[2]*q.v[1];

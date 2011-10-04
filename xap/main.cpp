@@ -175,9 +175,9 @@ static void printToLog(int level, const char *message)
         default: sprintf(levelStr, "ERROR");
     }
 
-    int msgLen = snprintf(NULL, 0, "SASL: %s: %s\n", levelStr, message);
+    int msgLen = snprintf(NULL, 0, "SASL %s: %s\n", levelStr, message);
     char *buf = (char*)alloca(msgLen + 1);
-    snprintf(buf, msgLen + 1, "SASL: %s: %s\n", levelStr, message);
+    snprintf(buf, msgLen + 1, "SASL %s: %s\n", levelStr, message);
     XPLMDebugString(buf);
     printf("%s", buf);
 }
@@ -202,8 +202,6 @@ static std::string carbonPathToPosixPath(const std::string &carbonPath)
     CFRelease(resultString_CF);
     CFRelease(url);
     
-    sasl_log_info(sasl, "SASL: Translated Mac path %s", outPathBuf);
-    
     return std::string(outPathBuf);
 #else
     return carbonPath;
@@ -215,7 +213,7 @@ static std::string getDirSeparator()
 {
     std::string sep = XPLMGetDirectorySeparator();
     if(sep == std::string(":")) {
-        sasl_log_info(sasl, "Using Mac paths");
+        XPLMDebugString("SASL: Using Mac paths\n");
         return std::string("/");
     } else {
         return sep;
@@ -255,9 +253,6 @@ static std::string getAircraftDir()
     XPLMExtractFileAndPath(path);
     
     std::string dir = carbonPathToPosixPath(std::string(path)) + getDirSeparator(); 
-    
-    sasl_log_info(sasl, "Got aircraft dir '%s'", dir.c_str());
-    sasl_log_info(sasl, "If the path does not look sane there was likely a problem with path translation");
     return dir;
 }
 
@@ -288,7 +283,9 @@ static double getPropd(const char *name)
 {
     XPLMDataRef ref = XPLMFindDataRef(name);
     if (! ref) {
-        sasl_log_error(sasl, "Can't find property '%s'", name);
+        XPLMDebugString("SASL: Can't find property ");
+        XPLMDebugString(name);
+        XPLMDebugString("\n");
         return 0.0;
     } else
         return XPLMGetDataf(ref);
@@ -658,17 +655,17 @@ static void reloadPanel(bool keepProps)
 {
     freeAvionics(keepProps);
         
-    sasl_log_info(sasl, "Reload panel signal received");
-
     lastShowClickable = -1;
 
     std::string dir = getAircraftDir();
     std::string panelPath = getPanelPath(dir);
 
-    sasl_log_info(sasl, "Path to panel: ", panelPath.c_str());
+    XPLMDebugString("SASL: Path to panel: ");
+    XPLMDebugString(panelPath.c_str());
+    XPLMDebugString("\n");
     
     if (fileDoesExist(panelPath)) {
-        sasl_log_info(sasl, "Loading avionics...");
+        XPLMDebugString("SASL: Loading avionics...\n");
         panelViewInitialized = false;
 
         std::string dataDir = dir + "/plugins/sasl/data";
@@ -713,7 +710,7 @@ static void reloadPanel(bool keepProps)
             sasl_log_info(sasl, "Avionics loaded");
         }
     } else
-        sasl_log_info(sasl, "Avionics not detected");
+        XPLMDebugString("SASL: Avionics not detected\n");
 }
 
 
@@ -787,7 +784,7 @@ static float updateAvionics(float elapsedSinceLastCall,
 // start plugin
 PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc)
 {
-    sasl_log_info(sasl, "Starting...");
+    XPLMDebugString("SASL: Starting...\n");
     const char *pluginSignature = "1-sim.sasl";
     
 #ifdef APL
@@ -802,8 +799,9 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc)
         // Figure out where the other plugin came from
         char pathToAnotherCopy[256];
         XPLMGetPluginInfo(other_xap_id, NULL, pathToAnotherCopy, NULL, NULL);
-        sasl_log_error(sasl, "Another copy already loaded from %s", pathToAnotherCopy);
-        sasl_log_error("Will not init twice, bailing");
+        XPLMDebugString("SASL: Another copy already loaded from ");
+        XPLMDebugString(pathToAnotherCopy);
+        XPLMDebugString("\nSASL: Will not init twice, bailing\n");
         return 0;
     }
 #endif
@@ -822,7 +820,8 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc)
     sprintf(outDesc, "X-Plane scriptable avionics library plugin v%i.%i.%i", 
             VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
 #endif
-    sasl_log_info(sasl, outDesc);
+    XPLMDebugString(outDesc);
+    XPLMDebugString("\n");
 
     viewType = XPLMFindDataRef("sim/graphics/view/view_type");
     //windowLeft = XPLMFindDataRef("sim/graphics/view/panel_total_win_l");
@@ -890,9 +889,9 @@ PLUGIN_API int XPluginEnable(void)
 
     disabled = false;
     if (! XPLMRegisterDrawCallback(drawGauges, xplm_Phase_Gauges, 0, NULL))
-        sasl_log_error(sasl, "Error registering draw callback at xplm_Phase_Gauges");
+        XPLMDebugString("SASL: Error registering draw callback at xplm_Phase_Gauges\n");
     if (! XPLMRegisterDrawCallback(drawPopups, xplm_Phase_Window, 0, NULL))
-        sasl_log_error(sasl, "Error registering draw callback at xplm_Phase_Window");
+        XPLMDebugString("SASL: Error registering draw callback at xplm_Phase_Window\n");
     fakeWindow = createFakeWindow();
     
     reloadCommand = XPLMCreateCommand("sasl/reload", "Reload SASL avionics");
