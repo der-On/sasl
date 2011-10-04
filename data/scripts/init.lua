@@ -34,7 +34,7 @@ local function loadTableFromFile(fileName, name)
         chunk()
         return t[name]
     else
-        print('file not exists', fileName)
+        error('file not exists', fileName)
         return nil
     end
 end
@@ -512,7 +512,7 @@ function openFile(fileName)
             if f then
                 return f
             else
-                print(errorMsg)
+                logError(errorMsg)
             end
         end
 
@@ -523,12 +523,11 @@ function openFile(fileName)
             if f then
                 return f, subdir
             else
-                print(errorMsg)
+                logError(errorMsg)
             end
         end
     end
 
-    print("component not found", fileName)
     return nil
 end
 
@@ -581,7 +580,7 @@ end
 
 -- load component from file and create constructor
 function loadComponent(name, fileName)
-    print("loading", name)
+    logInfo("loading", name)
 
     if not fileName then
         fileName = name .. ".lua"
@@ -589,7 +588,7 @@ function loadComponent(name, fileName)
 
     local f, subdir = openFile(fileName)
     if not f then
-        print("can't load component", name)
+        logError("can't load component", name)
         return nil
     end
 
@@ -644,7 +643,7 @@ function loadPanel(fileName, panelWidth, panelHeight, popupWidth, popupHeight)
 
     local c = loadComponent("panel", fileName)
     if not c then
-        print("Error loading panel", fileName)
+        logError("Error loading panel", fileName)
         return nil
     end
     panel = c({position = { 0, 0, panelWidth, panelHeight}})
@@ -724,7 +723,7 @@ function loadImage(fileName, x, y, width, height)
 
     local tex = getGLTexture(fileName, x, y, width, height)
     if not tex then
-        print("Can't load texture", fileName)
+        logError("Can't load texture", fileName)
     end
     return tex
 end
@@ -741,7 +740,7 @@ function loadFont(fileName)
 
     local font = getGLTexture(fileName)
     if not font then
-        print("Can't load font", fileName)
+        logError("Can't load font", fileName)
     end
     return tex
 end
@@ -1193,13 +1192,12 @@ function savePopupsPositions()
     end
 
     local fileName = panelDir .. '/panels.txt'
-    print('saving panels positions', fileName)
     local f = io.open(fileName, 'w+')
     if nil ~= f then
         savePositionsToFile(f, positions, 'positions')
         f:close()
     else
-        print("Can't open file '" .. fileName .. "' for writing")
+        logWarning("Can't open file '" .. fileName .. "' for writing")
     end
 end
 
@@ -1260,11 +1258,11 @@ end
 
 -- load script inside component environment
 function include(component, name)
-    print("including", name)
+    logInfo("including", name)
 
     local f, subdir = openFile(name)
     if not f then
-        print("can't include script", name)
+        logError("can't include script", name)
     else
         if subdir then
             addSearchPath(subdir)
@@ -1290,12 +1288,12 @@ function loadSample(fileName)
     end
 
     if not isFileExists(fileName) then
-        print("Can't find sound", fileName)
+        logError("Can't find sound", fileName)
     end
 
     local s = loadSampleFromFile(fileName)
     if 0 == s then
-        print("Can't load sound", fileName)
+        logError("Can't load sound", fileName)
     end
     return s
 end

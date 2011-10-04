@@ -163,10 +163,10 @@ static int luaError(lua_State *L)
 void Log::exportToLua(Luna &lua)
 {
     lua_State *L = lua.getLua();
-    lua_register(L, "debug", luaDebug);
-    lua_register(L, "info", luaInfo);
-    lua_register(L, "warning", luaWarning);
-    lua_register(L, "error", luaError);
+    lua_register(L, "logDebug", luaDebug);
+    lua_register(L, "logInfo", luaInfo);
+    lua_register(L, "logWarning", luaWarning);
+    lua_register(L, "logError", luaError);
     lua_register(L, "print", luaInfo);
 }
 
