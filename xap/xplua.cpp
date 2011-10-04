@@ -233,6 +233,7 @@ static int clearFMSEntry(lua_State *L)
 
 // GPS API
 
+
 // lua wrapper for XPLMGetGPSDestinationType
 static int getGPSDestinationType(lua_State *L)
 {
@@ -249,6 +250,93 @@ static int getGPSDestination(lua_State *L)
 
 
 
+// plugins api
+
+
+
+// lua wrapper for XPLMGetMyID
+static int getMyID(lua_State *L)
+{
+    lua_pushnumber(L, XPLMGetMyID());
+    return 1;
+}
+
+// lua wrapper for XPLMCountPlugins
+static int countPlugins(lua_State *L)
+{
+    lua_pushnumber(L, XPLMCountPlugins());
+    return 1;
+}
+
+// lua wrapper for XPLMGetNthPlugin
+static int getNthPlugin(lua_State *L)
+{
+    lua_pushnumber(L, XPLMGetNthPlugin(lua_tonumber(L, 1)));
+    return 1;
+}
+
+// lua wrapper for XPLMFindPluginByPath
+static int findPluginByPath(lua_State *L)
+{
+    lua_pushnumber(L, XPLMFindPluginByPath(lua_tostring(L, 1)));
+    return 1;
+}
+
+// lua wrapper for XPLMFindPluginBySignature
+static int findPluginBySignature(lua_State *L)
+{
+    lua_pushnumber(L, XPLMFindPluginBySignature(lua_tostring(L, 1)));
+    return 1;
+}
+
+// lua wrapper for XPLMGetPluginInfo
+// returns 4 strings: name, path, signature, description
+static int getPluginInfo(lua_State *L)
+{
+    char name[256], path[256], sign[256], descr[256];
+    name[0] = path[0] = sign[0] = descr[0] = 0;
+
+    XPLMGetPluginInfo(lua_tonumber(L, 1), name, path, sign, descr);
+
+    lua_pushstring(L, name);
+    lua_pushstring(L, path);
+    lua_pushstring(L, sign);
+    lua_pushstring(L, descr);
+
+    return 4;
+}
+
+// lua wrapper for XPLMIsPluginEnabled
+static int isPluginEnabled(lua_State *L)
+{
+    lua_pushnumber(L, XPLMIsPluginEnabled(lua_tonumber(L, 1)));
+    return 1;
+}
+
+// lua wrapper for XPLMEnablePlugin
+static int enablePlugin(lua_State *L)
+{
+    lua_pushnumber(L, XPLMEnablePlugin(lua_tonumber(L, 1)));
+    return 1;
+}
+
+// lua wrapper for XPLMDisablePlugin
+static int disablePlugin(lua_State *L)
+{
+    XPLMDisablePlugin(lua_tonumber(L, 1));
+    return 0;
+}
+
+// lua wrapper for XPLMReloadPlugins
+static int reloadPlugins(lua_State *L)
+{
+    XPLMReloadPlugins();
+    return 0;
+}
+
+
+
+// register functions
 
 
 // add integer const to Lua
@@ -303,6 +391,18 @@ void xap::exportLuaFunctions(lua_State *L)
     // gps api
     lua_register(L, "getGPSDestinationType", getGPSDestinationType);
     lua_register(L, "getGPSDestination", getGPSDestination);
+
+    // plugins api
+    lua_register(L, "getMyID", getMyID);
+    lua_register(L, "countPlugins", countPlugins);
+    lua_register(L, "getNthPlugin", getNthPlugin);
+    lua_register(L, "findPluginByPath", findPluginByPath);
+    lua_register(L, "findPluginBySignature", findPluginBySignature);
+    lua_register(L, "getPluginInfo", getPluginInfo);
+    lua_register(L, "isPluginEnabled", isPluginEnabled);
+    lua_register(L, "enablePlugin", enablePlugin);
+    lua_register(L, "disablePlugin", disablePlugin);
+    lua_register(L, "reloadPlugins", reloadPlugins);
 }
 
 
