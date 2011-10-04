@@ -17,7 +17,7 @@ static int luaFindCommand(lua_State *L)
     }
 
     Avionics *avionics = getAvionics(L);
-    XaCommand cmd = avionics->getCommands().findCommand(lua_tostring(L, 1));
+    SaslCommand cmd = avionics->getCommands().findCommand(lua_tostring(L, 1));
 
     if (cmd)
         lua_pushlightuserdata(L, cmd);
@@ -33,7 +33,7 @@ static int luaCommandBegin(lua_State *L)
     if (lua_isnil(L, 1))
         return 0;
 
-    XaCommand cmd = (XaCommand)lua_touserdata(L, 1);
+    SaslCommand cmd = (SaslCommand)lua_touserdata(L, 1);
     if (cmd) {
         Avionics *avionics = getAvionics(L);
         avionics->getCommands().commandBegin(cmd);
@@ -48,7 +48,7 @@ static int luaCommandEnd(lua_State *L)
     if (lua_isnil(L, 1))
         return 0;
 
-    XaCommand cmd = (XaCommand)lua_touserdata(L, 1);
+    SaslCommand cmd = (SaslCommand)lua_touserdata(L, 1);
     if (cmd) {
         Avionics *avionics = getAvionics(L);
         avionics->getCommands().commandEnd(cmd);
@@ -63,7 +63,7 @@ static int luaCommandOnce(lua_State *L)
     if (lua_isnil(L, 1))
         return 0;
 
-    XaCommand cmd = (XaCommand)lua_touserdata(L, 1);
+    SaslCommand cmd = (SaslCommand)lua_touserdata(L, 1);
     if (cmd) {
         Avionics *avionics = getAvionics(L);
         avionics->getCommands().commandOnce(cmd);
@@ -81,7 +81,7 @@ static int luaCreateCommand(lua_State *L)
     }
     
     Avionics *avionics = getAvionics(L);
-    XaCommand cmd = avionics->getCommands().createCommand(lua_tostring(L, 1), 
+    SaslCommand cmd = avionics->getCommands().createCommand(lua_tostring(L, 1), 
             lua_tostring(L, 2));
     if (cmd)
         lua_pushlightuserdata(L, cmd);
@@ -93,7 +93,7 @@ static int luaCreateCommand(lua_State *L)
 
 
 /// handle command
-static int luaCommandHandler(XaCommand command, int phase,
+static int luaCommandHandler(SaslCommand command, int phase,
         void *data)
 {
     Commands::CommandHandler *handler = (Commands::CommandHandler*)data;
@@ -155,7 +155,7 @@ Commands::~Commands()
 }
 
 
-void Commands::setCallbacks(XaCommandCallbacks *cb, void *dta)
+void Commands::setCallbacks(SaslCommandCallbacks *cb, void *dta)
 {
     if (! cb)
         memset(&callbacks, 0, sizeof(callbacks));
@@ -165,7 +165,7 @@ void Commands::setCallbacks(XaCommandCallbacks *cb, void *dta)
 }
 
 
-XaCommand Commands::findCommand(const char *name)
+SaslCommand Commands::findCommand(const char *name)
 {
     if (callbacks.find_command)
         return callbacks.find_command(name, data);
@@ -174,21 +174,21 @@ XaCommand Commands::findCommand(const char *name)
 }
 
 
-void Commands::commandBegin(XaCommand command)
+void Commands::commandBegin(SaslCommand command)
 {
     if (callbacks.command_begin)
         callbacks.command_begin(command, data);
 }
 
 
-void Commands::commandEnd(XaCommand command)
+void Commands::commandEnd(SaslCommand command)
 {
     if (callbacks.command_end)
         callbacks.command_end(command, data);
 }
 
 
-void Commands::commandOnce(XaCommand command)
+void Commands::commandOnce(SaslCommand command)
 {
     if (callbacks.command_once)
         callbacks.command_once(command, data);
@@ -199,7 +199,7 @@ void Commands::commandOnce(XaCommand command)
 }
 
 
-XaCommand Commands::createCommand(const char *name, const char *descr)
+SaslCommand Commands::createCommand(const char *name, const char *descr)
 {
     if (callbacks.create_command)
         return callbacks.create_command(name, descr, data);
@@ -208,7 +208,7 @@ XaCommand Commands::createCommand(const char *name, const char *descr)
 }
 
 
-int Commands::handleCommand(XaCommand command, int phase,
+int Commands::handleCommand(SaslCommand command, int phase,
         CommandHandler *handler)
 {
     lua_State *L = lua.getLua();
@@ -231,7 +231,7 @@ int Commands::handleCommand(XaCommand command, int phase,
 int Commands::registerCommandHandler(lua_State *L)
 {
     CommandHandler handler;
-    handler.command = (XaCommand)lua_touserdata(L, 1);
+    handler.command = (SaslCommand)lua_touserdata(L, 1);
     handler.commands = this;
     handler.before = lua_tointeger(L, 2);
 
@@ -250,7 +250,7 @@ int Commands::registerCommandHandler(lua_State *L)
 
 int Commands::unregisterCommandHandler(lua_State *L)
 {
-    XaCommand command = (XaCommand)lua_touserdata(L, 1);
+    SaslCommand command = (SaslCommand)lua_touserdata(L, 1);
     int before = lua_tointeger(L, 2);
 
     CommandHandler *handler = NULL;

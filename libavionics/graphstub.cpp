@@ -3,13 +3,13 @@
 using namespace xa;
 
 
-static void drawBegin(struct XaGraphicsCallbacks *canvas)
+static void drawBegin(struct SaslGraphicsCallbacks *canvas)
 {
 }
 
 
 /// flush drawed graphics to screen
-static void drawEnd(struct XaGraphicsCallbacks *canvas)
+static void drawEnd(struct SaslGraphicsCallbacks *canvas)
 {
 }
 
@@ -17,7 +17,7 @@ static void drawEnd(struct XaGraphicsCallbacks *canvas)
 /// load texture to memory.
 /// Returns texture ID or -1 on failure.  On success returns texture width
 //  and height in pixels
-static int loadTexture(struct XaGraphicsCallbacks *canvas,
+static int loadTexture(struct SaslGraphicsCallbacks *canvas,
         const char *name, int *width, int *height)
 {
     return -1;
@@ -25,20 +25,20 @@ static int loadTexture(struct XaGraphicsCallbacks *canvas,
 
 
 // Unload texture from video memory.
-static void freeTexture(struct XaGraphicsCallbacks *canvas, int textureId)
+static void freeTexture(struct SaslGraphicsCallbacks *canvas, int textureId)
 {
 }
 
 
 // draw line of specified color.
-static void drawLine(struct XaGraphicsCallbacks *canvas, double x1,
+static void drawLine(struct SaslGraphicsCallbacks *canvas, double x1,
         double y1, double x2, double y2, double r, double g, double b, double a)
 {
 }
 
 
 // draw untextured triangle.
-static void drawTriangle(struct XaGraphicsCallbacks *canvas, 
+static void drawTriangle(struct SaslGraphicsCallbacks *canvas, 
         double x1, double y1, double r1, double g1, double b1, double a1,
         double x2, double y2, double r2, double g2, double b2, double a2,
         double x3, double y3, double r3, double g3, double b3, double a3)
@@ -47,7 +47,7 @@ static void drawTriangle(struct XaGraphicsCallbacks *canvas,
 
 
 // draw textured triangle.
-static void drawTexturedTriangle(struct XaGraphicsCallbacks *canvas, 
+static void drawTexturedTriangle(struct SaslGraphicsCallbacks *canvas, 
         int textureId,
         double x1, double y1, double u1, double v1, double r1, double g1, double b1, double a1,
         double x2, double y2, double u2, double v2, double r2, double g2, double b2, double a2,
@@ -57,55 +57,55 @@ static void drawTexturedTriangle(struct XaGraphicsCallbacks *canvas,
 
 
 // enable clipping to rectangle
-static void setClipArea(struct XaGraphicsCallbacks *canvas, 
+static void setClipArea(struct SaslGraphicsCallbacks *canvas, 
         double x1, double y1, double x2, double y2)
 {
 }
 
 
 // disable clipping.
-static void resetClipArea(struct XaGraphicsCallbacks *canvas)
+static void resetClipArea(struct SaslGraphicsCallbacks *canvas)
 {
 }
 
 
 // push affine translation state
-static void pushTransform(struct XaGraphicsCallbacks *canvas)
+static void pushTransform(struct SaslGraphicsCallbacks *canvas)
 {
 }
 
 // pop affine transform state
-static void popTransform(struct XaGraphicsCallbacks *canvas)
+static void popTransform(struct SaslGraphicsCallbacks *canvas)
 {
 }
 
 
 // apply move transform to current state
-static void translateTransform(struct XaGraphicsCallbacks *canvas, 
+static void translateTransform(struct SaslGraphicsCallbacks *canvas, 
         double x, double y)
 {
 }
 
 
 // apply scale transform to current state
-static void scaleTransform(struct XaGraphicsCallbacks *canvas, 
+static void scaleTransform(struct SaslGraphicsCallbacks *canvas, 
         double x, double y)
 {
 }
 
 // apply rotate transform to current state
-static void rotateTransform(struct XaGraphicsCallbacks *canvas, 
+static void rotateTransform(struct SaslGraphicsCallbacks *canvas, 
         double angle)
 {
 }
 
-static struct XaGraphicsCallbacks callbacks = { drawBegin, drawEnd,
+static struct SaslGraphicsCallbacks callbacks = { drawBegin, drawEnd,
     loadTexture, freeTexture, drawLine, drawTriangle, drawTexturedTriangle,
     setClipArea, resetClipArea, pushTransform, popTransform, 
     translateTransform, scaleTransform, rotateTransform };
 
 
-XaGraphicsCallbacks* xa::getGraphicsStub()
+SaslGraphicsCallbacks* xa::getGraphicsStub()
 {
     return &callbacks;
 }

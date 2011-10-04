@@ -275,7 +275,7 @@ int xa::getFontWidth(struct Font* font, const char *str)
 }
 
 
-void xa::drawFont(Font* font, XaGraphicsCallbacks *graphics, double x, double y, 
+void xa::drawFont(Font* font, SaslGraphicsCallbacks *graphics, double x, double y, 
         const char *str, double r, double g, double b, double a)
 {
     if ((! font) || (! str))

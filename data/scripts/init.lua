@@ -1008,17 +1008,36 @@ end
 
 -- Called when mouse motion event was processed
 function onMouseMove(x, y, layer)
+    local cursorArrow = false
+    if pressedComponentPath then
+        cursorArrow = true
+    else
+        if ((1 == layer) or (3 == layer)) and 0 < #popups.components then
+            local size = popups.size
+            local position = get(popups.position)
+            local mx = (x - position[1]) * size[1] / position[3]
+            local my = (y - position[2]) * size[2] / position[4]
+            for i = #popups.components, 1, -1 do
+                local v = popups.components[i]
+                if toboolean(get(v.visible)) and 
+                        isInRect(get(v.position), mx, my) 
+                then
+                    cursorArrow = true
+                    break
+                end
+            end
+        end
+    end
     if pressedComponentPath then
         setCursor(x, y, cursor.shape, layer)
         local res = runPressedHandler(pressedComponentPath, "onMouseMove", 
                 x, y, pressedButton)
-        return res
     else
         local cursor = getTopCursorShape(layer, x, y)
         setCursor(x, y, cursor, layer)
         local res = runTopHandler(layer, "onMouseMove", x, y, pressedButton)
-        return res or cursor
     end
+    return cursorArrow
 end
 
 
@@ -1281,4 +1300,12 @@ function loadSample(fileName)
     return s
 end
 
+-- play sound inside of cockpit
+SOUND_INTERNAL = 1
+
+-- play sound outside of cockpit
+SOUND_EXTERNAL = 2
+
+-- play sound both inside and outside
+SOUND_EVERYWHERE = 3
 

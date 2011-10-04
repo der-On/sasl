@@ -166,7 +166,7 @@ void TextureManager::unloadAll()
     cache.clear();
 }
 
-void TextureManager::setGraphicsCallbacks(struct XaGraphicsCallbacks *callbacks)
+void TextureManager::setGraphicsCallbacks(struct SaslGraphicsCallbacks *callbacks)
 {
     graphics = callbacks;
 }

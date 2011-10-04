@@ -3,6 +3,8 @@
 
 // low-level network routinues
 
+#include "log.h"
+
 
 #include <stdlib.h>
 
@@ -109,6 +111,9 @@ class NetReceiver
 class AsyncCon
 {
     private:
+        /// Logger object
+        Log &log;
+
         /// Socket handle
         int sock;
 
@@ -123,7 +128,7 @@ class AsyncCon
 
     public:
         /// Create async net struture
-        AsyncCon();
+        AsyncCon(Log &log);
 
         /// Destroy async net structure
         ~AsyncCon();
@@ -185,6 +190,9 @@ class ConnectionAcceptor
 class TcpServer
 {
     private:
+        /// Logget object
+        Log &log;
+
         /// socket descriptor
         int sock;
 
@@ -193,7 +201,7 @@ class TcpServer
 
     public:
         /// create server object
-        TcpServer();
+        TcpServer(Log &log);
         
         /// destroy socket
         ~TcpServer();

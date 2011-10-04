@@ -4,7 +4,7 @@
 #include "main.h"
 #include "options.h"
 #include "utils.h"
-#include "xavionics.h"
+#include "libavionics.h"
 #include <stdio.h>
 
 
@@ -153,14 +153,14 @@ static void xapMenuCallback(void *menuRef, void *param)
     if (OPTIONS_MENU == param)
         showOptionsDialog();
     else if (START_MENU == param) {
-        if (xa_start_netprop_server(xa, options.getPort(), 
+        if (sasl_start_netprop_server(sasl, options.getPort(), 
                     options.getSecret().c_str())) 
         {
-            printf("error starting server\n");
+            sasl_log_error(sasl, "error starting server");
         } else
             enableMenus(true);
     } else if (STOP_MENU == param) {
-        xa_stop_netprop_server(xa);
+        sasl_stop_netprop_server(sasl);
         enableMenus(false);
     }
 }

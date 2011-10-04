@@ -13,7 +13,7 @@ static void setupMatrix(Avionics *avionics, double x, double y,
         double width, double height,
         double originalWidth, double originalHeight)
 {
-    XaGraphicsCallbacks *graphics = avionics->getGraphics();
+    SaslGraphicsCallbacks *graphics = avionics->getGraphics();
     assert(graphics);
 
     graphics->translate_transform(graphics, x, y);
@@ -33,7 +33,7 @@ static int luaSetupMatrix(lua_State *L)
 
 static void saveContext(Avionics *avionics)
 {
-    XaGraphicsCallbacks *graphics = avionics->getGraphics();
+    SaslGraphicsCallbacks *graphics = avionics->getGraphics();
     assert(graphics);
     graphics->push_transform(graphics);
 }
@@ -47,7 +47,7 @@ static int luaSaveContext(lua_State *L)
 
 static void restoreContext(Avionics *avionics)
 {
-    XaGraphicsCallbacks *graphics = avionics->getGraphics();
+    SaslGraphicsCallbacks *graphics = avionics->getGraphics();
     assert(graphics);
     graphics->pop_transform(graphics);
 }
@@ -64,7 +64,7 @@ static int luaRestoreContext(lua_State *L)
 static void drawFrame(Avionics *avionics, double x, double y, 
         double width, double height)
 {
-    XaGraphicsCallbacks *graphics = avionics->getGraphics();
+    SaslGraphicsCallbacks *graphics = avionics->getGraphics();
     assert(graphics);
 
     graphics->draw_line(graphics, x, y, x + width, y, 1, 1, 1, 1);
@@ -86,7 +86,7 @@ static void drawRectangle(Avionics *avionics, double x, double y,
         double width, double height,
         double r, double g, double b, double a)
 {
-    XaGraphicsCallbacks *graphics = avionics->getGraphics();
+    SaslGraphicsCallbacks *graphics = avionics->getGraphics();
     assert(graphics);
 
     graphics->draw_triangle(graphics, 
@@ -113,7 +113,7 @@ static void drawTriangle(Avionics *avionics, double x1, double y1, double x2, do
         double x3, double y3,
         double r, double g, double b, double a)
 {
-    XaGraphicsCallbacks *graphics = avionics->getGraphics();
+    SaslGraphicsCallbacks *graphics = avionics->getGraphics();
     assert(graphics);
 
     graphics->draw_triangle(graphics, 
@@ -137,7 +137,7 @@ static int luaDrawTriangle(lua_State *L)
 static void drawLine(Avionics *avionics, double x1, double y1, 
         double x2, double y2, double r, double g, double b, double a)
 {
-    XaGraphicsCallbacks *graphics = avionics->getGraphics();
+    SaslGraphicsCallbacks *graphics = avionics->getGraphics();
     assert(graphics);
 
     graphics->draw_line(graphics, x1, y1, x2, y2, r, g, b, a);
@@ -157,7 +157,7 @@ static void drawTexture(Avionics *avionics, TexturePart *tex,
         double x, double y, double width, double height,
         float r, float g, float b, float a)
 {
-    XaGraphicsCallbacks *graphics = avionics->getGraphics();
+    SaslGraphicsCallbacks *graphics = avionics->getGraphics();
     assert(graphics);
 
     graphics->draw_textured_triangle(graphics, tex->getTexture()->getId(),
@@ -213,7 +213,7 @@ static void drawTexturePart(Avionics *avionics, TexturePart *tex,
         double tx, double ty, double tw, double th,
         float r, float g, float b, float a)
 {
-    XaGraphicsCallbacks *graphics = avionics->getGraphics();
+    SaslGraphicsCallbacks *graphics = avionics->getGraphics();
     assert(graphics);
 
     double pw = tex->getX2() - tex->getX1();
@@ -262,7 +262,7 @@ static void drawRotatedTexture(Avionics *avionics, TexturePart *tex,
         double angle, double x, double y, double width, double height,
         float r, float g, float b, float a)
 {
-    XaGraphicsCallbacks *graphics = avionics->getGraphics();
+    SaslGraphicsCallbacks *graphics = avionics->getGraphics();
     assert(graphics);
 
     graphics->push_transform(graphics);
@@ -305,7 +305,7 @@ static void drawRotatedTexturePart(Avionics *avionics, TexturePart *tex,
         double tx, double ty, double tw, double th,
         float r, float g, float b, float a)
 {
-    XaGraphicsCallbacks *graphics = avionics->getGraphics();
+    SaslGraphicsCallbacks *graphics = avionics->getGraphics();
     assert(graphics);
 
     graphics->push_transform(graphics);
@@ -360,7 +360,7 @@ static int luaDrawFont(lua_State *L)
     avionics->getBackgroundColor(r, g, b, a);
     rgbaFromLua(L, 5, r, g, b, a);
     
-    XaGraphicsCallbacks *graphics = avionics->getGraphics();
+    SaslGraphicsCallbacks *graphics = avionics->getGraphics();
     assert(graphics);
 
     drawFont(font, graphics, lua_tonumber(L, 2), lua_tonumber(L, 3), 
@@ -394,7 +394,7 @@ static void drawIntricatelyTexturedRectangle(Avionics *avionics,
         double height, double tx, double ty, double tw, double th,
         float r, float g, float b, float a)
 {
-    XaGraphicsCallbacks *graphics = avionics->getGraphics();
+    SaslGraphicsCallbacks *graphics = avionics->getGraphics();
     assert(graphics);
 
     double tx1 = tx;

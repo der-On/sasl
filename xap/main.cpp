@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+#include <alloca.h>
 
 extern "C" {
     #include <lua.h>
@@ -17,14 +18,15 @@ extern "C" {
 
 #include "main.h"
 #include "xpsdk.h"
-#include "xavionics.h"
+#include "libavionics.h"
 #include "props.h"
 #include "commands.h"
 #include "gui.h"
 #include "options.h"
 #include "xplua.h"
 #include "ogl.h"
-#include "sound.h"
+#include "alsasound.h"
+#include "listener.h"
 
 
 // version of plug-in
@@ -38,7 +40,7 @@ using namespace xap;
 static bool disabled = false;
 
 // X-Avionics handler
-XA xap::xa = NULL;
+SASL xap::sasl = NULL;
 
 // True for 2D panels
 static bool has2d = false;
@@ -113,7 +115,7 @@ static int popupWidth;
 static int popupHeight;
 
 /// Properties
-static Props props = NULL;
+static SaslProps props = NULL;
 
 /// Options storage
 Options xap::options;
@@ -144,6 +146,7 @@ static XPLMDataRef viewHeading;
 // last mouse position
 static int lastMouseX = -1;
 static int lastMouseY = -1;
+static bool lastMouseHandled = false;
 static float lastPanelX = -1;
 static float lastPanelY = -1;
 
@@ -151,18 +154,39 @@ static float lastPanelY = -1;
 static bool disablePanelClicks = false;
 
 // OpenGL graphics functions
-static XaGraphicsCallbacks* graphics;
+static SaslGraphicsCallbacks* graphics;
 
+// sound functions
+static struct SaslAlsaSound* sound;
+
+
+/// Write message to X-Plane log
+static void printToLog(int level, const char *message)
+{
+    if (! message)
+        return;
+
+    char levelStr[10];
+
+    switch (level) {
+        case LOG_DEBUG: sprintf(levelStr, "DEBUG"); break;
+        case LOG_INFO: sprintf(levelStr, "INFO"); break;
+        case LOG_WARNING: sprintf(levelStr, "WARNING"); break;
+        default: sprintf(levelStr, "ERROR");
+    }
+
+    int msgLen = snprintf(NULL, 0, "SASL: %s: %s\n", levelStr, message);
+    char *buf = (char*)alloca(msgLen + 1);
+    snprintf(buf, msgLen + 1, "SASL: %s: %s\n", levelStr, message);
+    XPLMDebugString(buf);
+    printf("%s", buf);
+}
 
 /// Convert a Mac-style path with double colons to a POSIX path.
 // Since Carbon is not available on other paltfornms we can safely bypass this
 static std::string carbonPathToPosixPath(const std::string &carbonPath)
 {
 #ifdef APL
-    XPLMDebugString("XAP: Will translate CF path from\n");
-    XPLMDebugString(carbonPath.c_str());
-    XPLMDebugString("\n");
-    
     char outPathBuf[PATH_MAX]; //gothic
     
     CFStringRef urlString_CF, resultString_CF;
@@ -178,9 +202,7 @@ static std::string carbonPathToPosixPath(const std::string &carbonPath)
     CFRelease(resultString_CF);
     CFRelease(url);
     
-    XPLMDebugString("XAP: Translated POSIX path will be\n");
-    XPLMDebugString(outPathBuf);
-    XPLMDebugString("\n");
+    sasl_log_info(sasl, "SASL: Translated Mac path %s", outPathBuf);
     
     return std::string(outPathBuf);
 #else
@@ -192,9 +214,8 @@ static std::string carbonPathToPosixPath(const std::string &carbonPath)
 static std::string getDirSeparator()
 {
     std::string sep = XPLMGetDirectorySeparator();
-    
     if(sep == std::string(":")) {
-        XPLMDebugString("XAP: Using Mac paths\n");
+        sasl_log_info(sasl, "Using Mac paths");
         return std::string("/");
     } else {
         return sep;
@@ -211,7 +232,7 @@ static std::string getConfigFileName()
     
     strcpy(translatedPath, carbonPathToPosixPath(std::string(path)).c_str());
     strcat(translatedPath, getDirSeparator().c_str());
-    strcat(translatedPath, "xap.prf");
+    strcat(translatedPath, "sasl.prf");
     return translatedPath;
 }
 
@@ -235,9 +256,8 @@ static std::string getAircraftDir()
     
     std::string dir = carbonPathToPosixPath(std::string(path)) + getDirSeparator(); 
     
-    XPLMDebugString("XAP: Got aircraft dir\n");
-    XPLMDebugString(dir.c_str());
-    XPLMDebugString("\nXAP: If the path does not look sane there was likely a problem with path translation\n");
+    sasl_log_info(sasl, "Got aircraft dir '%s'", dir.c_str());
+    sasl_log_info(sasl, "If the path does not look sane there was likely a problem with path translation");
     return dir;
 }
 
@@ -268,7 +288,7 @@ static double getPropd(const char *name)
 {
     XPLMDataRef ref = XPLMFindDataRef(name);
     if (! ref) {
-        printf("Can't find property '%s'\n", name);
+        sasl_log_error(sasl, "Can't find property '%s'", name);
         return 0.0;
     } else
         return XPLMGetDataf(ref);
@@ -312,7 +332,7 @@ static void calculatePanelSize()
 static void setPanelSize(int width, int height)
 {
     if ((lastPanelWidth != width) || (lastPanelHeight != height)) {
-        xa_set_panel_size(xa, width, height);
+        sasl_set_panel_size(sasl, width, height);
         lastPanelWidth = width;
         lastPanelHeight = height;
     }
@@ -342,7 +362,7 @@ static void updatePopupSize()
     int width = XPLMGetDatai(screenWidth);
     int height = XPLMGetDatai(screenHeight);
     if ((popupWidth != width) || (popupHeight != height)) {
-        xa_set_popup_size(xa, width, height);
+        sasl_set_popup_size(sasl, width, height);
         popupWidth = width;
         popupHeight = height;
     }
@@ -352,10 +372,10 @@ static void updatePopupSize()
 /// draws gauges
 static int drawGauges(XPLMDrawingPhase phase, int isBefore, void *refcon)
 {
-    if (xa) {
+    if (sasl) {
         int clickable = XPLMGetDatai(showClickable);
         if (clickable != lastShowClickable) {
-            xa_set_show_clickable(xa, clickable);
+            sasl_set_show_clickable(sasl, clickable);
             lastShowClickable = clickable;
         }
 
@@ -372,11 +392,11 @@ static int drawGauges(XPLMDrawingPhase phase, int isBefore, void *refcon)
 
         XPLMSetGraphicsState(0, 1, 0, 0, 1, 0, 0);
 
-        xa_set_background_color(xa, XPLMGetDataf(cockpitRed), 
+        sasl_set_background_color(sasl, XPLMGetDataf(cockpitRed), 
                 XPLMGetDataf(cockpitGreen), XPLMGetDataf(cockpitBlue),
                 XPLMGetDatai(cockpitTransparent) ? 0.5f : 1.0f);
 
-        xa_draw_panel(xa, STAGE_GAUGES);
+        sasl_draw_panel(sasl, STAGE_GAUGES);
     
         glPopMatrix();
     }
@@ -388,14 +408,14 @@ static int drawGauges(XPLMDrawingPhase phase, int isBefore, void *refcon)
 /// draws popups layer
 static int drawPopups(XPLMDrawingPhase phase, int isBefore, void *refcon)
 {
-    if (xa) {
+    if (sasl) {
         glPushMatrix();
 
         updatePopupSize();
 
         XPLMSetGraphicsState(0, 1, 0, 0, 1, 1, 1);
         
-        xa_draw_panel(xa, STAGE_POPUPS);
+        sasl_draw_panel(sasl, STAGE_POPUPS);
     
         glPopMatrix();
     }
@@ -424,9 +444,9 @@ static int handleMouseLayerClick(int x, int y, XPLMMouseStatus status,
 {
     switch (status) {
         case xplm_MouseDown: 
-            return xa_mouse_button_down(xa, x, y, 1, layer);
+            return sasl_mouse_button_down(sasl, x, y, 1, layer);
         case xplm_MouseUp: 
-            return xa_mouse_button_up(xa, x, y, 1, layer);
+            return sasl_mouse_button_up(sasl, x, y, 1, layer);
     }
     return 0;
 }
@@ -436,13 +456,13 @@ static int handleMouseLayerClick(int x, int y, XPLMMouseStatus status,
 static int handleKeyboardEvent(char charCode, XPLMKeyFlags flags,
         char keyCode, void *refcon)
 {
-    if (! xa)
+    if (! sasl)
         return 0;
 
     if (flags & xplm_DownFlag)
-        return ! xa_key_down(xa, charCode, keyCode);
+        return ! sasl_key_down(sasl, charCode, keyCode);
     if (flags & xplm_UpFlag)
-        return ! xa_key_up(xa, charCode, keyCode);
+        return ! sasl_key_up(sasl, charCode, keyCode);
     return 0;
 }
 
@@ -472,7 +492,7 @@ static bool clicked = false;
 static int handleMouseClick(XPLMWindowID window, int panelX, int panelY,
         XPLMMouseStatus status, void *data)
 {
-    if (! xa)
+    if (! sasl)
         return 0;
 
     if (clicked && (xplm_MouseDrag == status))
@@ -510,31 +530,36 @@ static int handleMouseClick(XPLMWindowID window, int panelX, int panelY,
 static XPLMCursorStatus handleCursor(XPLMWindowID inWindowID, int x, int y, 
         void* inRefcon)
 {
-    if (! xa)
+    if (! sasl)
         return xplm_CursorDefault;
 
     if ((x != lastMouseX) || (y != lastMouseY)) {
         lastMouseX = x;
         lastMouseY = y;
-        if (! xa_mouse_move(xa, x, y, 1)) {
+        lastMouseHandled = sasl_mouse_move(sasl, x, y, 1);
+        if (! lastMouseHandled) {
             float px, py;
             getPanelCoords(x, y, px, py);
             if ((px == lastPanelX) && (py == lastPanelY)) {
                 // 2d coords changed but panel position doesn't
                 // looks like mouse out of panel and x-plane bug in action
                 // let's move mouse to -1 -1 and hope it will be ok
-                xa_mouse_move(xa, -1, -1, 2);
+                sasl_mouse_move(sasl, -1, -1, 2);
                 disablePanelClicks = true;
             } else {
                 disablePanelClicks = false;
-                xa_mouse_move(xa, (int)px, (int)py, 2);
+                sasl_mouse_move(sasl, (int)px, (int)py, 2);
                 lastPanelX = px;
                 lastPanelY = py;
             }
         }
     }
 
-    return xplm_CursorDefault;
+
+    if (! lastMouseHandled)
+        return xplm_CursorDefault;
+    else
+        return xplm_CursorArrow;
 }
 
 /// Creates screen-wide invisible window with mouse press handler
@@ -563,7 +588,7 @@ static XPLMWindowID createFakeWindow()
 }
 
 
-/// Returns path to xavionics data dir
+/// Returns path to libavionics data dir
 static std::string getDataDir()
 {
     char buf[512];
@@ -573,7 +598,7 @@ static std::string getDataDir()
     std::string path = carbonPathToPosixPath(std::string(buf));
     
     return path +  "Resources" + sep +
-        "plugins" + sep + "xap" + sep + "data";
+        "plugins" + sep + "sasl" + sep + "data";
 }
 
 
@@ -582,11 +607,11 @@ static std::string getDataDir()
 static void freeAvionics(bool keepProps)
 {
     doneGui();
-    if (! xa)
+    if (! sasl)
         return;
-    doneSound(xa);
-    xa_done(xa);
-    xa = NULL;
+    sasl_done_alsa_sound(sound);
+    sasl_done(sasl);
+    sasl = NULL;
     if (props) {
         if (! keepProps) {
             propsDone(props);
@@ -601,7 +626,7 @@ static void freeAvionics(bool keepProps)
 /// Returns value of panel variable as boolean
 static bool getGlobalPanelValue(const char *name, bool dflt)
 {
-    lua_State *L = xa_get_lua(xa);
+    lua_State *L = sasl_get_lua(sasl);
     bool res = dflt;
     lua_getglobal(L, "panel");
     lua_pushstring(L, name);
@@ -616,7 +641,7 @@ static bool getGlobalPanelValue(const char *name, bool dflt)
 /// Returns value of panel variable as int
 static int getGlobalPanelValue(const char *name, int dflt)
 {
-    lua_State *L = xa_get_lua(xa);
+    lua_State *L = sasl_get_lua(sasl);
     int res = dflt;
     lua_getglobal(L, "panel");
     lua_pushstring(L, name);
@@ -632,31 +657,32 @@ static int getGlobalPanelValue(const char *name, int dflt)
 static void reloadPanel(bool keepProps)
 {
     freeAvionics(keepProps);
-    
-    XPLMDebugString("XAP: Reload panel signal received\n");
-    
+        
+    sasl_log_info(sasl, "Reload panel signal received");
+
     lastShowClickable = -1;
-    
+
     std::string dir = getAircraftDir();
     std::string panelPath = getPanelPath(dir);
-    
-    XPLMDebugString(panelPath.c_str());
+
+    sasl_log_info(sasl, "Path to panel: ", panelPath.c_str());
     
     if (fileDoesExist(panelPath)) {
-        XPLMDebugString("XAP: Loading avionics...\n");
+        sasl_log_info(sasl, "Loading avionics...");
         panelViewInitialized = false;
-        
-        std::string dataDir = dir + "/plugins/xap/data";
+
+        std::string dataDir = dir + "/plugins/sasl/data";
         if (! fileDoesExist(dataDir + "/scripts/init.lua"))
             dataDir = getDataDir();
-        
-        xa = xa_init(dataDir.c_str());
-        xa_enable_click_emulator(xa, 1);
-        xa_set_graphics_callbacks(xa, graphics);
-        initSound(xa);
-        registerCommandsApi(xa);
 
-        if (!props)
+        sasl = sasl_init(dataDir.c_str());
+        sasl_set_log_callback(sasl, printToLog, NULL);
+        sasl_enable_click_emulator(sasl, 1);
+        sasl_set_graphics_callbacks(sasl, graphics);
+        sound = sasl_init_alsa_sound(sasl);
+        registerCommandsApi(sasl);
+
+        if (! props)
             props = propsInit();
 
         options.load();
@@ -664,16 +690,16 @@ static void reloadPanel(bool keepProps)
         initGui();
 
         if (options.isAutoStartServer()) {
-            XPLMDebugString("XAP: starting server\n");
-            if (xa_start_netprop_server(xa, options.getPort(), 
+            sasl_log_info(sasl, "Starting server");
+            if (sasl_start_netprop_server(sasl, options.getPort(), 
                         options.getSecret().c_str())) 
-                XPLMDebugString("XAP: error starting server\n");
+                sasl_log_error(sasl, "Can't start server");
         }
 
-        exportLuaFunctions(xa_get_lua(xa));
-        xa_set_props(xa, getPropsCallbacks(), props);
-        if (xa_load_panel(xa, panelPath.c_str())) {
-            XPLMDebugString("XAP: Can't load avionics\n");
+        exportLuaFunctions(sasl_get_lua(sasl));
+        sasl_set_props(sasl, getPropsCallbacks(), props);
+        if (sasl_load_panel(sasl, panelPath.c_str())) {
+            sasl_log_error(sasl, "Can't load avionics");
             freeAvionics(keepProps);
         } else {
             has2d = getGlobalPanelValue("panel2d", false);
@@ -684,10 +710,10 @@ static void reloadPanel(bool keepProps)
             lastPanelWidth = lastPanelHeight = 0;
             popupWidth = popupHeight = 0;
     
-            XPLMDebugString("XAP: Avionics loaded\n");
+            sasl_log_info(sasl, "Avionics loaded");
         }
     } else
-        XPLMDebugString("XAP: Avionics not detected\n");
+        sasl_log_info(sasl, "Avionics not detected");
 }
 
 
@@ -740,7 +766,7 @@ static float updateAvionics(float elapsedSinceLastCall,
                  float elapsedTimeSinceLastFlightLoop,  int counter,    
                  void *refcon)
 {
-    if (xa && (! disabled)) {
+    if (sasl && (! disabled)) {
         // if camera position changed make 'virtual' mouse move to reset 
         // cursor shape
         if (! isViewTheSame()) {
@@ -749,7 +775,8 @@ static float updateAvionics(float elapsedSinceLastCall,
             handleCursor(fakeWindow, -1, -1, NULL);
         }
         
-        xa_update(xa);
+        updateListenerPosition(sasl);
+        sasl_update(sasl);
         return -1;
     }
     return -1;
@@ -760,36 +787,43 @@ static float updateAvionics(float elapsedSinceLastCall,
 // start plugin
 PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc)
 {
-    XPLMDebugString("XAP: Starting...\n");
-    const char *pluginSignature = "babichev.xap";
+    sasl_log_info(sasl, "Starting...");
+    const char *pluginSignature = "1-sim.sasl";
     
 #ifdef APL
-    // Mac-specific: it IS possible to have XAP installed twice, once in the ACF folder
+    // Mac-specific: it IS possible to have SASL installed twice, once in the ACF folder
     // and once in the X-System folder. Probably due to namespace mangling on OS X
     // the system will NOT crash the app when the plugin gets loaded twice. 
     // Thus, we query the enabled plugins for the defined signatures
     // and DO NOT activate should the other plugin already be plugged in
     
-    XPLM_API XPLMPluginID other_xap_id = XPLMFindPluginBySignature(pluginSignature);
-    if(-1 != other_xap_id) {
+    XPLM_API XPLMPluginID other_sasl_id = XPLMFindPluginBySignature(pluginSignature);
+    if(-1 != other_sasl_id) {
         // Figure out where the other plugin came from
         char pathToAnotherCopy[256];
         XPLMGetPluginInfo(other_xap_id, NULL, pathToAnotherCopy, NULL, NULL);
-        XPLMDebugString("XAP: another copy already loaded from \n");
-        XPLMDebugString(pathToAnotherCopy);
-        XPLMDebugString("\nXAP: will not init twice, bailing\n");
+        sasl_log_error(sasl, "Another copy already loaded from %s", pathToAnotherCopy);
+        sasl_log_error("Will not init twice, bailing");
         return 0;
     }
 #endif
 
     strcpy(outName, "SASL");
     strcpy(outSig, pluginSignature);
-    
-    // Describe the plugin version
-    sprintf(outDesc, "X-Plane scriptable avionics library plugin %i.%i.%i built on %s %s", 
-            VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, __DATE__, __TIME__);
-    XPLMDebugString((std::string("XAP:") + std::string(outDesc) + "\n").c_str());
-    
+
+#ifdef SNAPSHOT
+#define xstr(s) str(s)
+#define str(s) #s
+    sprintf(outDesc, "X-Plane scriptable avionics library plugin snapshot %i.%i.%i %s", 
+            VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, xstr(SNAPSHOT));
+#undef str
+#undef xstr
+#else
+    sprintf(outDesc, "X-Plane scriptable avionics library plugin v%i.%i.%i", 
+            VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+#endif
+    sasl_log_info(sasl, outDesc);
+
     viewType = XPLMFindDataRef("sim/graphics/view/view_type");
     //windowLeft = XPLMFindDataRef("sim/graphics/view/panel_total_win_l");
     panelLeft = XPLMFindDataRef("sim/graphics/view/panel_total_pnl_l");
@@ -820,9 +854,11 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc)
     viewHeading = XPLMFindDataRef("sim/graphics/view/cockpit_heading");
     viewType = XPLMFindDataRef("sim/graphics/view/view_type");
 
-    graphics = xagl_init_graphics();
-    xagl_set_texture2d_binder_callback(graphics, bindTexture2dCallback);
-    xagl_set_gen_tex_name_callback(graphics, genTexNameCallback);
+    graphics = saslgl_init_graphics();
+    saslgl_set_texture2d_binder_callback(graphics, bindTexture2dCallback);
+    saslgl_set_gen_tex_name_callback(graphics, genTexNameCallback);
+
+    initListenerTracking();
 
     return 1;
 }
@@ -830,7 +866,7 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc)
 // clean up before die
 PLUGIN_API void	XPluginStop(void)
 {
-    xagl_done_graphics(graphics);
+    saslgl_done_graphics(graphics);
     graphics = NULL;
 }
 
@@ -854,12 +890,12 @@ PLUGIN_API int XPluginEnable(void)
 
     disabled = false;
     if (! XPLMRegisterDrawCallback(drawGauges, xplm_Phase_Gauges, 0, NULL))
-        printf("XAP: Error registering draw callback at xplm_Phase_Gauges\n");
+        sasl_log_error(sasl, "Error registering draw callback at xplm_Phase_Gauges");
     if (! XPLMRegisterDrawCallback(drawPopups, xplm_Phase_Window, 0, NULL))
-        printf("XAP: Error registering draw callback at xplm_Phase_Window\n");
+        sasl_log_error(sasl, "Error registering draw callback at xplm_Phase_Window");
     fakeWindow = createFakeWindow();
     
-    reloadCommand = XPLMCreateCommand("xap/reload", "Reload SASL avionics");
+    reloadCommand = XPLMCreateCommand("sasl/reload", "Reload SASL avionics");
     XPLMRegisterCommandHandler(reloadCommand, reloadPanelCallback, 0, NULL);
 
     XPLMRegisterKeySniffer(handleKeyboardEvent, 0, NULL);

@@ -5,7 +5,7 @@
 #include <string>
 #include <map>
 #include "luna.h"
-#include "xcallbacks.h"
+#include "libavcallbacks.h"
 
 
 namespace xa {
@@ -26,7 +26,7 @@ int getFontHeight(struct Font* font);
 int getFontWidth(struct Font* font, const char *str);
 
 /// Draw text
-void drawFont(struct Font* font, XaGraphicsCallbacks *graphics, 
+void drawFont(struct Font* font, SaslGraphicsCallbacks *graphics, 
         double x, double y, const char *str, 
         double red, double green, double blue, double alpha);
 

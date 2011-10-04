@@ -1,0 +1,29 @@
+# set to yes to build slava or no to disable it
+BUILD_SLAVA=yes
+
+# set to yes to build X-Plane plugin or no to disable it
+BUILD_XAP=yes
+
+# set to yes to build release version or no for debug version
+BUILD_RELEASE=yes
+
+# location of X-Plane SDK
+XPSDK=/opt/x-plane/SDK
+
+# location of luajit
+LUAJIT=/usr/local
+
+# debug option
+DEBUG_CXXFLAGS=-ggdb
+DEBUG_LNFLAGS=-ggdb
+
+# release options
+RELEASE_CXXFLAGS=-O3 -ffast-math -march=i686 -msse
+RELEASE_LNFLAGS=
+
+# extra CXXFLAGS
+EXTRA_CXXFLAGS=
+
+# extra LNFLAGS
+EXTRA_LNFLAGS=
+

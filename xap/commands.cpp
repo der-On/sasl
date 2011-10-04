@@ -7,59 +7,59 @@
 using namespace xap;
 
 
-static XaCommand findCommand(const char *name, void *cmdDta)
+static SaslCommand findCommand(const char *name, void *cmdDta)
 {
     return XPLMFindCommand(name);
 }
 
 
-static XaCommand createCommand(const char *name, const char *description, 
+static SaslCommand createCommand(const char *name, const char *description, 
         void *cmdDta)
 {
     return XPLMCreateCommand(name, description);
 }
 
 
-static void addCommandHandler(XaCommand command, xa_command_callback handler, 
+static void addCommandHandler(SaslCommand command, sasl_command_callback handler, 
         int before, void *data, void *cmdDta)
 {
     XPLMRegisterCommandHandler((XPLMCommandRef)command, handler, before, data);
 }
 
 
-static void removeCommandHandler(XaCommand command, 
-        xa_command_callback handler, int before, void *data, void *cmdDta)
+static void removeCommandHandler(SaslCommand command, 
+        sasl_command_callback handler, int before, void *data, void *cmdDta)
 {
     XPLMUnregisterCommandHandler((XPLMCommandRef)command, handler, before,
             data);
 }
 
 
-static void commandBegin(XaCommand command, void *cmdDta)
+static void commandBegin(SaslCommand command, void *cmdDta)
 {
     XPLMCommandBegin((XPLMCommandRef)command);
 }
 
 
-static void commandEnd(XaCommand command, void *cmdDta)
+static void commandEnd(SaslCommand command, void *cmdDta)
 {
     XPLMCommandEnd((XPLMCommandRef)command);
 }
 
 
-static void commandOnce(XaCommand command, void *cmdDta)
+static void commandOnce(SaslCommand command, void *cmdDta)
 {
     XPLMCommandOnce((XPLMCommandRef)command);
 }
 
 
 
-void xap::registerCommandsApi(XA xa)
+void xap::registerCommandsApi(SASL sasl)
 {
-    XaCommandCallbacks callbacks = { findCommand, createCommand,
+    SaslCommandCallbacks callbacks = { findCommand, createCommand,
         addCommandHandler, removeCommandHandler, commandBegin,
         commandEnd, commandOnce };
-    xa_set_commands(xa, &callbacks, NULL);
+    sasl_set_commands(sasl, &callbacks, NULL);
 }
 
 

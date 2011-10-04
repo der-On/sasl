@@ -1,35 +1,11 @@
 #include "luna.h"
 
+#include <sys/types.h>
+#include <dirent.h>
+
 
 using namespace xa;
 
-
-/// Print arguments of function
-static int luaPrint(lua_State *L) 
-{
-    std::string str;
-    
-    int n = lua_gettop(L);
-    lua_getglobal(L, "tostring");
-    for (int i = 1; i <= n; i++) {
-        const char *s;
-
-        if (i > 1)
-            str += "\t";
-        lua_pushvalue(L, -1);  /* function to be called */
-        lua_pushvalue(L, i);   /* value to print */
-        lua_call(L, 1, 1);
-        s = lua_tostring(L, -1);  /* get result */
-        if (! s)
-            return luaL_error(L, "`tostring' must return a string to `print'");
-        str += s;
-        lua_pop(L, 1);  /* pop result */
-    }
-
-    printf("%s\n", str.c_str());
-
-    return 0;
-}
 
 /// bitwise and
 static int luaBitAnd(lua_State *L) 
@@ -64,15 +40,51 @@ static int luaBitXor(lua_State *L)
     return 1;
 }
 
+/// enumerate files in directory
+static int luaListFiles(lua_State *L) 
+{
+    const char *name = lua_tostring(L, 1);
+    if (! name)
+        return 0;
+
+    lua_newtable(L);
+
+    DIR *dir = opendir(name);
+    if (! dir) {
+        return 1;
+    }
+
+    int i = 1;
+    for (struct dirent *de = readdir(dir); de; de = readdir(dir)) {
+        if ((DT_DIR == de->d_type) || (DT_LNK == de->d_type) || 
+                (DT_REG == de->d_type))
+        {
+            lua_pushnumber(L, i);
+            lua_newtable(L);
+            lua_pushstring(L, "name");
+            lua_pushstring(L, de->d_name);
+            lua_settable(L, -3);
+            lua_pushstring(L, "type");
+            lua_pushstring(L, DT_DIR == de->d_type ? "dir" : "file");
+            lua_settable(L, -3);
+            lua_settable(L, -3);
+            i++;
+        }
+    }
+    closedir(dir);
+
+    return 1;
+}
+
 
 Luna::Luna()
 {
     lua = luaL_newstate();
     luaL_openlibs(lua);
-    lua_register(lua, "print", luaPrint);
     lua_register(lua, "bitand", luaBitAnd);
     lua_register(lua, "bitor", luaBitOr);
     lua_register(lua, "bitxor", luaBitXor);
+    lua_register(lua, "listFiles", luaListFiles);
 
     lua_newtable(lua);
     lua_setfield(lua, LUA_REGISTRYINDEX, "xavionics");

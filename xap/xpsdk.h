@@ -39,6 +39,7 @@
 #include <XPLMMenus.h>
 #include <XPWidgets.h>
 #include <XPStandardWidgets.h>
+#include <XPLMNavigation.h>
 
 
 

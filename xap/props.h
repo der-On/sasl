@@ -1,21 +1,22 @@
 #ifndef __PROPS_H__
 #define __PROPS_H__
 
-#include "xavionics.h"
+#include "libavionics.h"
 
 namespace xap {
 
 /// Returns pointer to XAvionics callbacks structure
-struct PropsCallbacks* getPropsCallbacks();
+struct SaslPropsCallbacks* getPropsCallbacks();
 
 /// Initialize properties system
-Props propsInit();
+SaslProps propsInit();
 
 /// Free properties structure
-void propsDone(Props props);
+void propsDone(SaslProps props);
 
 /// Free func properties only
-void funcPropsDone(Props props);
+void funcPropsDone(SaslProps props);
+
 };
 
 #endif

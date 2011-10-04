@@ -1,11 +1,11 @@
 #ifndef __GRAPH_STUB_H__
 #define __GRAPH_STUB_H__
 
-#include "xcallbacks.h"
+#include "libavcallbacks.h"
 
 namespace xa {
 
-XaGraphicsCallbacks* getGraphicsStub();
+SaslGraphicsCallbacks* getGraphicsStub();
 
 };
 

@@ -1,12 +1,11 @@
-TARGET=libxavionics.a
+include ../common.mk
+    
+TARGET=libavionics.a
 HEADERS=$(wildcard *.h)
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)
 
-LUAJIT=/opt/luajit
-CXXFLAGS+=-Wall -I$(LUAJIT)/include/luajit-2.0 -fPIC -m32 -ggdb -fno-stack-protector 
-LNFLAGS+=-shared -rdynamic -nodefaultlibs -fPIC -m32 -ggdb -L$(LUAJIT)/lib
-LIBS+=-lluajit-5.1 -lm -lIL -lILU -lILUT
+CXXFLAGS+=$(LUAJIT_CXXFLAGS)
 
 all: $(TARGET)
 
@@ -15,7 +14,6 @@ all: $(TARGET)
 	
 $(TARGET): $(OBJECTS)
 	$(AR) rs $(TARGET) $(OBJECTS)
-#	$(CXX) -o $(TARGET) $(LNFLAGS) $(OBJECTS) $(LIBS)
 
 clean:
 	rm -f $(OBJECTS) $(TARGET)

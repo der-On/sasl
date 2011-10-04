@@ -3,7 +3,7 @@
 
 
 #include "luna.h"
-#include "xcallbacks.h"
+#include "libavcallbacks.h"
 #include <list>
 
 
@@ -14,7 +14,7 @@ class Commands
 {
     private:
         /// Commands callbacks from simulator
-        XaCommandCallbacks callbacks;
+        SaslCommandCallbacks callbacks;
 
         /// Reference to Lua
         Luna &lua;
@@ -27,7 +27,7 @@ class Commands
         struct CommandHandler
         {
             /// command to handle
-            XaCommand command;
+            SaslCommand command;
 
             /// reference to commands object
             Commands *commands;
@@ -52,26 +52,26 @@ class Commands
 
     public:
         /// Setup callbacks functions
-        void setCallbacks(XaCommandCallbacks *callbacks,
+        void setCallbacks(SaslCommandCallbacks *callbacks,
                 void *data);
 
         /// Find command with specified name
-        XaCommand findCommand(const char *name);
+        SaslCommand findCommand(const char *name);
 
         /// Start command execution
-        void commandBegin(XaCommand command);
+        void commandBegin(SaslCommand command);
         
         /// Finish command execution
-        void commandEnd(XaCommand command);
+        void commandEnd(SaslCommand command);
         
         /// Start and finish immediatelly command execution
-        void commandOnce(XaCommand command);
+        void commandOnce(SaslCommand command);
         
         /// Create command with specified name and description
-        XaCommand createCommand(const char *name, const char *descr);
+        SaslCommand createCommand(const char *name, const char *descr);
 
         /// Called by host application on command processing
-        int handleCommand(XaCommand command, int phase, 
+        int handleCommand(SaslCommand command, int phase, 
                 CommandHandler *handler);
 
         /// Add command handler callback

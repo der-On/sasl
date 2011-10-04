@@ -1,18 +1,20 @@
+include ../common.mk
+    
 TARGET=slava
 HEADERS=$(wildcard *.h)
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)
 
-CXXFLAGS+=-Wall -I/usr/include/lua5.1 `sdl-config --cflags` -I../libavionics -I../libogl -m32 -ggdb
-LNFLAGS+=-m32 -L. -L../libavionics -L../libogl -ggdb  -L/usr/lib32
-LIBS+=-llua5.1 -lm `sdl-config --libs` -lxavionics -logl -lSOIL32 -lGL
+CXXFLAGS+=`sdl-config --cflags` -I../libavionics  -I../libaccgl $(LUAJIT_CXXFLAGS)
+LNFLAGS+=-L../libavionics -L../libaccgl $(LUAJIT_LNFLAGS)
+LIBS+=-lm `sdl-config --libs` -lavionics -laccgl -lSOIL32 -lGL $(LUAJIT_LIBS)
 
 all: $(TARGET)
 
 .cpp.o:
 	$(CXX) $(CXXFLAGS) -c $<
 	
-$(TARGET): $(OBJECTS) ../libavionics/libxavionics.a ../libogl/libogl.a
+$(TARGET): $(OBJECTS) ../libavionics/libavionics.a ../libaccgl/libaccgl.a
 	$(CXX) -o $(TARGET) $(LNFLAGS) $(OBJECTS) $(LIBS)
 
 clean:

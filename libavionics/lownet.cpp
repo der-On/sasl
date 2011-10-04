@@ -1,7 +1,7 @@
 #include "lownet.h"
 
 #include "exception.h"
-#include "xcallbacks.h"
+#include "libavcallbacks.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -22,21 +22,6 @@
 #include <errno.h>
 #include <cstdio>
 
-
-#ifdef WINDOWS
-static void logf(char *str, ...)
-{
-    FILE *f = fopen("net.log", "a");
-    va_list args;    
-    va_start (args, str);
-    if (! f) return;
-    std::vfprintf(f, str, args);
-    va_end(args);
-    fclose(f);
-}
-
-#define printf logf
-#endif
 
 // MSG_NOSIGNAL does not exist on OS X and is never sent anyway
 #ifndef MSG_NOSIGNAL
@@ -201,7 +186,7 @@ static void closeSocket(int sock)
 }
 
 
-AsyncCon::AsyncCon()
+AsyncCon::AsyncCon(Log &log): log(log)
 {
     sock = 0;
     receiver = NULL;
@@ -367,13 +352,13 @@ int AsyncCon::update()
 {
     if (sendBuffer.getFilled() && canSend(sock))
         if (sendMore()) {
-printf("error sending data\n");
+            log.error("error sending data\n");
             return -1;
         }
 
     if (canReceive(sock))
         if (recvMore()) {
-printf("error receiving data\n");
+            log.error("error receiving data\n");
             return -1;
         }
 
@@ -418,7 +403,7 @@ void AsyncCon::setCallback(NetReceiver *callback)
 void AsyncCon::close()
 {
     if (sock) {
-printf("closing connection\n");
+        log.debug("closing connection\n");
         closeSocket(sock);
         sock = 0;
     }
@@ -458,7 +443,7 @@ int xa::establishConnection(const char *host, int port)
 
 
 
-TcpServer::TcpServer()
+TcpServer::TcpServer(Log &log): log(log)
 {
     sock = 0;
 }
@@ -544,7 +529,7 @@ int TcpServer::update()
 
     if (canReceive(sock)) {
         int clntSock = accept(sock, (struct sockaddr*)&clntAddr, &addrlen);
-printf("accept %i\n", clntSock);
+        log.debug("accept %i", clntSock);
         if (-1 == clntSock)
             return (EAGAIN == errno) ? 0 : -1;
 

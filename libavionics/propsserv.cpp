@@ -2,7 +2,7 @@
 
 #include <string.h>
 #include "md5.h"
-#include "xcallbacks.h"
+#include "libavcallbacks.h"
 
 
 using namespace xa;
@@ -14,7 +14,7 @@ ClientProp::ClientProp()
 
 
 ClientProp::ClientProp(int id, int type, const std::string &name, 
-        Properties *properties, PropRef ref):
+        Properties *properties, SaslPropRef ref):
        id(id), type(type), name(name), properties(properties), ref(ref)
 {
     sendNext = true;
@@ -113,7 +113,8 @@ void ClientProp::setString(const std::string &value)
 
 
 
-PropsServer::PropsServer(Properties &properties): properties(properties)
+PropsServer::PropsServer(Log &log, Properties &properties): 
+        log(log), server(log), properties(properties)
 {
     server.setCallback(this);
 }
@@ -137,7 +138,7 @@ int PropsServer::update()
     int err = 0;
 
     if (server.update()) {
-printf("tcp server error\n");
+        log.error("tcp server error\n");
         err = -1;
     }
 
@@ -145,7 +146,7 @@ printf("tcp server error\n");
             i != clients.end(); )
     {
         if ((*i).update()) {
-printf("closing client connection\n");
+            log.debug("closing client connection\n");
             i = clients.erase(i);
         } else
             i++;
@@ -164,7 +165,7 @@ void PropsServer::stop()
 
 void PropsServer::onConnectionReceived(int sock)
 {
-    clients.push_back(PropsClient(secret, properties));
+    clients.push_back(PropsClient(log, secret, properties));
     clients.back().start(sock);
 }
 
@@ -176,8 +177,8 @@ bool PropsServer::isRunning()
 
 
 
-PropsClient::PropsClient(const std::string &secret, Properties &properties): 
-    secret(secret), properties(properties)
+PropsClient::PropsClient(Log &log, const std::string &secret, Properties &properties): 
+    log(log), con(log), secret(secret), properties(properties)
 {
 }
 
@@ -189,9 +190,9 @@ PropsClient::~PropsClient()
 
 void PropsClient::start(int sock)
 {
-printf("starting connection\n");
+    log.debug("starting connection\n");
     if (con.setSocket(sock)) {
-        printf("error witching client to non-blockng mode\n");
+        log.error("error witching client to non-blockng mode\n");
         stop();
         return;
     }
@@ -204,12 +205,12 @@ printf("starting connection\n");
 int PropsClient::update()
 {
     if (CLOSED == state) {
-printf("client closed\n");
+        log.debug("client closed\n");
         return -1;
     }
     int res = con.update();
     if (res) {
-        printf("error updaing client connection\n");
+        log.error("error updaing client connection\n");
         stop();
     }
     return res;
@@ -229,20 +230,17 @@ void PropsClient::onDataReceived(NetBuf &buffer)
 
 void PropsClient::doHandshake(NetBuf &buffer)
 {
-printf("checking handshake...\n");
     if (4 > buffer.getFilled())
         return;
 
-printf("data received...\n");
     if (memcmp(buffer.getData(), "NP2\n", 4)) {
-printf("invalid protocol!\n");
+        log.error("invalid protocol!\n");
         stop();
         return;
     }
 
     buffer.remove(4);
 
-printf("sending seed...\n");
     con.send((unsigned char*)"NP1\n", 4);
 
     for (int i = 0; i < 16; i++)
@@ -256,11 +254,9 @@ printf("sending seed...\n");
 
 void PropsClient::doVerify(NetBuf &buffer)
 {
-printf("verifying...\n");
     if (16 > buffer.getFilled())
         return;
 
-printf("calculating md5...\n");
     md5_state_t md5;
     md5_init(&md5);
     md5_append(&md5, (const md5_byte_t*)"NP2\n", 4);
@@ -273,11 +269,9 @@ printf("calculating md5...\n");
     buffer.remove(16);
 
     if (passed) {
-printf("sending PASS reply...\n");
         con.send((unsigned char*)"PASS", 4);
         state = COMMAND;
     } else {
-printf("sending DENY reply...\n");
         con.send((unsigned char*)"DENY", 4);
         con.sendAll();
         stop();
@@ -301,12 +295,12 @@ void PropsClient::handleSubscription(NetBuf &buffer)
     buffer.remove(nameSize + 6);
 
     if ((1 > type) || (4 < type)) {
-        printf("Invalid property type %i\n", type);
+        log.error("Invalid property type %i\n", type);
         stop();
         return;
     }
 
-    PropRef prop;
+    SaslPropRef prop;
 
     if (5 == command)
         prop = properties.createProp(name, type, maxSize);
@@ -314,7 +308,7 @@ void PropsClient::handleSubscription(NetBuf &buffer)
         prop = properties.getProp(name, type);
 
     if (! prop) {
-        printf("Can't reference property %s\n", name.c_str());
+        log.error("Can't reference property %s\n", name.c_str());
         return;
     }
 
@@ -359,7 +353,7 @@ void PropsClient::handleSetProp(NetBuf &buffer)
     unsigned int sz = 5;
     int dataSz = getPropTypeSize(command[2]);
     if (! dataSz) {
-        printf("Invalid property type %i\n", command[2]);
+        log.error("Invalid property type %i\n", command[2]);
         stop();
         return;
     }
@@ -379,7 +373,7 @@ void PropsClient::handleSetProp(NetBuf &buffer)
 
     std::map<int, ClientProp>::iterator i = propRefs.find(command[1]);
     if (i == propRefs.end()) {
-        printf("preoperty %i doesn't exists\n", command[1]);
+        log.warning("preoperty %i doesn't exists\n", command[1]);
         buffer.remove(sz);
         stop();
         return;
@@ -394,7 +388,7 @@ void PropsClient::handleSetProp(NetBuf &buffer)
             prop.setString(std::string((const char*)command + 7, dataSz));
             break;
         default:
-            printf("invalid property type %i\n", command[2]);
+            log.error("invalid property type %i\n", command[2]);
             stop();
     }
         
@@ -417,7 +411,7 @@ void PropsClient::doCommand(NetBuf &buffer)
             case 2: handleSetProp(buffer);  break;
             case 3: handleGetProps(buffer);  break;
             default:
-                printf("Invalid command %i\n", command);
+                log.error("Invalid command %i\n", command);
                 stop();
         }
     } while ((COMMAND == state) && (buffer.getFilled() != lastFilled) && 

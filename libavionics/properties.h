@@ -2,10 +2,11 @@
 #define __PROPS_H__
 
 
-#include "xcallbacks.h"
+#include "libavcallbacks.h"
 #include <string>
 #include <list>
 #include "luna.h"
+#include "log.h"
 
 
 namespace xa {
@@ -19,10 +20,10 @@ class Properties
         Luna &lua;
 
         /// Pluggable properties module callbacks
-        struct PropsCallbacks *propsCallbacks;
+        struct SaslPropsCallbacks *propsCallbacks;
 
         /// Pointer to properties subsystem
-        Props props;
+        SaslProps props;
 
         /// If equals to false, properties functions will throw 
         // exceptions on errors
@@ -59,50 +60,50 @@ class Properties
         /// Setup properties callbacks
         /// \param callbacks structure full of properties callbacks
         /// \param props properties handler
-        void setProps(struct PropsCallbacks *callbacks, Props props);
+        void setProps(struct SaslPropsCallbacks *callbacks, SaslProps props);
 
         /// Returns pointer to property with specified name or NULL if not found
-        PropRef getProp(const std::string &name, int type);
+        SaslPropRef getProp(const std::string &name, int type);
 
         /// Create new property
-        PropRef createProp(const std::string &name, int type, int maxSize=0);
+        SaslPropRef createProp(const std::string &name, int type, int maxSize=0);
         
         /// Release property struture
-        void freeProp(PropRef prop);
+        void freeProp(SaslPropRef prop);
 
         /// Returns value of property as integer
         /// On errors returns dflt
-        int getPropi(PropRef prop, int dflt=0, int *err=NULL);
+        int getPropi(SaslPropRef prop, int dflt=0, int *err=NULL);
 
         /// Set value of integer property.
-        int setProp(PropRef prop, int value);
+        int setProp(SaslPropRef prop, int value);
         
         /// Returns value of property as integer
         /// On errors returns dflt
-        float getPropf(PropRef prop, float dflt=0, int *err=NULL);
+        float getPropf(SaslPropRef prop, float dflt=0, int *err=NULL);
         
         /// Set value of float property.
-        int setProp(PropRef prop, float value);
+        int setProp(SaslPropRef prop, float value);
         
         /// Returns value of property as double
         /// On errors returns dflt
-        float getPropd(PropRef prop, double dflt=0, int *err=NULL);
+        float getPropd(SaslPropRef prop, double dflt=0, int *err=NULL);
         
         /// Set value of double property.
-        int setProp(PropRef prop, double value);
+        int setProp(SaslPropRef prop, double value);
         
         /// Returns value of property as string
         /// On errors returns dflt
-        std::string getProps(PropRef prop, const std::string &dflt="", int *err=NULL);
+        std::string getProps(SaslPropRef prop, const std::string &dflt="", int *err=NULL);
         
         /// Set value of string property.
-        int setProp(PropRef prop, const std::string &value);
+        int setProp(SaslPropRef prop, const std::string &value);
 
         /// Update properties subsystem
         int update();
 
         /// register functional property
-        PropRef registerFuncProp(const std::string &name, int type, 
+        SaslPropRef registerFuncProp(const std::string &name, int type, 
                 int maxSize, int getter, int setter);
        
         /// remove property handler from list and unref callbacks

@@ -8,7 +8,7 @@
 #include "xpsdk.h"
 
 #include "props.h"
-#include "xavionics.h"
+#include "libavionics.h"
 #include "utils.h"
 
 
@@ -66,10 +66,10 @@ struct FuncProperty
     XPLMDataRef ref;
 
     /// property getter
-    xa_prop_getter_callback getter;
+    sasl_prop_getter_callback getter;
 
     /// property setter
-    xa_prop_setter_callback setter;
+    sasl_prop_setter_callback setter;
 
     /// reference for callbacks
     void *data;
@@ -149,7 +149,7 @@ struct XPlaneProps {
 
 
 /// Initialize properties structure
-Props xap::propsInit()
+SaslProps xap::propsInit()
 {
     XPlaneProps *props = new XPlaneProps;
     props->initialized = false;
@@ -158,7 +158,7 @@ Props xap::propsInit()
 
 
 /// Free properties structure
-void xap::propsDone(Props props)
+void xap::propsDone(SaslProps props)
 {
     XPlaneProps *p = (XPlaneProps*)props;
     if (! p)
@@ -185,7 +185,7 @@ void xap::propsDone(Props props)
         delete p;
 }
 
-void xap::funcPropsDone(Props props)
+void xap::funcPropsDone(SaslProps props)
 {
     XPlaneProps *p = (XPlaneProps*)props;
     if (! p)
@@ -221,7 +221,7 @@ static void cutArrayIndex(std::string &name, int &index)
 
 
 /// Finds reference to property
-static PropRef getPropRef(Props props, const char *name, int type)
+static SaslPropRef getPropRef(SaslProps props, const char *name, int type)
 {
     XPlaneProps *p = (XPlaneProps*)props;
     if (! (p && name))
@@ -249,7 +249,7 @@ static PropRef getPropRef(Props props, const char *name, int type)
 
 
 /// Destroy unneeded reference to pointer
-static void freePropRef(PropRef property)
+static void freePropRef(SaslPropRef property)
 {
     Property *prop = (Property*)property;
     if (! prop)
@@ -269,7 +269,7 @@ static void freePropRef(PropRef property)
 
 
 /// Returne value of property as integer
-static int getPropInt(PropRef property, int *err)
+static int getPropInt(SaslPropRef property, int *err)
 {
     if (err)
         *err = 0;
@@ -328,7 +328,7 @@ static int getPropInt(PropRef property, int *err)
 
 /// Sets value of property as integer
 /// Returns zero on cuccess or non-zero on error
-static int setPropInt(PropRef property, int value)
+static int setPropInt(SaslPropRef property, int value)
 {
     Property *prop = (Property*)property;
     if (! prop)
@@ -380,7 +380,7 @@ static int setPropInt(PropRef property, int value)
 
 
 /// Returne value of property as float
-static float getPropFloat(PropRef property, int *err)
+static float getPropFloat(SaslPropRef property, int *err)
 {
     if (err)
         *err = 0;
@@ -439,7 +439,7 @@ static float getPropFloat(PropRef property, int *err)
 
 /// Sets value of property as float
 /// Returns zero on cuccess or non-zero on error
-static int setPropFloat(PropRef property, float value)
+static int setPropFloat(SaslPropRef property, float value)
 {
     Property *prop = (Property*)property;
     if (! prop)
@@ -490,7 +490,7 @@ static int setPropFloat(PropRef property, float value)
 }
 
 /// Returne value of property as double
-static double getPropDouble(PropRef property, int *err)
+static double getPropDouble(SaslPropRef property, int *err)
 {
     if (err)
         *err = 0;
@@ -549,7 +549,7 @@ static double getPropDouble(PropRef property, int *err)
 
 /// Sets value of property as float
 /// Returns zero on cuccess or non-zero on error
-static int setPropDouble(PropRef property, double value)
+static int setPropDouble(SaslPropRef property, double value)
 {
     Property *prop = (Property*)property;
     if (! prop)
@@ -618,7 +618,7 @@ static int copyStr(char *dest, int maxSize, const std::string &src, int *err)
 
 /// Returne value of property as string
 /// returns length of string
-static int getPropString(PropRef property, char *buf, int maxSize, int *err)
+static int getPropString(SaslPropRef property, char *buf, int maxSize, int *err)
 {
     if (err)
         *err = 0;
@@ -674,7 +674,7 @@ static int getPropString(PropRef property, char *buf, int maxSize, int *err)
 
 /// Sets value of property as string
 /// Returns zero on cuccess or non-zero on error
-static int setPropString(PropRef property, const char *value)
+static int setPropString(SaslPropRef property, const char *value)
 {
     Property *prop = (Property*)property;
     if ((! prop) || (! value))
@@ -744,7 +744,7 @@ static void writeInt(void *refcon, int value)
 }
 
 /// Create integer property
-static PropRef createIntProp(XPlaneProps *props, const char *name)
+static SaslPropRef createIntProp(XPlaneProps *props, const char *name)
 {
     CustomProperty *prop = new CustomProperty;
     prop->data.intValue = 0;
@@ -781,7 +781,7 @@ static void writeFloat(void *refcon, float value)
 }
 
 /// Create integer property
-static PropRef createFloatProp(XPlaneProps *props, const char *name)
+static SaslPropRef createFloatProp(XPlaneProps *props, const char *name)
 {
     CustomProperty *prop = new CustomProperty;
     prop->data.floatValue = 0;
@@ -819,7 +819,7 @@ static void writeDouble(void *refcon, double value)
 
 
 /// Create integer property
-static PropRef createDoubleProp(XPlaneProps *props, const char *name)
+static SaslPropRef createDoubleProp(XPlaneProps *props, const char *name)
 {
     CustomProperty *prop = new CustomProperty;
     prop->data.doubleValue = 0;
@@ -870,7 +870,7 @@ static void writeString(void *refcon, void *value, int offset, long size)
 
 
 /// Create string property
-static PropRef createStringProp(XPlaneProps *props, const char *name, 
+static SaslPropRef createStringProp(XPlaneProps *props, const char *name, 
         int maxSize)
 {
     CustomProperty *prop = new CustomProperty;
@@ -889,7 +889,7 @@ static PropRef createStringProp(XPlaneProps *props, const char *name,
 
 /// Create new propery and returns reference to it.
 /// If property already exists just returns reference to it.
-static PropRef createProp(Props props, const char *name, int type, int maxSize)
+static SaslPropRef createProp(SaslProps props, const char *name, int type, int maxSize)
 {
     XPlaneProps *p = (XPlaneProps*)props;
     if (! (p && name))
@@ -911,7 +911,7 @@ static PropRef createProp(Props props, const char *name, int type, int maxSize)
 
 
 /// delayed properties write
-static int updateProps(Props props)
+static int updateProps(SaslProps props)
 {
     XPlaneProps *p = (XPlaneProps*)props;
 
@@ -1049,13 +1049,13 @@ static void setStringCallback(void *refcon, void *value, int offset, long len)
 
 
 // create functional property
-static PropRef createFuncProp(Props props, const char *name, 
-            int type, int size, xa_prop_getter_callback getter, 
-            xa_prop_setter_callback setter, void *ref)
+static SaslPropRef createFuncProp(SaslProps props, const char *name, 
+            int type, int size, sasl_prop_getter_callback getter, 
+            sasl_prop_setter_callback setter, void *ref)
 {
     XPlaneProps *p = (XPlaneProps*)props;
 
-    PropRef propRef = getPropRef(props, name, type);
+    SaslPropRef propRef = getPropRef(props, name, type);
     if (propRef)
         return propRef;
 
@@ -1093,13 +1093,13 @@ static PropRef createFuncProp(Props props, const char *name,
 }
 
 
-static PropsCallbacks callbacks = { getPropRef, freePropRef, createProp, 
+static SaslPropsCallbacks callbacks = { getPropRef, freePropRef, createProp, 
         createFuncProp, getPropInt, setPropInt, getPropFloat, 
         setPropFloat, getPropDouble, setPropDouble, getPropString,
         setPropString, updateProps, NULL };
 
 
-PropsCallbacks* xap::getPropsCallbacks()
+SaslPropsCallbacks* xap::getPropsCallbacks()
 {
     return &callbacks;
 }

@@ -14,7 +14,7 @@
 #include <SDL_events.h>
 #endif
 
-#include "xavionics.h"
+#include "libavionics.h"
 #include "ogl.h"
 #include "cmdline.h"
 #include "fps.h"
@@ -70,35 +70,35 @@ static void initScreen(int width, int height, bool fullscreen)
 }
 
 
-XA createPanel(XaGraphicsCallbacks* graphics, int width, int height, 
+SASL createPanel(SaslGraphicsCallbacks* graphics, int width, int height, 
         const std::string &data, const std::string &panel, 
         const std::string &host, int port, const std::string &secret)
 {
-    XA xa = xa_init(data.c_str());
-    if (! xa) {
+    SASL sasl = sasl_init(data.c_str());
+    if (! sasl) {
         fprintf(stderr, "Unable to initialize avionics library\n");
         exit(1);
     }
         
-    xa_set_graphics_callbacks(xa, graphics);
+    sasl_set_graphics_callbacks(sasl, graphics);
     
-    xa_set_panel_size(xa, width, height);
-    xa_set_popup_size(xa, width, height);
-    xa_enable_click_emulator(xa, true);
-    xa_set_background_color(xa, 1, 1, 1, 1);
+    sasl_set_panel_size(sasl, width, height);
+    sasl_set_popup_size(sasl, width, height);
+    sasl_enable_click_emulator(sasl, true);
+    sasl_set_background_color(sasl, 1, 1, 1, 1);
 
     if (host.size())
-        if (xa_connect_to_server(xa, host.c_str(), port, secret.c_str())) {
+        if (sasl_connect_to_server(sasl, host.c_str(), port, secret.c_str())) {
             fprintf(stderr, "Can't connect to server %s %i\n", host.c_str(), port);
             exit(1);
         }
 
-    if (xa_load_panel(xa, panel.c_str())) {
+    if (sasl_load_panel(sasl, panel.c_str())) {
         fprintf(stderr, "Can't load panel\n");
         exit(1);
     }
 
-    return xa;
+    return sasl;
 }
 
 int main(int argc, char *argv[])
@@ -128,9 +128,9 @@ int main(int argc, char *argv[])
     std::string title = "SLAVA - " + cmdLine.getPanel();
     SDL_WM_SetCaption(title.c_str(), title.c_str());
 
-    XaGraphicsCallbacks* graphics = xagl_init_graphics();
+    SaslGraphicsCallbacks* graphics = saslgl_init_graphics();
 
-    XA xa = createPanel(graphics, width, height, cmdLine.getDataDir(), 
+    SASL sasl = createPanel(graphics, width, height, cmdLine.getDataDir(), 
             cmdLine.getPanel(), cmdLine.getNetHost(), cmdLine.getNetPort(),
             cmdLine.getNetSecret());
 
@@ -139,11 +139,11 @@ int main(int argc, char *argv[])
 
     bool done = false;
     while (! done) {
-        if (xa_update(xa))
+        if (sasl_update(sasl))
             break;
 
         glClear(GL_COLOR_BUFFER_BIT);
-        if (xa_draw_panel(xa, STAGE_ALL))
+        if (sasl_draw_panel(sasl, STAGE_ALL))
             break;
         SDL_GL_SwapBuffers();
 
@@ -155,17 +155,17 @@ int main(int argc, char *argv[])
                     break;
 
                 case SDL_MOUSEBUTTONDOWN: 
-                    xa_mouse_button_down(xa, event.button.x, 
+                    sasl_mouse_button_down(sasl, event.button.x, 
                             height - event.button.y, event.button.button, 3);
                     break;
 
                 case SDL_MOUSEBUTTONUP: 
-                    xa_mouse_button_up(xa, event.button.x, 
+                    sasl_mouse_button_up(sasl, event.button.x, 
                             height - event.button.y, event.button.button, 3);
                     break;
 
                 case SDL_MOUSEMOTION: 
-                    xa_mouse_move(xa, event.button.x, 
+                    sasl_mouse_move(sasl, event.button.x, 
                             height - event.button.y, 3);
                     break;
 
@@ -173,12 +173,12 @@ int main(int argc, char *argv[])
                     switch (event.key.keysym.sym) {
                         case SDLK_F7:
                             showClickable = ! showClickable;
-                            xa_set_show_clickable(xa, showClickable);
+                            sasl_set_show_clickable(sasl, showClickable);
                             break;
 
                         case SDLK_F8:
-                            xa_done(xa);
-                            xa = createPanel(graphics, width, height, 
+                            sasl_done(sasl);
+                            sasl = createPanel(graphics, width, height, 
                                     cmdLine.getDataDir(), cmdLine.getPanel(), 
                                     cmdLine.getNetHost(), cmdLine.getNetPort(),
                                     cmdLine.getNetSecret());
@@ -198,8 +198,8 @@ int main(int argc, char *argv[])
                     width = event.resize.w;
                     height = event.resize.h;
                     initScreen(width, height, cmdLine.isFullscreen());
-                    xa_set_panel_size(xa, width, height);
-                    xa_set_popup_size(xa, width, height);
+                    sasl_set_panel_size(sasl, width, height);
+                    sasl_set_popup_size(sasl, width, height);
                     break;
 #endif
             }
@@ -208,8 +208,8 @@ int main(int argc, char *argv[])
         fps.update();
     }
 
-    xagl_done_graphics(graphics);
-    xa_done(xa);
+    saslgl_done_graphics(graphics);
+    sasl_done(sasl);
     return 0;
 }
 

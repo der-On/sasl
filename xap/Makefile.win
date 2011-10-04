@@ -9,8 +9,8 @@ DEVIL=c:/mingw/sdk/lib
 CXX=mingw32-g++
 CXXFLAGS+=-Wall -I$(SDK)/CHeaders/XPLM -I$(SDK)/CHeaders/Widgets -DAPL=0 -DIBM=1 -I../libavionics -DXPLM200 #-Ic:/mingw/sdk/inc
 LNFLAGS=-L$(SDK)/Libraries/Win -Lc:/mingw/sdk/lib -L../libavionics
-#LIBS=-lxplm -lxpwidgets -lm -lIL -lILU -lILUT -lxavionics -llua -lOpenGL32
-LIBS=-lxavionics -lxplm -lxpwidgets -lm -lSOIL -llua -lOpenGL32 -lws2_32 #-lDevIL -lILU -lILUT
+#LIBS=-lxplm -lxpwidgets -lm -lIL -lILU -lILUT -lavionics -llua -lOpenGL32
+LIBS=-lavionics -lxplm -lxpwidgets -lm -lSOIL -llua -lOpenGL32 -lws2_32 #-lDevIL -lILU -lILUT
 
 
 all: $(TARGET)

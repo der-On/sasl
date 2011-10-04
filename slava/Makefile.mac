@@ -10,14 +10,14 @@ OSXL=-syslibroot=$(SDKROOT) -arch i386
 # Add OS X Frameworks to linker paths too, assume SOIL and SDL are installed from source and into /usr/local (as is by default)
 CXXFLAGS+=-Wall -I/usr/local/include -I/usr/local/include/SDL -I/usr/include `sdl-config --cflags` -I../libavionics -m32 -ggdb $(OSXC)
 LNFLAGS+=-undefined warning -flat_namespace -m32 -L. -L../libavionics -ggdb $(OSXL)
-LIBS+=-llua -lm `sdl-config --libs` -lxavionics -lSOIL
+LIBS+=-llua -lm `sdl-config --libs` -lavionics -lSOIL
 
 all: $(TARGET)
 
 .cpp.o:
 	$(CXX) $(CXXFLAGS) -c $<
 	
-$(TARGET): $(OBJECTS) ../libavionics/libxavionics.a
+$(TARGET): $(OBJECTS) ../libavionics/libavionics.a
 	$(CXX) -o $(TARGET) $(LNFLAGS) $(OBJECTS) $(LIBS)
   
 clean:

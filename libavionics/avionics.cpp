@@ -3,7 +3,7 @@
 #include "exception.h"
 #include "graph.h"
 #include "texture.h"
-#include "xconsts.h"
+#include "libavconsts.h"
 #include "propsserv.h"
 #include "utils.h"
 #include "graphstub.h"
@@ -15,14 +15,14 @@ using namespace xa;
 
 
 Avionics::Avionics(const std::string &path): path(path), clickEmulator(timer),
-    fontManager(textureManager), properties(lua), server(properties), 
+    fontManager(textureManager), properties(lua), server(log, properties), 
     commands(lua)
 {
+    log.exportToLua(lua);
     panelWidth = popupWidth = 1024;
     panelHeight = popupHeight = 768;
     setGraphicsCallbacks(getGraphicsStub());
     lastGcTime = 0;
-    sound = NULL;
 
     bgR = bgG = bgB = 1.0f;
     bgA = 0.0f;
@@ -32,7 +32,7 @@ Avionics::Avionics(const std::string &path): path(path), clickEmulator(timer),
     exportTextureToLua(lua);
     exportFontToLua(lua);
     exportPropsToLua(lua);
-    exportSoundToLua(lua);
+    sound.exportSoundToLua(lua);
 
     if (lua.runScript(path + "/scripts/init.lua")) {
         std::string msg(std::string("Error running init script: ") + 
@@ -64,7 +64,7 @@ void Avionics::setPanelResolution(int width, int height)
     lua_pushnumber(L, width);
     lua_pushnumber(L, height);
     if (lua_pcall(L, 2, 0, 0)) {
-        printf("Error resizing panel: %s\n", lua_tostring(L, -1));
+        log.error("Can't resize panel: %s\n", lua_tostring(L, -1));
         lua_pop(L, 1);
     }
 }
@@ -79,7 +79,7 @@ void Avionics::setPopupResolution(int width, int height)
     lua_pushnumber(L, width);
     lua_pushnumber(L, height);
     if (lua_pcall(L, 2, 0, 0)) {
-        printf("Error resizing popup layer: %s\n", lua_tostring(L, -1));
+        log.error("Can't resize popup layer: %s\n", lua_tostring(L, -1));
         lua_pop(L, 1);
     }
 }
@@ -131,6 +131,8 @@ void Avionics::update()
                     clickEmulator.getButton(), clickEmulator.getLayer());
     }
     
+    sound.update();
+
     lua_State *L = lua.getLua();
     lua_getglobal(L, "update");
     if (lua_isfunction(L, -1)) {
@@ -347,80 +349,16 @@ void Avionics::stopPropsServer()
 }
 
 
-void Avionics::setCommandsCallbacks(XaCommandCallbacks *callbacks, 
+void Avionics::setCommandsCallbacks(SaslCommandCallbacks *callbacks, 
         void *data)
 {
     commands.setCallbacks(callbacks, data);
 }
 
-void Avionics::setGraphicsCallbacks(XaGraphicsCallbacks *callbacks)
+void Avionics::setGraphicsCallbacks(SaslGraphicsCallbacks *callbacks)
 {
     graphics = callbacks;
     textureManager.setGraphicsCallbacks(callbacks);
 }
 
-
-void Avionics::setSoundCallbacks(XaSoundCallbacks *callbacks, void *data)
-{
-    sound = callbacks;
-}
-
-
-int Avionics::sampleLoad(const char *fileName)
-{
-    if (sound)
-        return sound->load(sound, fileName);
-    else
-        return 0;
-}
-
-
-void Avionics::samplePlay(int sampleId, int loop)
-{
-    if (sound)
-        sound->play(sound, sampleId, loop);
-}
-
-
-void Avionics::sampleStop(int sampleId)
-{
-    if (sound)
-        sound->stop(sound, sampleId);
-}
-
-
-void Avionics::sampleSetGain(int sampleId, int gain)
-{
-    if (sound)
-        sound->set_gain(sound, sampleId, gain);
-}
-
-
-void Avionics::sampleSetPitch(int sampleId, int pitch)
-{
-    if (sound)
-        sound->set_pitch(sound, sampleId, pitch);
-}
-
-
-void Avionics::sampleRewind(int sampleId)
-{
-    if (sound)
-        sound->rewind(sound, sampleId);
-}
-
-
-bool Avionics::sampleIsPlaying(int sampleId)
-{
-    if (sound)
-        return sound->is_playing(sound, sampleId);
-    else
-        return false;
-}
-
-void Avionics::setMasterGain(int gain)
-{
-    if (sound)
-        sound->set_master_gain(sound, gain);
-}
 

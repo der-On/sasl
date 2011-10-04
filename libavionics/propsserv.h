@@ -7,6 +7,7 @@
 #include <map>
 #include "lownet.h"
 #include "properties.h"
+#include "log.h"
 
 
 namespace xa {
@@ -42,14 +43,14 @@ class ClientProp
         Properties *properties;
 
         /// Reference to property
-        PropRef ref;
+        SaslPropRef ref;
 
     public:
         ClientProp();
 
         /// Create new reference to property
         ClientProp(int id, int type, const std::string &name, 
-                Properties *properties, PropRef ref);
+                Properties *properties, SaslPropRef ref);
         
         ~ClientProp();
 
@@ -79,6 +80,9 @@ class ClientProp
 class PropsClient: private NetReceiver
 {
     private:
+        /// Logger to use
+        Log log;
+
         /// Connection to client
         AsyncCon con;
 
@@ -109,7 +113,7 @@ class PropsClient: private NetReceiver
 
     public:
         /// Create new connection to client
-        PropsClient(const std::string &secret, Properties &properties);
+        PropsClient(Log &log, const std::string &secret, Properties &properties);
 
         /// Destroy connection to client
         ~PropsClient();
@@ -152,6 +156,9 @@ class PropsClient: private NetReceiver
 class PropsServer: private ConnectionAcceptor
 {
     private:
+        /// logger to use
+        Log &log;
+
         /// secret word
         std::string secret;
 
@@ -166,7 +173,7 @@ class PropsServer: private ConnectionAcceptor
 
     public:
         /// create props server
-        PropsServer(Properties &properties);
+        PropsServer(Log &log, Properties &properties);
 
         /// destroy props server
         virtual ~PropsServer();

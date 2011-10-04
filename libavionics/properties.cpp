@@ -41,7 +41,7 @@ static int luaGetProp(lua_State *L)
         return 1;
     }
 
-    PropRef prop = getAvionics(L)->getProps().getProp(propName, type);
+    SaslPropRef prop = getAvionics(L)->getProps().getProp(propName, type);
 
     if (prop)
         lua_pushlightuserdata(L, prop);
@@ -69,7 +69,7 @@ static int luaCreateProp(lua_State *L)
         valArg++;
     }
 
-    PropRef prop = getAvionics(L)->getProps().createProp(propName, type, maxLen);
+    SaslPropRef prop = getAvionics(L)->getProps().createProp(propName, type, maxLen);
 
     if (prop) {
         if (! lua_isnil(L, valArg)) {
@@ -123,7 +123,7 @@ static int luaCreateFuncProp(lua_State *L)
     lua_pushvalue(L, 4);
     int setter = lua.addRef();
    
-    PropRef p = getAvionics(L)->getProps().registerFuncProp(propName, type, 
+    SaslPropRef p = getAvionics(L)->getProps().registerFuncProp(propName, type, 
             maxSize, getter, setter);
     if (p)
         lua_pushlightuserdata(L, p);
@@ -140,7 +140,7 @@ static int luaFreeProp(lua_State *L)
     if (! lua_islightuserdata(L, 1))
         return 0;
     
-    PropRef prop = (PropRef)lua_touserdata(L, 1);
+    SaslPropRef prop = (SaslPropRef)lua_touserdata(L, 1);
     if (prop)
         getAvionics(L)->getProps().freeProp(prop);
 
@@ -151,7 +151,7 @@ static int luaFreeProp(lua_State *L)
 /// Lua wrapper for getPropi
 static int luaGetPropi(lua_State *L)
 {
-    PropRef prop = (PropRef)lua_touserdata(L, 1);
+    SaslPropRef prop = (SaslPropRef)lua_touserdata(L, 1);
     int dflt = 0;
     
     if (! lua_isnil(L, 2))
@@ -166,7 +166,7 @@ static int luaGetPropi(lua_State *L)
 /// Lua wrapper for setPropi
 static int luaSetPropi(lua_State *L)
 {
-    PropRef prop = (PropRef)lua_touserdata(L, 1);
+    SaslPropRef prop = (SaslPropRef)lua_touserdata(L, 1);
     int value = (int)lua_tonumber(L, 2);
     getAvionics(L)->getProps().setProp(prop, value);
     return 0;
@@ -176,7 +176,7 @@ static int luaSetPropi(lua_State *L)
 /// Lua wrapper for getPropf
 static int luaGetPropf(lua_State *L)
 {
-    PropRef prop = (PropRef)lua_touserdata(L, 1);
+    SaslPropRef prop = (SaslPropRef)lua_touserdata(L, 1);
     float dflt = 0;
     
     if (! lua_isnil(L, 2))
@@ -191,7 +191,7 @@ static int luaGetPropf(lua_State *L)
 /// Lua wrapper for setPropf
 static int luaSetPropf(lua_State *L)
 {
-    PropRef prop = (PropRef)lua_touserdata(L, 1);
+    SaslPropRef prop = (SaslPropRef)lua_touserdata(L, 1);
     float value = (float)lua_tonumber(L, 2);
     getAvionics(L)->getProps().setProp(prop, value);
     return 0;
@@ -200,7 +200,7 @@ static int luaSetPropf(lua_State *L)
 /// Lua wrapper for getPropd
 static int luaGetPropd(lua_State *L)
 {
-    PropRef prop = (PropRef)lua_touserdata(L, 1);
+    SaslPropRef prop = (SaslPropRef)lua_touserdata(L, 1);
     float dflt = 0;
     
     if (! lua_isnil(L, 2))
@@ -215,7 +215,7 @@ static int luaGetPropd(lua_State *L)
 /// Lua wrapper for setPropf
 static int luaSetPropd(lua_State *L)
 {
-    PropRef prop = (PropRef)lua_touserdata(L, 1);
+    SaslPropRef prop = (SaslPropRef)lua_touserdata(L, 1);
     double value = (float)lua_tonumber(L, 2);
     getAvionics(L)->getProps().setProp(prop, value);
     return 0;
@@ -224,7 +224,7 @@ static int luaSetPropd(lua_State *L)
 /// Lua wrapper for getProps
 static int luaGetProps(lua_State *L)
 {
-    PropRef prop = (PropRef)lua_touserdata(L, 1);
+    SaslPropRef prop = (SaslPropRef)lua_touserdata(L, 1);
     const char *dflt = "";
     
     if (! lua_isnil(L, 2))
@@ -239,7 +239,7 @@ static int luaGetProps(lua_State *L)
 /// Lua wrapper for setProps
 static int luaSetProps(lua_State *L)
 {
-    PropRef prop = (PropRef)lua_touserdata(L, 1);
+    SaslPropRef prop = (SaslPropRef)lua_touserdata(L, 1);
     const char *value = lua_tostring(L, 2);
     getAvionics(L)->getProps().setProp(prop, value);
     return 0;
@@ -289,7 +289,7 @@ Properties::~Properties()
 }
 
 
-void Properties::setProps(struct PropsCallbacks *callbacks, Props p)
+void Properties::setProps(struct SaslPropsCallbacks *callbacks, SaslProps p)
 {
     if (propsCallbacks && propsCallbacks->props_done)
         propsCallbacks->props_done(props);
@@ -299,7 +299,7 @@ void Properties::setProps(struct PropsCallbacks *callbacks, Props p)
 }
 
 
-PropRef Properties::getProp(const std::string &name, int type)
+SaslPropRef Properties::getProp(const std::string &name, int type)
 {
     if (! (propsCallbacks && props)) {
         if (ignorePropsErrors)
@@ -308,14 +308,14 @@ PropRef Properties::getProp(const std::string &name, int type)
             EXCEPTION("Properties not active");
     }
 
-    PropRef res = propsCallbacks->get_prop_ref(props, name.c_str(), type);
+    SaslPropRef res = propsCallbacks->get_prop_ref(props, name.c_str(), type);
     if ((! res) && (! ignorePropsErrors))
         EXCEPTION(std::string("Can't find property ") + name);
     return res;
 }
 
 
-PropRef Properties::createProp(const std::string &name, int type, int maxSize)
+SaslPropRef Properties::createProp(const std::string &name, int type, int maxSize)
 {
     if (! (propsCallbacks && props)) {
         if (ignorePropsErrors)
@@ -324,7 +324,7 @@ PropRef Properties::createProp(const std::string &name, int type, int maxSize)
             EXCEPTION("Properties not active");
     }
 
-    PropRef res = propsCallbacks->create_prop(props, name.c_str(), type, 
+    SaslPropRef res = propsCallbacks->create_prop(props, name.c_str(), type, 
             maxSize);
     if ((! res) && (! ignorePropsErrors))
         EXCEPTION(std::string("Can't create property ") + name);
@@ -332,7 +332,7 @@ PropRef Properties::createProp(const std::string &name, int type, int maxSize)
 }
 
 
-void Properties::freeProp(PropRef prop)
+void Properties::freeProp(SaslPropRef prop)
 {
     if (! prop)
         return;
@@ -344,7 +344,7 @@ void Properties::freeProp(PropRef prop)
 }
 
 
-int Properties::getPropi(PropRef prop, int dflt, int *err)
+int Properties::getPropi(SaslPropRef prop, int dflt, int *err)
 {
     int localErr;
     if (! err)
@@ -374,7 +374,7 @@ int Properties::getPropi(PropRef prop, int dflt, int *err)
 }
 
 
-int Properties::setProp(PropRef prop, int value)
+int Properties::setProp(SaslPropRef prop, int value)
 {
     if (! prop)
         return 0;
@@ -393,7 +393,7 @@ int Properties::setProp(PropRef prop, int value)
 }
 
 
-float Properties::getPropf(PropRef prop, float dflt, int *err)
+float Properties::getPropf(SaslPropRef prop, float dflt, int *err)
 {
     int localErr;
     if (! err)
@@ -423,7 +423,7 @@ float Properties::getPropf(PropRef prop, float dflt, int *err)
 }
 
 
-int Properties::setProp(PropRef prop, float value)
+int Properties::setProp(SaslPropRef prop, float value)
 {
     if (! prop)
         return 0;
@@ -441,7 +441,7 @@ int Properties::setProp(PropRef prop, float value)
     return err;
 }
 
-float Properties::getPropd(PropRef prop, double dflt, int *err)
+float Properties::getPropd(SaslPropRef prop, double dflt, int *err)
 {
     int localErr;
     if (! err)
@@ -471,7 +471,7 @@ float Properties::getPropd(PropRef prop, double dflt, int *err)
 }
 
 
-int Properties::setProp(PropRef prop, double value)
+int Properties::setProp(SaslPropRef prop, double value)
 {
     if (! prop)
         return 0;
@@ -490,7 +490,7 @@ int Properties::setProp(PropRef prop, double value)
 }
 
 
-std::string Properties::getProps(PropRef prop, const std::string &dflt, 
+std::string Properties::getProps(SaslPropRef prop, const std::string &dflt, 
         int *err)
 {
     int localErr;
@@ -527,7 +527,7 @@ std::string Properties::getProps(PropRef prop, const std::string &dflt,
 }
 
 
-int Properties::setProp(PropRef prop, const std::string &value)
+int Properties::setProp(SaslPropRef prop, const std::string &value)
 {
     if (! prop)
         return 0;
@@ -578,7 +578,8 @@ static int propGetterCallback(int type, void *buf, int maxSize, void *ref)
     lua.getRef(handler->getter);
     
     if (lua_pcall(L, 0, 1, 0))
-        printf("Error calling property getter: %s\n", lua_tostring(L, -1));
+        getAvionics(L)->getLog().error(
+                "Error calling property getter: %s\n", lua_tostring(L, -1));
     else {
         switch (type) {
             case PROP_INT: {
@@ -640,10 +641,11 @@ static void propSetterCallback(int type, void *buf, int size, void *ref)
     }
     
     if (lua_pcall(lua.getLua(), 1, 0, 0))
-        printf("Error calling property setter: %s\n", lua_tostring(L, -1));
+        getAvionics(L)->getLog().error(
+                "Error calling property setter: %s\n", lua_tostring(L, -1));
 }
 
-PropRef Properties::registerFuncProp(const std::string &name, int type, 
+SaslPropRef Properties::registerFuncProp(const std::string &name, int type, 
         int maxSize, int getter, int setter)
 {
     if (! (propsCallbacks && props)) {

@@ -8,10 +8,12 @@
 #include "clickemul.h"
 #include "texture.h"
 #include "font.h"
-#include "xcallbacks.h"
+#include "libavcallbacks.h"
 #include "properties.h"
 #include "propsserv.h"
 #include "commands.h"
+#include "log.h"
+#include "sound.h"
 
 
 namespace xa {
@@ -38,6 +40,9 @@ class Avionics
 
         /// Lua state
         Luna lua;
+
+        /// Logger api
+        Log log;
 
         /// True to enable click emulation
         bool clickEmulation;
@@ -67,13 +72,13 @@ class Avionics
         Commands commands;
 
         /// Graphics functions
-        XaGraphicsCallbacks *graphics;
+        SaslGraphicsCallbacks *graphics;
 
         /// Time passed since last garbage collection
         long lastGcTime;
-        
-        /// sound functions
-        XaSoundCallbacks *sound;
+
+        /// Sound related functions
+        Sound sound;
 
     public:
         /// Initialize avionics internal data
@@ -165,57 +170,23 @@ class Avionics
         Commands& getCommands() { return commands; };
 
         /// Set commands callbacks
-        void setCommandsCallbacks(XaCommandCallbacks *callbacks,
+        void setCommandsCallbacks(SaslCommandCallbacks *callbacks,
                 void *data);
 
         /// Returns lua wrapper
         Luna& getLuna() { return lua; };
 
         /// Set graphics callbacks
-        void setGraphicsCallbacks(XaGraphicsCallbacks *callbacks);
+        void setGraphicsCallbacks(SaslGraphicsCallbacks *callbacks);
 
         /// Returns grpahics callbacks.
-        struct XaGraphicsCallbacks* getGraphics() { return graphics; };
+        struct SaslGraphicsCallbacks* getGraphics() { return graphics; };
+        
+        /// Returns logger object
+        Log& getLog() { return log; };
 
-        /// Setup sound callbacks
-        /// \param callbacks sound engine callbacks.
-        /// \param data custom data for sound engine
-        void setSoundCallbacks(XaSoundCallbacks *callbacks, void *data);
-
-        /// Load sample into memory.  Returns sample handler or 0 if can't load sample
-        /// \param fileName path to sample on disk
-        int sampleLoad(const char *fileName);
-
-        // Play loaded sample
-        /// \param sampleId sample handler
-        /// \param loop if non-zero sound will be looped
-        void samplePlay(int sampleId, int loop);
-
-        /// Stop playing sample
-        /// \param sampleId sample handler
-        void sampleStop(int sampleId);
-
-        /// Set gain of sample
-        /// \param sampleId sample handler
-        /// \param gain gain ratio from 0 to 1000
-        void sampleSetGain(int sampleId, int gain);
-
-        /// Set pitch of sample
-        /// \param sampleId sample handler
-        /// \param pitch pitch ration from 0 to 1000
-        void sampleSetPitch(int sampleId, int pitch);
-
-        /// Rewind sample to beginning
-        /// \param sampleId sample handler
-        void sampleRewind(int sampleId);
-
-        /// Returns true if sample playing now
-        /// \param sampleId sample handler
-        bool sampleIsPlaying(int sampleId);
-
-        /// Set gain for all samles
-        /// \param gain gain ratio from 0 to 1000
-        void setMasterGain(int gain);
+        /// Returns sound API object
+        Sound& getSound() { return sound; };
 
     private:
         /// Add path to components search list

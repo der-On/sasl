@@ -2,12 +2,12 @@
 #define __COMMANDS_H__
 
 
-#include "xavionics.h"
+#include "libavionics.h"
 
 namespace xap {
 
 /// Register commands-related Lua functions
-void registerCommandsApi(XA xa);
+void registerCommandsApi(SASL sasl);
 
 };
 

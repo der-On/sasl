@@ -4,7 +4,7 @@
 #include <map>
 #include <string>
 #include "luna.h"
-#include "xcallbacks.h"
+#include "libavcallbacks.h"
 
 namespace xa {
 
@@ -100,7 +100,7 @@ class TextureManager
         TexturesParts parts;
 
         /// Graphics funtions
-        XaGraphicsCallbacks *graphics;
+        SaslGraphicsCallbacks *graphics;
         
     public:
         /// Create texture manager
@@ -124,10 +124,10 @@ class TextureManager
         void unloadAll();
 
         /// set graphics callbacks
-        void setGraphicsCallbacks(struct XaGraphicsCallbacks *graphics);
+        void setGraphicsCallbacks(struct SaslGraphicsCallbacks *graphics);
 
         /// Returns graphics API
-        XaGraphicsCallbacks* getGraphics() { return graphics; }
+        SaslGraphicsCallbacks* getGraphics() { return graphics; }
 
     private:
         /// Load image from file or return cached image if already loaded.

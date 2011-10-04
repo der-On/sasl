@@ -1,6 +1,6 @@
 .SUFFIXES: .obj
 
-TARGET=xavionics.lib
+TARGET=avionics.lib
 HEADERS=$(wildcard *.h)
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.obj)

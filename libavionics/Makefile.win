@@ -1,4 +1,4 @@
-TARGET=libxavionics.a
+TARGET=libavionics.a
 HEADERS=$(wildcard *.h)
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)

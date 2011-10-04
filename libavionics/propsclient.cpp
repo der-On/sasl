@@ -1,4 +1,5 @@
-#include "xavionics.h"
+#include "propsclient.h"
+#include "libavionics.h"
 #include <string>
 #include <vector>
 #include <string.h>
@@ -101,11 +102,14 @@ class PropValue
 /// Storage of networked properties handles
 struct NetProps
 {
+    Log &log;
     AsyncCon con;
     std::vector<PropValue*> values;
     int propsToGo;
     uint16_t lastSetSerial;
     uint16_t curSetSerial;
+
+    NetProps(Log &log): log(log), con(log) { };
 
     ~NetProps() {
         for (std::vector<PropValue*>::iterator i = values.begin();
@@ -354,7 +358,7 @@ void PropValue::parse(const unsigned char *data, int revision)
 
 
 /// Returns reference to property
-static PropRef createPropRef(Props props, const char *name, int type, 
+static SaslPropRef createSaslPropRef(SaslProps props, const char *name, int type, 
         int maxSize, int cmd)
 {
     NetProps *p = (NetProps*)props;
@@ -363,7 +367,7 @@ static PropRef createPropRef(Props props, const char *name, int type,
 
     int id = p->values.size() + 1;
     if ((255 < id) || (PROP_INT > type) || (PROP_STRING < type)) {
-        printf("invalid property type %i\n", type);
+        p->log.error("invalid property type %i\n", type);
         return NULL;
     }
 
@@ -389,39 +393,42 @@ static PropRef createPropRef(Props props, const char *name, int type,
 
 
 /// Get reference to property
-static PropRef getPropRef(Props props, const char *name, int type)
+static SaslPropRef getSaslPropRef(SaslProps props, const char *name, int type)
 {
-    return createPropRef(props, name, type, 1, 0);
+    return createSaslPropRef(props, name, type, 1, 0);
 }
 
 /// Get reference to property or create new property
-static PropRef createProp(Props props, const char *name, int type, int maxSize)
+static SaslPropRef createProp(SaslProps props, const char *name, int type, int maxSize)
 {
-    return createPropRef(props, name, type, 5, maxSize);
+    return createSaslPropRef(props, name, type, 5, maxSize);
 }
 
 /// create functional propert
-static PropRef createFuncProp(Props props, const char *name, 
-            int type, int maxSize, xa_prop_getter_callback getter, 
-            xa_prop_setter_callback setter, 
+static SaslPropRef createFuncProp(SaslProps props, const char *name, 
+            int type, int maxSize, sasl_prop_getter_callback getter, 
+            sasl_prop_setter_callback setter, 
             void *ref)
 {
-    printf("networked functional properties doesn't supported yet!\n");
+    NetProps *p = (NetProps*)props;
+    if (! p)
+        return NULL;
+    p->log.error("networked functional properties doesn't supported yet!\n");
     return NULL;
 }
 
 /// does nothing for now.  properties referenced forever
-static void freePropRef(PropRef prop)
+static void freeSaslPropRef(SaslPropRef prop)
 {
 }
 
 
 /// Returns property value as integer
-static int getPropInt(PropRef prop, int *err)
+static int getPropInt(SaslPropRef prop, int *err)
 {
     PropValue *value = (PropValue*)prop;
     if (! value) {
-printf("invalid prop ref!\n");
+        printf("invalid prop ref!\n");
         if (err)
             *err = 1;
         return 0;
@@ -433,7 +440,7 @@ printf("invalid prop ref!\n");
 
 /// Sets value of property as integer
 /// Returns zero on cuccess or non-zero on error
-static int setPropInt(PropRef prop, int newValue)
+static int setPropInt(SaslPropRef prop, int newValue)
 {
     PropValue *value = (PropValue*)prop;
     if (! value)
@@ -444,11 +451,11 @@ static int setPropInt(PropRef prop, int newValue)
 
 
 /// Returns property value as float
-static float getPropFloat(PropRef prop, int *err)
+static float getPropFloat(SaslPropRef prop, int *err)
 {
     PropValue *value = (PropValue*)prop;
     if (! value) {
-printf("invalid prop ref!\n");
+        printf("invalid prop ref!\n");
         if (err)
             *err = 1;
         return 0;
@@ -460,7 +467,7 @@ printf("invalid prop ref!\n");
 
 /// Sets value of property as float
 /// Returns zero on cuccess or non-zero on error
-static int setPropFloat(PropRef prop, float newValue)
+static int setPropFloat(SaslPropRef prop, float newValue)
 {
     PropValue *value = (PropValue*)prop;
     if (! value)
@@ -471,7 +478,7 @@ static int setPropFloat(PropRef prop, float newValue)
 
 
 /// Returns property value as double
-static double getPropDouble(PropRef prop, int *err)
+static double getPropDouble(SaslPropRef prop, int *err)
 {
     PropValue *value = (PropValue*)prop;
     if (! value) {
@@ -486,7 +493,7 @@ static double getPropDouble(PropRef prop, int *err)
 
 /// Sets value of property as double
 /// Returns zero on cuccess or non-zero on error
-static int setPropDouble(PropRef prop, double newValue)
+static int setPropDouble(SaslPropRef prop, double newValue)
 {
     PropValue *value = (PropValue*)prop;
     if (! value)
@@ -497,7 +504,7 @@ static int setPropDouble(PropRef prop, double newValue)
 
 
 /// Returns property value as string
-static int getPropString(PropRef prop, char *buf, int maxSize, int *err)
+static int getPropString(SaslPropRef prop, char *buf, int maxSize, int *err)
 {
     PropValue *value = (PropValue*)prop;
     if (! value) {
@@ -512,7 +519,7 @@ static int getPropString(PropRef prop, char *buf, int maxSize, int *err)
 
 /// Sets value of property as string
 /// Returns zero on cuccess or non-zero on error
-static int setPropString(PropRef prop, const char *newValue)
+static int setPropString(SaslPropRef prop, const char *newValue)
 {
     PropValue *value = (PropValue*)prop;
     if (! value)
@@ -523,7 +530,7 @@ static int setPropString(PropRef prop, const char *newValue)
 
 
 /// destroy properties
-static void doneProps(Props props)
+static void doneProps(SaslProps props)
 {
     NetProps *p = (NetProps*)props;
     if (p)
@@ -532,7 +539,7 @@ static void doneProps(Props props)
 
 
 // do networked job
-static int updateProps(Props props)
+static int updateProps(SaslProps props)
 {
     NetProps *p = (NetProps*)props;
     if (! p)
@@ -550,7 +557,7 @@ static int updateProps(Props props)
         p->curSetSerial = netToInt16(buf.getData() + 2);
         buf.remove(4);
         if (4 != id) {
-            printf("Invalid command %i\n", id);
+            p->log.error("Invalid command %i\n", id);
             p->con.close();
             return -1;
         }
@@ -560,7 +567,7 @@ static int updateProps(Props props)
     while (p->propsToGo && (1 < buf.getFilled())) {
         int propId = buf.getData()[0];
         if ((! propId) || (propId > (int)p->values.size())) {
-            printf("invalid property id %i\n", propId);
+            p->log.error("invalid property id %i\n", propId);
             p->con.close();
             return -1;
         }
@@ -584,33 +591,31 @@ static int updateProps(Props props)
 }
 
 
-static PropsCallbacks callbacks = { getPropRef, freePropRef, createProp, 
+static SaslPropsCallbacks callbacks = { getSaslPropRef, freeSaslPropRef, createProp, 
         createFuncProp, getPropInt, setPropInt, getPropFloat, 
         setPropFloat, getPropDouble, setPropDouble, 
         getPropString, setPropString,
         updateProps, doneProps };
 
 
-int xa_connect_to_server(XA xa, const char *host, int port, 
+int xa::connectToServer(SASL sasl, Log &log, const char *host, int port, 
         const char *secret)
 {
     int sock = establishConnection(host, port);
-printf("connecting...\n");
+    log.debug("connecting...");
     if (1 > sock)
         return -1;
 
-    NetProps *np = new NetProps;
+    NetProps *np = new NetProps(log);
     np->con.setSocket(sock);
     AsyncCon &con = np->con;
 
-printf("sending handshake...\n");
     con.send((unsigned char*)"NP2\n", 4);
     if (con.sendAll()) {
         delete np;
         return -1;
     }
 
-printf("receiving reply...\n");
     if (con.recvData(20)) {
         delete np;
         return -1;
@@ -622,7 +627,6 @@ printf("receiving reply...\n");
         return -1;
     }
 
-printf("checking server reply...\n");
     md5_state_t md5;
     md5_init(&md5);
     md5_append(&md5, buf.getData(), 20);
@@ -637,25 +641,24 @@ printf("checking server reply...\n");
         return -1;
     }
     
-printf("receiving result...\n");
     if (con.recvData(4) || (4 != buf.getFilled())) {
-printf("can't receive result\n");
+        log.error("can't receive result");
         delete np;
         return -1;
     }
 
     if (memcmp(buf.getData(), "PASS", 4)) {
-printf("we are not allowed\n");
+        log.error("we are not allowed");
         delete np;
         return -1;
     }
     buf.remove(4);
-printf("logged in!\n");
+    log.debug("logged in!");
 
     np->propsToGo = 0;
     np->lastSetSerial = 0;
 
-    xa_set_props(xa, &callbacks, np);
+    sasl_set_props(sasl, &callbacks, np);
         
     np->con.getSendBuffer().addUint8(3);
 
