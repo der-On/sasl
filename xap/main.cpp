@@ -34,8 +34,6 @@ extern "C" {
 
 using namespace xap;
 
-
-
 // plugin is enabled or disabled
 static bool disabled = false;
 
@@ -94,7 +92,7 @@ static int lastPanelWidth;
 static int lastPanelHeight;
 
 /// reload panel hot key command
-XPLMCommandRef reloadCommand;
+static XPLMCommandRef reloadCommand;
 
 /// Cockpit light red component
 static XPLMDataRef cockpitRed;

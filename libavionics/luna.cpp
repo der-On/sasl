@@ -104,10 +104,8 @@ float Luna::getFieldf(int tableIdx, const std::string &field, float dflt)
 {
     float v = dflt;
     lua_getfield(lua, tableIdx, field.c_str());
-    try {
-        if (! lua_isnil(lua, -1))
-            v = (float)lua_tonumber(lua, -1);
-    } catch (...) { }
+    if (! lua_isnil(lua, -1))
+        v = (float)lua_tonumber(lua, -1);
     lua_pop(lua, 1);
     return v;
 }
@@ -116,11 +114,8 @@ double Luna::getFieldd(int tableIdx, const std::string &field, double dflt)
 {
     lua_getfield(lua, tableIdx, field.c_str());
     double v = dflt;
-    try {
-        if (! lua_isnil(lua, -1))
-            v = lua_tonumber(lua, -1);
-    } catch (...) {
-    }
+    if (! lua_isnil(lua, -1))
+        v = lua_tonumber(lua, -1);
     lua_pop(lua, 1);
     return v;
 }
@@ -130,10 +125,8 @@ std::string Luna::getFields(int tableIdx, const std::string &field,
 {
     std::string s(dflt);
     lua_getfield(lua, tableIdx, field.c_str());
-    try {
-        if (! lua_isnil(lua, -1))
-            s = lua_tostring(lua, -1);
-    } catch (...) { }
+    if (! lua_isnil(lua, -1))
+        s = lua_tostring(lua, -1);
     lua_pop(lua, 1);
     return s;
 }
@@ -142,10 +135,8 @@ bool Luna::getFieldb(int tableIdx, const std::string &field, bool dflt)
 {
     bool v = dflt;
     lua_getfield(lua, tableIdx, field.c_str());
-    try {
-        if (! lua_isnil(lua, -1))
-            v = lua_toboolean(lua, -1);
-    } catch (...) { }
+    if (! lua_isnil(lua, -1))
+        v = lua_toboolean(lua, -1);
     lua_pop(lua, 1);
     return v;
 }
@@ -155,10 +146,8 @@ int Luna::getFieldi(int tableIdx, const std::string &field, int dflt)
 {
     int v = dflt;
     lua_getfield(lua, tableIdx, field.c_str());
-    try {
-        if (! lua_isnil(lua, -1))
-            v = (int)lua_tonumber(lua, -1);
-    } catch (...) { }
+    if (! lua_isnil(lua, -1))
+        v = (int)lua_tonumber(lua, -1);
     lua_pop(lua, 1);
     return v;
 }

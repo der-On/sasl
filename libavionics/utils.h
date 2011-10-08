@@ -4,9 +4,6 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <stdexcept>
-#include <typeinfo>
-#include "exception.h"
 
 
 namespace xa {
@@ -17,8 +14,7 @@ template<typename T>
 inline std::string toString(const T& x)
 {
     std::ostringstream o;
-    if (!(o << x))
-        throw Exception(std::string("toString(") + typeid(x).name() + ")");
+    o << x;
     return o.str();
 }
 
@@ -28,9 +24,7 @@ template<typename T>
 inline std::string toString(const T& x, const char *file, int line)
 {
     std::ostringstream o;
-    if (!(o << x))
-        throw Exception(std::string(file) + ":" + toString(line) + ": " +
-                std::string("toString(") + typeid(x).name() + ")");
+    o << x;
     return o.str();
 }
 

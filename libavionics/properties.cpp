@@ -1,7 +1,6 @@
 #include "properties.h"
 
 #include "avionics.h"
-#include "exception.h"
 #include <string.h>
 
 
@@ -268,7 +267,6 @@ void xa::exportPropsToLua(Luna &lua)
 
 Properties::Properties(Luna &lua): lua(lua)
 {
-    ignorePropsErrors = true;
     propsCallbacks = NULL;
     props = NULL;
 }
@@ -301,44 +299,26 @@ void Properties::setProps(struct SaslPropsCallbacks *callbacks, SaslProps p)
 
 SaslPropRef Properties::getProp(const std::string &name, int type)
 {
-    if (! (propsCallbacks && props)) {
-        if (ignorePropsErrors)
-            return NULL;
-        else
-            EXCEPTION("Properties not active");
-    }
+    if (! (propsCallbacks && props))
+        return NULL;
 
-    SaslPropRef res = propsCallbacks->get_prop_ref(props, name.c_str(), type);
-    if ((! res) && (! ignorePropsErrors))
-        EXCEPTION(std::string("Can't find property ") + name);
-    return res;
+    return propsCallbacks->get_prop_ref(props, name.c_str(), type);
 }
 
 
 SaslPropRef Properties::createProp(const std::string &name, int type, int maxSize)
 {
-    if (! (propsCallbacks && props)) {
-        if (ignorePropsErrors)
-            return NULL;
-        else
-            EXCEPTION("Properties not active");
-    }
+    if (! (propsCallbacks && props))
+        return NULL;
 
-    SaslPropRef res = propsCallbacks->create_prop(props, name.c_str(), type, 
-            maxSize);
-    if ((! res) && (! ignorePropsErrors))
-        EXCEPTION(std::string("Can't create property ") + name);
-    return res;
+    return propsCallbacks->create_prop(props, name.c_str(), type, maxSize);
 }
 
 
 void Properties::freeProp(SaslPropRef prop)
 {
-    if (! prop)
+    if ((! prop) || (! propsCallbacks))
         return;
-
-    if ((! (propsCallbacks && props)) && (! ignorePropsErrors))
-        EXCEPTION("Properties not active");
 
     propsCallbacks->free_prop_ref(prop);
 }
@@ -355,21 +335,14 @@ int Properties::getPropi(SaslPropRef prop, int dflt, int *err)
         return dflt;
 
     if (! (propsCallbacks && props)) {
-        if (ignorePropsErrors) {
-            if (err) 
-                *err = -1;
-            return dflt;
-        } else
-            EXCEPTION("Properties not active");
+        if (err) 
+            *err = -1;
+        return dflt;
     }
 
     int res = propsCallbacks->get_prop_int(prop, err);
-    if (*err) {
-        if (! ignorePropsErrors)
-            EXCEPTION("Can't get value of int property")
-        else
-            res = dflt;
-    }
+    if (*err)
+        res = dflt;
     return res;
 }
 
@@ -379,17 +352,10 @@ int Properties::setProp(SaslPropRef prop, int value)
     if (! prop)
         return 0;
     
-    if (! (propsCallbacks && props)) {
-        if (ignorePropsErrors)
-            return 0;
-        else
-            EXCEPTION("Properties not active");
-    }
+    if (! (propsCallbacks && props))
+        return 0;
 
-    int err = propsCallbacks->set_prop_int(prop, value);
-    if (err && (! ignorePropsErrors))
-        EXCEPTION("Can't set value of int property");
-    return err;
+    return propsCallbacks->set_prop_int(prop, value);
 }
 
 
@@ -400,25 +366,19 @@ float Properties::getPropf(SaslPropRef prop, float dflt, int *err)
         err = &localErr;
     *err = 0;
 
-    if (! prop)
+    if (! prop) {
+        *err = -1;
         return dflt;
+    }
 
     if (! (propsCallbacks && props)) {
-        if (ignorePropsErrors) {
-            if (err) 
-                *err = -1;
-            return dflt;
-        } else
-            EXCEPTION("Properties not active");
+        *err = -1;
+        return dflt;
     }
 
     float res = propsCallbacks->get_prop_float(prop, err);
-    if (*err) {
-        if (! ignorePropsErrors)
-            EXCEPTION("Can't get value of float property")
-        else
-            res = dflt;
-    }
+    if (*err)
+        res = dflt;
     return res;
 }
 
@@ -428,17 +388,10 @@ int Properties::setProp(SaslPropRef prop, float value)
     if (! prop)
         return 0;
     
-    if (! (propsCallbacks && props)) {
-        if (ignorePropsErrors)
+    if (! (propsCallbacks && props))
             return 0;
-        else
-            EXCEPTION("Properties not active");
-    }
 
-    int err = propsCallbacks->set_prop_float(prop, value);
-    if (err && (! ignorePropsErrors))
-        EXCEPTION("Can't set value of float property");
-    return err;
+    return propsCallbacks->set_prop_float(prop, value);
 }
 
 float Properties::getPropd(SaslPropRef prop, double dflt, int *err)
@@ -448,25 +401,19 @@ float Properties::getPropd(SaslPropRef prop, double dflt, int *err)
         err = &localErr;
     *err = 0;
 
-    if (! prop)
+    if (! prop) {
+        *err = -1;
         return dflt;
+    }
 
     if (! (propsCallbacks && props)) {
-        if (ignorePropsErrors) {
-            if (err) 
-                *err = -1;
-            return dflt;
-        } else
-            EXCEPTION("Properties not active");
+        *err = -1;
+        return dflt;
     }
 
     double res = propsCallbacks->get_prop_double(prop, err);
-    if (*err) {
-        if (! ignorePropsErrors)
-            EXCEPTION("Can't get value of double property")
-        else
-            res = dflt;
-    }
+    if (*err)
+        res = dflt;
     return res;
 }
 
@@ -476,17 +423,10 @@ int Properties::setProp(SaslPropRef prop, double value)
     if (! prop)
         return 0;
     
-    if (! (propsCallbacks && props)) {
-        if (ignorePropsErrors)
-            return 0;
-        else
-            EXCEPTION("Properties not active");
-    }
+    if (! (propsCallbacks && props))
+        return 0;
 
-    int err = propsCallbacks->set_prop_double(prop, value);
-    if (err && (! ignorePropsErrors))
-        EXCEPTION("Can't set value of double property");
-    return err;
+    return propsCallbacks->set_prop_double(prop, value);
 }
 
 
@@ -502,12 +442,8 @@ std::string Properties::getProps(SaslPropRef prop, const std::string &dflt,
         return dflt;
 
     if (! (propsCallbacks && props)) {
-        if (ignorePropsErrors) {
-            if (err) 
-                *err = -1;
-            return dflt;
-        } else
-            EXCEPTION("Properties not active");
+        *err = -1;
+        return dflt;
     }
 
     int sz = propsCallbacks->get_prop_string(prop, NULL, 0, err);
@@ -517,50 +453,29 @@ std::string Properties::getProps(SaslPropRef prop, const std::string &dflt,
     char buf[sz + 1];
 #endif
     propsCallbacks->get_prop_string(prop, buf, sz, err);
-    if (*err) {
-        if (! ignorePropsErrors)
-            EXCEPTION("Can't get value of string property")
-        else
-            return dflt;
-    }
+    if (*err)
+        return dflt;
     return buf;
 }
 
 
 int Properties::setProp(SaslPropRef prop, const std::string &value)
 {
-    if (! prop)
+    if ((! prop) || (! (propsCallbacks && props)))
         return 0;
     
-    if (! (propsCallbacks && props)) {
-        if (ignorePropsErrors)
-            return 0;
-        else
-            EXCEPTION("Properties not active");
-    }
-
-    int err = propsCallbacks->set_prop_string(prop, value.c_str());
-    if (err && (! ignorePropsErrors))
-        EXCEPTION("Can't set value of float property");
-    return err;
+    return propsCallbacks->set_prop_string(prop, value.c_str());
 }
 
 
 int Properties::update()
 {
-    if (! (propsCallbacks && props)) {
-        if (ignorePropsErrors)
-            return 0;
-        else
-            EXCEPTION("Properties not active");
-    }
+    if (! (propsCallbacks && props))
+        return 0;
 
     int err = 0;
-    if (propsCallbacks->update_props) {
+    if (propsCallbacks->update_props)
         err = propsCallbacks->update_props(props);
-        if (err && (! ignorePropsErrors))
-            EXCEPTION("Can't update properties subsystem");
-    }
 
     return err;
 }
@@ -648,12 +563,8 @@ static void propSetterCallback(int type, void *buf, int size, void *ref)
 SaslPropRef Properties::registerFuncProp(const std::string &name, int type, 
         int maxSize, int getter, int setter)
 {
-    if (! (propsCallbacks && props)) {
-        if (ignorePropsErrors)
-            return 0;
-        else
-            EXCEPTION("Properties not active");
-    }
+    if (! (propsCallbacks && props))
+        return 0;
 
     FuncPropHandler handler;
     handler.properties = this;

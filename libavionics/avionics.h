@@ -88,6 +88,10 @@ class Avionics
         ~Avionics();
 
     public:
+        /// Initialize lua virtual machine
+        /// returns 0 on success or non-zero on errors
+        int initLua();
+
         /// Setup panel resolution.
         /// \param width - width of panel, default is 1024
         /// \param height - height of panel, default is 768
@@ -99,7 +103,8 @@ class Avionics
         void setPopupResolution(int width, int height);
 
         /// Load aircraft panel from specified location
-        void loadPanel(const std::string &path);
+        /// returns true on success or error on failure
+        bool loadPanel(const std::string &path);
 
         /// Draw panel
         void draw(int stage);

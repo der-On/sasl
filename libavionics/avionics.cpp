@@ -1,6 +1,5 @@
 #include "avionics.h"
 
-#include "exception.h"
 #include "graph.h"
 #include "texture.h"
 #include "libavconsts.h"
@@ -11,7 +10,6 @@
 
 
 using namespace xa;
-
 
 
 Avionics::Avionics(const std::string &path): path(path), clickEmulator(timer),
@@ -34,16 +32,6 @@ Avionics::Avionics(const std::string &path): path(path), clickEmulator(timer),
     exportPropsToLua(lua);
     sound.exportSoundToLua(lua);
 
-    if (lua.runScript(path + "/scripts/init.lua")) {
-        std::string msg(std::string("Error running init script: ") + 
-                lua_tostring(lua.getLua(), -1));
-        lua_pop(lua.getLua(), 1);
-        EXCEPTION(msg);
-    }
-    addSearchPath(path + "/scripts");
-    addSearchPath(path + "/components");
-    addSearchImagePath(path + "/images");
-
     clickEmulation = false;
 }
 
@@ -52,6 +40,21 @@ Avionics::~Avionics()
     lua_State *L = lua.getLua();
     lua_getglobal(L, "doneAvionics");        
     lua_pcall(L, 0, 0, 0);
+}
+
+int Avionics::initLua()
+{
+    if (lua.runScript(path + "/scripts/init.lua")) {
+        log.error("Error running init script: %s", 
+                lua_tostring(lua.getLua(), -1));
+        lua_pop(lua.getLua(), 1);
+        return -1;
+    }
+    addSearchPath(path + "/scripts");
+    addSearchPath(path + "/components");
+    addSearchImagePath(path + "/images");
+
+    return 0;
 }
 
 void Avionics::setPanelResolution(int width, int height)
@@ -85,7 +88,7 @@ void Avionics::setPopupResolution(int width, int height)
 }
 
 
-void Avionics::loadPanel(const std::string &fileName)
+bool Avionics::loadPanel(const std::string &fileName)
 {
     std::string panelDir = getDirectory(fileName);
 
@@ -108,22 +111,24 @@ void Avionics::loadPanel(const std::string &fileName)
         const char* msg = lua_tostring(L, -1);
         std::string reason;
         if (msg)
-            reason = std::string("Error loading panel: ") + msg;
+            log.error("Error loading panel: %s", msg);
         else
-            reason = std::string("Error loading panel");
+            log.error("Error loading panel");
         lua_pop(L, 1);
-        throw Exception(reason);
+        return false;
     }
+
+    return true;
 }
 
 void Avionics::update()
 {
     if (properties.update())
-        EXCEPTION("Error updating properties");
+        log.error("Error updating properties");
 
     if (server.isRunning())
         if (server.update())
-            EXCEPTION("Server error");
+            log.error("Server error");
 
     if (clickEmulation) {
         if (clickEmulator.update())
@@ -139,7 +144,7 @@ void Avionics::update()
         if (lua_pcall(L, 0, 0, 0)) {
             std::string msg(lua_tostring(L, -1));
             lua_pop(L, 1);
-            EXCEPTION("Error updating avionics: " + msg);
+            log.error("Error updating avionics: %s",  msg.c_str());
         }
     } else
         lua_pop(L, 1);
@@ -168,7 +173,7 @@ void Avionics::draw(int stage)
     lua_getglobal(L, drawFunc);
     if (! lua_isfunction(L, -1)) {
         lua_pop(L, 1);
-        EXCEPTION("Can't find drawPanel function");
+        log.error("Can't find drawPanel function");
     }
 
     if (lua_pcall(L, 0, 0, 0)) {
@@ -180,7 +185,7 @@ void Avionics::draw(int stage)
             reason = std::string("Error drawing panel: ") + msg;
         else
             reason = std::string("Error drawing panel");
-        EXCEPTION(reason);
+        log.error(reason.c_str());
     }
     
     graphics->draw_end(graphics);
@@ -194,7 +199,7 @@ void Avionics::addSearchPath(const std::string &path)
     if (lua_pcall(L, 1, 0, 0)) {
         std::string msg = lua_tostring(L, -1);
         lua_pop(L, 1);
-        EXCEPTION("Error adding search path: " + msg);
+        log.error("Error adding search path: %s", msg.c_str());
     }
 }
 
@@ -206,11 +211,11 @@ void Avionics::addSearchImagePath(const std::string &path)
     if (lua_pcall(L, 1, 0, 0)) {
         std::string msg = lua_tostring(L, -1);
         lua_pop(L, 1);
-        EXCEPTION("Error adding image search path: " + msg);
+        log.error("Error adding image search path: %s", msg.c_str());
     }
 }
 
-static bool call2(Luna &lua, const std::string &name, int a1, int a2)
+static bool call2(Luna &lua, const std::string &name, int a1, int a2, Log &log)
 {
     lua_State *L = lua.getLua();
     lua_getglobal(L, name.c_str());
@@ -219,14 +224,16 @@ static bool call2(Luna &lua, const std::string &name, int a1, int a2)
     if (lua_pcall(L, 2, 1, 0)) {
         std::string msg = lua_tostring(L, -1);
         lua_pop(L, 1);
-        EXCEPTION("Error calling " + name + ": " + msg);
+        log.error("Error calling %s: %s", name.c_str(), msg.c_str());
+        return false;
     }
     bool res = lua_toboolean(L, -1);
     lua_pop(L, 1);
     return res;
 }
 
-static bool call3(Luna &lua, const std::string &name, int a1, int a2, int a3)
+static bool call3(Luna &lua, const std::string &name, int a1, int a2, int a3,
+        Log &log)
 {
     lua_State *L = lua.getLua();
     lua_getglobal(L, name.c_str());
@@ -236,14 +243,16 @@ static bool call3(Luna &lua, const std::string &name, int a1, int a2, int a3)
     if (lua_pcall(L, 3, 1, 0)) {
         std::string msg = lua_tostring(L, -1);
         lua_pop(L, 1);
-        EXCEPTION("Error calling " + name + ": " + msg);
+        log.error("Error calling %s: %s", name.c_str(), msg.c_str());
+        return false;
     }
     bool res = lua_toboolean(L, -1);
     lua_pop(L, 1);
     return res;
 }
 
-static bool call4(Luna &lua, const std::string &name, int a1, int a2, int a3, int a4)
+static bool call4(Luna &lua, const std::string &name, 
+        int a1, int a2, int a3, int a4, Log &log)
 {
     lua_State *L = lua.getLua();
     lua_getglobal(L, name.c_str());
@@ -254,7 +263,8 @@ static bool call4(Luna &lua, const std::string &name, int a1, int a2, int a3, in
     if (lua_pcall(L, 4, 1, 0)) {
         std::string msg = lua_tostring(L, -1);
         lua_pop(L, 1);
-        EXCEPTION("Error calling " + name + ": " + msg);
+        log.error("Error calling %s: %s", name.c_str(), msg.c_str());
+        return false;
     }
     bool res = lua_toboolean(L, -1);
     lua_pop(L, 1);
@@ -266,31 +276,31 @@ bool Avionics::onMouseUp(int x, int y, int button, int layer)
 {
     if (clickEmulation)
         clickEmulator.onMouseUp();
-    return call4(lua, "onMouseUp", x, y, button, layer);
+    return call4(lua, "onMouseUp", x, y, button, layer, log);
 }
 
 bool Avionics::onMouseDown(int x, int y, int button, int layer)
 {
     if (clickEmulation) {
-        bool res = call4(lua, "onMouseDown", x, y, button, layer);
+        bool res = call4(lua, "onMouseDown", x, y, button, layer, log);
         clickEmulator.onMouseDown(button, x, y, layer);
         if (onMouseClick(x, y, button, layer) || res)
             return true;
     }
-    return call4(lua, "onMouseDown", x, y, button, layer);
+    return call4(lua, "onMouseDown", x, y, button, layer, log);
 }
 
 bool Avionics::onMouseMove(int x, int y, int layer)
 {
     if (clickEmulation)
         clickEmulator.onMouseMove(x, y, layer);
-    return call3(lua, "onMouseMove", x, y, layer);
+    return call3(lua, "onMouseMove", x, y, layer, log);
 }
 
 
 bool Avionics::onMouseClick(int x, int y, int button, int layer)
 {
-    return call4(lua, "onMouseClick", x, y, button, layer);
+    return call4(lua, "onMouseClick", x, y, button, layer, log);
 }
 
 void Avionics::setClickParams(int delay, int period)
@@ -305,12 +315,12 @@ void Avionics::enableClickEmulator(bool enable)
 
 bool Avionics::onKeyUp(int charCode, int keyCode)
 {
-    return call2(lua, "onKeyUp", charCode, keyCode);
+    return call2(lua, "onKeyUp", charCode, keyCode, log);
 }
 
 bool Avionics::onKeyDown(int charCode, int keyCode)
 {
-    return call2(lua, "onKeyDown", charCode, keyCode);
+    return call2(lua, "onKeyDown", charCode, keyCode, log);
 }
 
 void Avionics::setBackgroundColor(float r, float g, float b, float a)

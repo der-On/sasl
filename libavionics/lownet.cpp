@@ -1,6 +1,5 @@
 #include "lownet.h"
 
-#include "exception.h"
 #include "libavcallbacks.h"
 
 #include <stdlib.h>

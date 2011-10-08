@@ -16,7 +16,7 @@ struct Sasl {
     Avionics *avionics;
 };
 
-#define TRY \
+/*#define TRY \
     assert(sasl && sasl->avionics); \
     try {
 
@@ -35,13 +35,27 @@ struct Sasl {
         sasl_log_warning(sasl, "Unknown error " msg); \
         if (err) *err = -1; \
     }
+*/
 
+#define TRY \
+    assert(sasl && sasl->avionics);
+#define CATCH(msg)
+#define CATCH_ERR(err, msg)
 
 SASL sasl_init(const char *path)
 {
-    SASL sasl = (SASL)malloc(sizeof(Sasl));
-    sasl->avionics = new Avionics(path);
-    return sasl;
+//    try {
+        SASL sasl = (SASL)malloc(sizeof(Sasl));
+        sasl->avionics = new Avionics(path);
+        if (sasl->avionics->initLua()) {
+            delete sasl->avionics;
+            delete sasl;
+            return NULL;
+        }
+        return sasl;
+/*    } catch (...) {
+        return NULL;
+    }*/
 }
 
 void sasl_done(SASL sasl)
@@ -69,8 +83,7 @@ void sasl_set_popup_size(SASL sasl, int width, int height)
 int sasl_load_panel(SASL sasl, const char *path)
 {
     TRY
-        sasl->avionics->loadPanel(path);
-        return 0;
+        return sasl->avionics->loadPanel(path);
     CATCH("loading panel")
     return -1;
 }

@@ -25,10 +25,6 @@ class Properties
         /// Pointer to properties subsystem
         SaslProps props;
 
-        /// If equals to false, properties functions will throw 
-        // exceptions on errors
-        bool ignorePropsErrors;
-
     public:
         /// stpres references to property callbacks
         struct FuncPropHandler{
@@ -52,11 +48,6 @@ class Properties
         ~Properties();
 
     public:
-        /// Enable or disable throwing exceptions on properties
-        /// errors.  Without exceptions you can still get error status
-        /// by passing pointer to error status variable in getProp* functions.
-        void setIgnorePropsErrors(bool ignore) { ignorePropsErrors = true; }
-
         /// Setup properties callbacks
         /// \param callbacks structure full of properties callbacks
         /// \param props properties handler
