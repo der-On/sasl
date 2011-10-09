@@ -115,10 +115,10 @@ bool Avionics::loadPanel(const std::string &fileName)
         else
             log.error("Error loading panel");
         lua_pop(L, 1);
-        return false;
+        return true;
     }
 
-    return true;
+    return false;
 }
 
 void Avionics::update()

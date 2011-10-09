@@ -1,4 +1,5 @@
-include ../conf.mk
+TOPDIR ?= ..
+include $(TOPDIR)/conf.mk
 
 CXXFLAGS+=$(EXTRA_CXXFLAGS) -m32 -Wall -fPIC -fno-stack-protector
 LNFLAGS+=$(EXTRA_LNFLAGS) -m32 -L/usr/lib32
