@@ -2,7 +2,12 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+
+#ifndef WINDOWS
 #include <alloca.h>
+#else
+#include <windows.h>
+#endif
 
 extern "C" {
     #include <lua.h>
@@ -173,9 +178,9 @@ static void printToLog(int level, const char *message)
         default: sprintf(levelStr, "ERROR");
     }
 
-    int msgLen = snprintf(NULL, 0, "SASL %s: %s\n", levelStr, message);
-    char *buf = (char*)alloca(msgLen + 1);
-    snprintf(buf, msgLen + 1, "SASL %s: %s\n", levelStr, message);
+    int msgLen = 20 + strlen(levelStr) + strlen(message);
+    char *buf = (char*)alloca(msgLen);
+    sprintf(buf, "SASL %s: %s\n", levelStr, message);
     XPLMDebugString(buf);
     printf("%s", buf);
 }

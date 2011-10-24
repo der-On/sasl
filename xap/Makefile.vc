@@ -5,13 +5,14 @@ HEADERS=$(wildcard *.h)
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.obj)
 SDK=e:/x-plane\ 9/SDK
+OPENAL=c:/Program\ Files/OpenAL\ 1.1\ SDK
 
 CXX=cl
 LD=link
 
-CXXFLAGS+=/EHsc /DWINDOWS /I../libavionics  /I../libogl /nologo /MT /O2 /GL /DNDEBUG /fp:precise /TP /DWIN32 /I$(SDK)/CHeaders/XPLM /I$(SDK)/CHeaders/Widgets /DIBM=1 /DXPLM200
-LNFLAGS=/nologo /LTCG /LIBPATH:$(SDK)/Libraries/Win /DLL
-LIBS=../libavionics/avionics.lib ../libogl/ogl.lib xplm.lib xpwidgets.lib
+CXXFLAGS+=/EHsc /DWINDOWS /I../libavionics  /I../libaccgl /I../alsasound /nologo /MT /O2 /GL /DNDEBUG /fp:precise /TP /DWIN32 /I$(SDK)/CHeaders/XPLM /I$(SDK)/CHeaders/Widgets /DIBM=1 /DXPLM200
+LNFLAGS=/nologo /LTCG /LIBPATH:$(SDK)/Libraries/Win /LIBPATH:$(OPENAL)/Libs/Win32 /DLL 
+LIBS=../libavionics/avionics.lib ../libaccgl/accgl.lib ../alsasound/alsasound.lib xplm.lib xpwidgets.lib openal32.lib
 
 all: $(TARGET)
 

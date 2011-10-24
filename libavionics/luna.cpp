@@ -1,7 +1,11 @@
 #include "luna.h"
 
 #include <sys/types.h>
+#ifndef WINDOWS
 #include <dirent.h>
+#else
+#include <windows.h>
+#endif
 
 
 using namespace xa;
@@ -40,6 +44,49 @@ static int luaBitXor(lua_State *L)
     return 1;
 }
 
+#ifdef WINDOWS
+
+
+/// enumerate files in directory
+static int luaListFiles(lua_State *L) 
+{
+    const char *name = lua_tostring(L, 1);
+    if (! name)
+        return 0;
+
+    std::string mask = name;
+    mask = mask + "\\*";
+
+    lua_newtable(L);
+
+    WIN32_FIND_DATA de;
+    HANDLE dir = FindFirstFile(mask.c_str(), &de);
+
+    if (dir == INVALID_HANDLE_VALUE) 
+        return 1;
+
+    int i = 1;
+    do {
+        lua_pushnumber(L, i);
+        lua_newtable(L);
+        lua_pushstring(L, "name");
+        lua_pushstring(L, de.cFileName);
+        lua_settable(L, -3);
+        lua_pushstring(L, "type");
+        lua_pushstring(L, de.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? 
+                "dir" : "file");
+        lua_settable(L, -3);
+        lua_settable(L, -3);
+        i++;
+    } while (FindNextFile(dir, &de));
+    FindClose(dir);
+
+    return 1;
+}
+
+#else
+
+
 /// enumerate files in directory
 static int luaListFiles(lua_State *L) 
 {
@@ -75,6 +122,7 @@ static int luaListFiles(lua_State *L)
 
     return 1;
 }
+#endif
 
 
 Luna::Luna()

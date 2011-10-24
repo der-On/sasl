@@ -1,6 +1,6 @@
 .SUFFIXES: .obj
 
-TARGET=avionics.lib
+TARGET=accgl.lib
 HEADERS=$(wildcard *.h)
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.obj)
@@ -10,7 +10,7 @@ LD=lib
 
 CXXFLAGS+=/EHsc /DWINDOWS /nologo /MT /O2 /GL /DNDEBUG /D_LIB /fp:precise /TP /DWIN32
 LNFLAGS=/nologo /LTCG
-LIBS= lua51.lib
+LIBS=soil.lib opengl32.lib ws2_32.lib
 
 all: $(TARGET)
 
