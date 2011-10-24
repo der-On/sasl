@@ -1,5 +1,9 @@
 #include "ogl.h"
 
+#ifdef __APPLE__
+#include "mac.h"
+#else
+
 #include <list>
 #include <vector>
 #include <stdlib.h>
@@ -495,4 +499,6 @@ void saslgl_set_gen_tex_name_callback(struct SaslGraphicsCallbacks *canvas,
         return;
     c->genTexNameCallback = generator;
 }
+
+#endif
 
