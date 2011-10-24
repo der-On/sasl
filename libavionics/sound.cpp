@@ -476,7 +476,7 @@ void Sound::exportSoundToLua(Luna &lua)
     lua_register(L, "isSamplePlaying", luaIsSamplePlaying);
     lua_register(L, "setMasterGain", luaSetMasterGain);
     lua_register(L, "setSampleEnv", luaSetSampleEnv);
-    lua_register(L, "fetSampleEnv", luaGetSampleEnv);
+    lua_register(L, "getSampleEnv", luaGetSampleEnv);
     lua_register(L, "setSamplePosition", luaSetSamplePosition);
     lua_register(L, "getSamplePosition", luaGetSamplePosition);
     lua_register(L, "setSampleDirection", luaSetSampleDirection);
