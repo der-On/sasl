@@ -654,7 +654,7 @@ static int getGlobalPanelValue(const char *name, int dflt)
 
 
 /// destroy current panel and load new if it exists
-static void reloadPanel(bool keepProps)
+void xap::reloadPanel(bool keepProps)
 {
     freeAvionics(keepProps);
         
@@ -667,16 +667,17 @@ static void reloadPanel(bool keepProps)
     XPLMDebugString(panelPath.c_str());
     XPLMDebugString("\n");
     
+    XPLMDebugString("SASL: Loading avionics...\n");
+    panelViewInitialized = false;
+
+    std::string dataDir = dir + "/plugins/sasl/data";
+    if (! fileDoesExist(dataDir + "/scripts/init.lua"))
+    dataDir = getDataDir();
+
+    sasl = sasl_init(dataDir.c_str());
+    sasl_set_log_callback(sasl, printToLog, NULL);
+    
     if (fileDoesExist(panelPath)) {
-        XPLMDebugString("SASL: Loading avionics...\n");
-        panelViewInitialized = false;
-
-        std::string dataDir = dir + "/plugins/sasl/data";
-        if (! fileDoesExist(dataDir + "/scripts/init.lua"))
-            dataDir = getDataDir();
-
-        sasl = sasl_init(dataDir.c_str());
-        sasl_set_log_callback(sasl, printToLog, NULL);
         sasl_enable_click_emulator(sasl, 1);
         sasl_set_graphics_callbacks(sasl, graphics);
         sound = sasl_init_alsa_sound(sasl);
@@ -712,8 +713,12 @@ static void reloadPanel(bool keepProps)
     
             sasl_log_info(sasl, "Avionics loaded");
         }
-    } else
+    } else {
+        if (sasl)
+            sasl_done(sasl);
+        sasl = NULL;
         XPLMDebugString("SASL: Avionics not detected\n");
+    }
 }
 
 
@@ -774,11 +779,10 @@ static float updateAvionics(float elapsedSinceLastCall,
             lastMouseY = -10;
             handleCursor(fakeWindow, -1, -1, NULL);
         }
-        
         updateListenerPosition(sasl);
         sasl_update(sasl);
-        return -1;
     }
+    
     return -1;
 }
 

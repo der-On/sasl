@@ -44,6 +44,7 @@ static int luaBitXor(lua_State *L)
     return 1;
 }
 
+
 #ifdef WINDOWS
 
 

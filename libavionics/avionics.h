@@ -104,7 +104,7 @@ class Avionics
 
         /// Load aircraft panel from specified location
         /// returns true on success or error on failure
-        bool loadPanel(const std::string &path);
+        int loadPanel(const std::string &path);
 
         /// Draw panel
         void draw(int stage);

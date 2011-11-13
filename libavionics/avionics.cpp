@@ -72,6 +72,7 @@ void Avionics::setPanelResolution(int width, int height)
     }
 }
 
+
 void Avionics::setPopupResolution(int width, int height)
 {
     popupWidth = width;
@@ -88,7 +89,7 @@ void Avionics::setPopupResolution(int width, int height)
 }
 
 
-bool Avionics::loadPanel(const std::string &fileName)
+int Avionics::loadPanel(const std::string &fileName)
 {
     std::string panelDir = getDirectory(fileName);
 
@@ -107,7 +108,7 @@ bool Avionics::loadPanel(const std::string &fileName)
     lua_pushnumber(L, panelHeight);
     lua_pushnumber(L, popupWidth);
     lua_pushnumber(L, popupHeight);
-    if (lua_pcall(L, 5, 0, 0)) {
+    if (lua_pcall(L, 5, 1, 0)) {
         const char* msg = lua_tostring(L, -1);
         std::string reason;
         if (msg)
@@ -115,10 +116,14 @@ bool Avionics::loadPanel(const std::string &fileName)
         else
             log.error("Error loading panel");
         lua_pop(L, 1);
-        return true;
+        return -1;
+    }
+    if (lua_isnil(L, -1)) {
+        lua_pop(L, 1);
+        return -1;
     }
 
-    return false;
+    return 0;
 }
 
 void Avionics::update()

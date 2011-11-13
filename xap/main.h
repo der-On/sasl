@@ -13,6 +13,8 @@ extern Options options;
 
 extern SASL sasl;
 
+void reloadPanel(bool keepProps);
+
 };
 
 
