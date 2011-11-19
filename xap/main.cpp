@@ -805,7 +805,7 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc)
     if(-1 != other_sasl_id) {
         // Figure out where the other plugin came from
         char pathToAnotherCopy[256];
-        XPLMGetPluginInfo(other_xap_id, NULL, pathToAnotherCopy, NULL, NULL);
+        XPLMGetPluginInfo(other_sasl_id, NULL, pathToAnotherCopy, NULL, NULL);
         XPLMDebugString("SASL: Another copy already loaded from ");
         XPLMDebugString(pathToAnotherCopy);
         XPLMDebugString("\nSASL: Will not init twice, bailing\n");

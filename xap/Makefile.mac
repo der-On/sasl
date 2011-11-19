@@ -10,14 +10,14 @@ SDKROOT=/Developer/SDKs/MacOSX10.4u.sdk
 OSXC=-arch i386 -mmacosx-version-min=10.4 -isysroot $(SDKROOT)
 OSXL=-arch i386 -syslibroot=$(SDKROOT)
 
-DEFS= -DAPL=1 -fPIC -m32 -fno-stack-protector -DXPLM200 -ggdb
+DEFS= -DAPL=1 -fPIC -m32 -fno-stack-protector -DXPLM200 
 
 # By default Lua installs itself into /usr/local so we will look for it there too
-CXXFLAGS+=-DSNAPSHOT -Wall -I$(SDK)/CHeaders/XPLM -I$(SDK)/CHeaders/Widgets -I/usr/local/include -I../libavionics -I../libogl $(DEFS) $(OSXC)
+CXXFLAGS+=-DSNAPSHOT=201111191 -Wall -I$(SDK)/CHeaders/XPLM -I$(SDK)/CHeaders/Widgets -I/usr/local/include -I/usr/local/include/luajit-2.0 -I../libavionics -I../libogl -I../alsasound $(DEFS) $(OSXC)  -O3 -ffast-math -fno-rtti -fno-exceptions -fvisibility=default -DNDEBUG
 # # XPLM is loaded dynamically on OS X hence the flag, -dynamiclib is used to get a .a instead of a .bundle
 # -undefined warning -flat_namespace -dynamiclib
-LNFLAGS+=-undefined warning -flat_namespace  -L../libavionics  -L../libogl -dynamiclib -shared -rdynamic -nodefaultlibs -m32 -ggdb -L/usr/local/lib  $(OSXL)
-LIBS+=-lavionics -logl
+LNFLAGS+=-undefined warning -flat_namespace  -L../libavionics  -L../libaccgl -L../alsasound -dynamiclib -shared -rdynamic -nodefaultlibs -m32 -L/usr/local/lib  $(OSXL) -O3 -fno-rtti -fvisibility=default -s -fno-exceptions
+LIBS+=-lavionics -laccgl -lalsasound -lluajit-5.1 -lSOIL
 
 all: $(TARGET)
 

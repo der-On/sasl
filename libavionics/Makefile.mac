@@ -7,9 +7,9 @@ SDKROOT=/Developer/SDKs/MacOSX10.4u.sdk
 OSXC=-mmacosx-version-min=10.4 -isysroot $(SDKROOT) -arch i386
 OSXL=-lobjc -arch i386 -syslibroot=$(SDKROOT) -framework Cocoa -framework OpenGL 
 
-CXXFLAGS+=-m32 -Wall -I/usr/local/include -DAPL=1 -fPIC -ggdb -fno-stack-protector $(OSXC)
-LNFLAGS+=-ggdb -L/usr/local/lib $(OSXL) 
-LIBS+=-L/usr/local/lib -lSDLmain -lSDL -lluajit-5.1 -lSOIL
+CXXFLAGS+=-m32 -Wall -I../utils/encrypt -I/usr/local/include -I/usr/local/include/luajit-2.0 -DAPL=1 -fPIC -fno-stack-protector $(OSXC)  -O3 -ffast-math -march=i686 -msse -fno-rtti -fno-exceptions -fvisibility=default -DNDEBUG
+LNFLAGS+=-L/usr/local/lib $(OSXL) -O3 -fno-rtti -fvisibility=default -s -fno-exceptions
+LIBS+=-L/usr/local/lib -lluajit-5.1 -lSOIL
 
 all: $(TARGET)
 
@@ -18,7 +18,7 @@ all: $(TARGET)
 
 # Use plain libtool (it packages universal anyway)
 $(TARGET): $(OBJECTS)
-	libtool -static -ggdb -o $(TARGET) $(OBJECTS) $(LIBS)
+	$(AR) rs $(TARGET) $(OBJECTS)
 
 clean:
 	rm -f $(OBJECTS) $(TARGET)
