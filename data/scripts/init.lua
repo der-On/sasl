@@ -34,7 +34,7 @@ local function loadTableFromFile(fileName, name)
         chunk()
         return t[name]
     else
-        error('file not exists', fileName)
+        logError('file not exists', fileName)
         return nil
     end
 end
@@ -161,6 +161,25 @@ function defaultOnMouseMove(comp, x, y, button, parentX, parentY)
         local pos = get(comp.position)
         local newSizeX = comp.dragStartSizeX + (parentX - comp.dragStartX)
         local newSizeY = comp.dragStartSizeY - (parentY - comp.dragStartY)
+
+        if 10 > newSizeX then
+            newSizeX = 10
+        end
+        if 10 > newSizeY then
+            newSizeY = 10
+        end
+
+        if toboolean(get(comp.resizeProportional)) then
+            ratio =  comp.dragStartSizeX / comp.dragStartSizeY
+            propHeight = newSizeX / ratio;
+            propWidth = newSizeY * ratio;
+            if propHeight > newSizeY then
+                newSizeY = propHeight
+            else
+                newSizeX = propWidth
+            end
+        end
+
         pos[2] = comp.dragStartY - (newSizeY - comp.dragStartSizeY)
         pos[3] = newSizeX
         pos[4] = newSizeY
@@ -205,7 +224,7 @@ function createComponent(name, parent)
         resizeble = createProperty(false),
         focused = createProperty(false),
         savePosition = createProperty(false),
-        resizeProporional = createProperty(false),
+        resizeProportional = createProperty(true),
         onMouseUp = defaultOnMouseUp,
         onMouseDown = defaultOnMouseDown,
         onMouseClick = defaultOnMouseClick,
