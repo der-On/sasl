@@ -181,10 +181,10 @@ class Avionics
         /// Returns lua wrapper
         Luna& getLuna() { return lua; };
 
-        /// Set graphics callbacks
+        /// Set GFX callbacks
         void setGraphicsCallbacks(SaslGraphicsCallbacks *callbacks);
 
-        /// Returns grpahics callbacks.
+        /// Returns GFX callbacks.
         struct SaslGraphicsCallbacks* getGraphics() { return graphics; };
         
         /// Returns logger object
