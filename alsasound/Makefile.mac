@@ -12,7 +12,6 @@ DEFS= -DAPL=1 -fPIC -m32 -fno-stack-protector -O3 -ffast-math -march=i686 -msse 
 # By default Lua installs itself into /usr/local so we will look for it there too
 CXXFLAGS+=-DSNAPSHOT=201126011 -Wall -I/usr/local/include $(DEFS) $(OSXC) -I../libavionics
 # # XPLM is loaded dynamically on OS X hence the flag, -dynamiclib is used to get a .a instead of a .bundle
-# -undefined warning -flat_namespace -dynamiclib
 LNFLAGS+=-undefined warning -flat_namespace -dynamiclib -shared -rdynamic -nodefaultlibs -m32 -O3 -L/usr/local/lib  $(OSXL) -fno-rtti -fvisibility=default -s -fno-exceptions
 
 all: $(TARGET)
