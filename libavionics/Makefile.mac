@@ -3,11 +3,11 @@ HEADERS=$(wildcard *.h)
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)
 
-SDKROOT=/Developer/SDKs/MacOSX10.4u.sdk
-OSXC=-mmacosx-version-min=10.4 -isysroot $(SDKROOT) -arch i386
+SDKROOT=/Developer/SDKs/MacOSX10.5.sdk
+OSXC=-mmacosx-version-min=10.5 -isysroot $(SDKROOT) -arch i386
 OSXL=-lobjc -arch i386 -syslibroot=$(SDKROOT) -framework Cocoa -framework OpenGL 
 
-CXXFLAGS+=-m32 -Wall -I../utils/encrypt -I/usr/local/include -I/usr/local/include/luajit-2.0 -DAPL=1 -fPIC -fno-stack-protector $(OSXC)  -O3 -ffast-math -march=i686 -msse -fno-rtti -fno-exceptions -fvisibility=default -DNDEBUG
+CXXFLAGS+=-m32 -Wall -I../utils/encrypt -I/usr/local/include -I/usr/local/include/luajit-2.0 -DAPL=1 -fPIC -fno-stack-protector $(OSXC)  -O3 -ffast-math -march=i686 -msse2 -fno-rtti -fno-exceptions -fvisibility=default -DNDEBUG
 LNFLAGS+=-L/usr/local/lib $(OSXL) -O3 -fno-rtti -fvisibility=default -s -fno-exceptions
 LIBS+=-L/usr/local/lib -lluajit-5.1 -lSOIL
 
