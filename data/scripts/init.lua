@@ -34,7 +34,7 @@ local function loadTableFromFile(fileName, name)
         chunk()
         return t[name]
     else
-        logError('file not exists', fileName)
+        logError('file does not exist', fileName)
         return nil
     end
 end
