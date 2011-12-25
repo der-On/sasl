@@ -3,11 +3,12 @@ HEADERS=$(wildcard *.h)
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)
 
-SDKROOT=/Developer/SDKs/MacOSX10.4u.sdk
-OSXC=-arch i386 -mmacosx-version-min=10.4 -isysroot $(SDKROOT)
+SDKROOT=/Developer/SDKs/MacOSX10.5.sdk
+OSXC=-arch i386 -mmacosx-version-min=10.5 -isysroot $(SDKROOT)
 OSXL=-arch i386 -syslibroot=$(SDKROOT)
 
-DEFS= -DAPL=1 -fPIC -m32 -fno-stack-protector -O3 -ffast-math -march=i686 -msse -fno-rtti -fno-exceptions -fvisibility=default -DNDEBUG
+# We need msse2 instead of msse. See https://github.com/MythTV/mythtv/commit/769a3a0bb833362bb84d3c48100c35fc03154ebb
+DEFS= -DAPL=1 -fPIC -m32 -fno-stack-protector -O3 -ffast-math -march=i386 -msse2 -fno-rtti -fno-exceptions -fvisibility=default -DNDEBUG
 
 # By default Lua installs itself into /usr/local so we will look for it there too
 CXXFLAGS+=-DSNAPSHOT=201126011 -Wall -I/usr/local/include $(DEFS) $(OSXC) -I../libavionics
