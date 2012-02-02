@@ -848,7 +848,7 @@ SaslAlsaSound* sasl_init_alsa_sound(SASL sasl)
 // destroy sound engine
 void sasl_done_alsa_sound(SaslAlsaSound *sound)
 {
-    if ((! sound->device) || (! sound->context))
+    if ((! sound) || (! sound->device) || (! sound->context))
         return;
     
     {
@@ -874,7 +874,9 @@ void sasl_done_alsa_sound(SaslAlsaSound *sound)
     if (alcGetCurrentContext() == sound->context)
         alcMakeContextCurrent(NULL);
     alcDestroyContext(sound->context);
+    sound->context = NULL;
     alcCloseDevice(sound->device);
+    sound->device = NULL;
     
     sasl_set_sound_engine(sound->sasl, NULL);
 }
