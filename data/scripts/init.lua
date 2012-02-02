@@ -26,7 +26,7 @@ function toboolean(value)
 end
 
 -- load stands from cache
-local function loadTableFromFile(fileName, name)
+function loadTableFromFile(fileName, name)
     local chunk = loadfile(fileName)
     if nil ~= chunk then
         local t = { }
@@ -757,7 +757,7 @@ function loadFont(fileName)
         end
     end
 
-    local font = getGLTexture(fileName)
+    local font = getGLFont(fileName)
     if not font then
         logError("Can't load font", fileName)
     end
@@ -1308,6 +1308,7 @@ function loadSample(fileName)
 
     if not isFileExists(fileName) then
         logError("Can't find sound", fileName)
+        return 0
     end
 
     local s = loadSampleFromFile(fileName)
