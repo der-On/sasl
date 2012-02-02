@@ -40,6 +40,7 @@
 #include <XPWidgets.h>
 #include <XPStandardWidgets.h>
 #include <XPLMNavigation.h>
+#include <XPLMScenery.h>
 
 
 
