@@ -347,7 +347,7 @@ static int luaGetSampleDirection(lua_State *L)
     lua_pushnumber(L, x);
     lua_pushnumber(L, y);
     lua_pushnumber(L, z);
-    return 6;
+    return 3;
 }
 
 
