@@ -32,6 +32,8 @@ extern "C" {
 #include "ogl.h"
 #include "alsasound.h"
 #include "listener.h"
+#include "xpobjects.h"
+
 
 
 // version of plug-in
@@ -157,10 +159,10 @@ static float lastPanelY = -1;
 static bool disablePanelClicks = false;
 
 // OpenGL graphics functions
-static SaslGraphicsCallbacks* graphics;
+static SaslGraphicsCallbacks* graphics = NULL;
 
 // sound functions
-static struct SaslAlsaSound* sound;
+static struct SaslAlsaSound* sound = NULL;
 
 
 /// Write message to X-Plane log
@@ -349,6 +351,11 @@ static bool is2dPanelView()
 /// Update size of panel in libavionics
 static void updatePanelSize()
 {
+    if (! panelViewInitialized) {
+        calculatePanelSize();
+        panelViewInitialized = true;
+    }
+
     if ((! has2d) || (has2d && (! is2dPanelView())))
         setPanelSize(panelWidth3d, panelHeight3d);
     else 
@@ -373,29 +380,12 @@ static void updatePopupSize()
 static int drawGauges(XPLMDrawingPhase phase, int isBefore, void *refcon)
 {
     if (sasl) {
-        int clickable = XPLMGetDatai(showClickable);
-        if (clickable != lastShowClickable) {
-            sasl_set_show_clickable(sasl, clickable);
-            lastShowClickable = clickable;
-        }
-
-        glPushMatrix();
-
-        if (! panelViewInitialized) {
-            calculatePanelSize();
-            panelViewInitialized = true;
-        }
-
         updatePanelSize();
 
+        glPushMatrix();
+        
         glTranslatef(XPLMGetDataf(panelLeft), XPLMGetDataf(panelBottom), 0);
-
         XPLMSetGraphicsState(0, 1, 0, 0, 1, 0, 0);
-
-        sasl_set_background_color(sasl, XPLMGetDataf(cockpitRed), 
-                XPLMGetDataf(cockpitGreen), XPLMGetDataf(cockpitBlue),
-                XPLMGetDatai(cockpitTransparent) ? 0.5f : 1.0f);
-
         sasl_draw_panel(sasl, STAGE_GAUGES);
     
         glPopMatrix();
@@ -409,20 +399,21 @@ static int drawGauges(XPLMDrawingPhase phase, int isBefore, void *refcon)
 static int drawPopups(XPLMDrawingPhase phase, int isBefore, void *refcon)
 {
     if (sasl) {
-        glPushMatrix();
-
         updatePopupSize();
-
-        XPLMSetGraphicsState(0, 1, 0, 0, 1, 1, 1);
-        
+        XPLMSetGraphicsState(0, 1, 0, 0, 1, 0, 0);
         sasl_draw_panel(sasl, STAGE_POPUPS);
-    
-        glPopMatrix();
     }
 
     return 1;
 }
 
+
+// draw objects
+static int drawScene(XPLMDrawingPhase phase, int isBefore, void *refcon)
+{
+    drawObjects();
+    return 1;
+}
 
 
 /// Do nothing.  It is here to keep x-plane happy
@@ -610,6 +601,7 @@ static void freeAvionics(bool keepProps)
     if (! sasl)
         return;
     sasl_done_alsa_sound(sound);
+    sound = NULL;
     sasl_done(sasl);
     sasl = NULL;
     if (props) {
@@ -675,6 +667,12 @@ void xap::reloadPanel(bool keepProps)
     dataDir = getDataDir();
 
     sasl = sasl_init(dataDir.c_str());
+    if (! sasl) {
+        XPLMDebugString("SASL: error initializing from ");
+        XPLMDebugString(dataDir.c_str());
+        XPLMDebugString("\n");
+        return;
+    }
     sasl_set_log_callback(sasl, printToLog, NULL);
     
     if (fileDoesExist(panelPath)) {
@@ -772,6 +770,16 @@ static float updateAvionics(float elapsedSinceLastCall,
                  void *refcon)
 {
     if (sasl && (! disabled)) {
+        int clickable = XPLMGetDatai(showClickable);
+        if (clickable != lastShowClickable) {
+            sasl_set_show_clickable(sasl, clickable);
+            lastShowClickable = clickable;
+        }
+        
+        sasl_set_background_color(sasl, XPLMGetDataf(cockpitRed), 
+                XPLMGetDataf(cockpitGreen), XPLMGetDataf(cockpitBlue),
+                XPLMGetDatai(cockpitTransparent) ? 0.5f : 1.0f);
+
         // if camera position changed make 'virtual' mouse move to reset 
         // cursor shape
         if (! isViewTheSame()) {
@@ -787,6 +795,17 @@ static float updateAvionics(float elapsedSinceLastCall,
 }
 
 
+// call lua callback if exists
+static void callCallback(const char *name)
+{
+    if (! sasl)
+        return;
+    
+    lua_State *L = sasl_get_lua(sasl);
+    lua_getglobal(L, name);
+    lua_pcall(L, 0, 0, 0);
+}
+
 
 // start plugin
 PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc)
@@ -794,14 +813,13 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc)
     XPLMDebugString("SASL: Starting...\n");
     const char *pluginSignature = "1-sim.sasl";
     
-#ifdef APL
     // Mac-specific: it IS possible to have SASL installed twice, once in the ACF folder
     // and once in the X-System folder. Probably due to namespace mangling on OS X
     // the system will NOT crash the app when the plugin gets loaded twice. 
     // Thus, we query the enabled plugins for the defined signatures
     // and DO NOT activate should the other plugin already be plugged in
     
-    XPLM_API XPLMPluginID other_sasl_id = XPLMFindPluginBySignature(pluginSignature);
+    XPLMPluginID other_sasl_id = XPLMFindPluginBySignature(pluginSignature);
     if(-1 != other_sasl_id) {
         // Figure out where the other plugin came from
         char pathToAnotherCopy[256];
@@ -811,7 +829,6 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc)
         XPLMDebugString("\nSASL: Will not init twice, bailing\n");
         return 0;
     }
-#endif
 
     strcpy(outName, "SASL");
     strcpy(outSig, pluginSignature);
@@ -899,6 +916,8 @@ PLUGIN_API int XPluginEnable(void)
         XPLMDebugString("SASL: Error registering draw callback at xplm_Phase_Gauges\n");
     if (! XPLMRegisterDrawCallback(drawPopups, xplm_Phase_Window, 0, NULL))
         XPLMDebugString("SASL: Error registering draw callback at xplm_Phase_Window\n");
+    if (! XPLMRegisterDrawCallback(drawScene, xplm_Phase_LastScene, 0, NULL))
+        XPLMDebugString("SASL: Error registering draw callback at xplm_Phase_LastScene\n");
     fakeWindow = createFakeWindow();
     
     reloadCommand = XPLMCreateCommand("sasl/reload", "Reload SASL avionics");
@@ -920,5 +939,20 @@ PLUGIN_API void XPluginReceiveMessage(XPLMPluginID fromWho,
     if ((XPLM_MSG_PLANE_CRASHED == message) || 
             ((XPLM_MSG_PLANE_LOADED == message) && (! param)))
         reloadPanel(false);
+    else {
+        if (! sasl)
+            return;
+        switch (message) {
+            case XPLM_MSG_AIRPORT_LOADED:
+                callCallback("onAirportLoaded");
+                break;
+            case XPLM_MSG_SCENERY_LOADED:
+                callCallback("onSceneryLoaded");
+                break;
+            case XPLM_MSG_AIRPLANE_COUNT_CHANGED:
+                callCallback("onAirplaneCountChanged");
+                break;
+        }
+    }
 }
 

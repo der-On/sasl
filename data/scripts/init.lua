@@ -34,7 +34,7 @@ function loadTableFromFile(fileName, name)
         chunk()
         return t[name]
     else
-        logError('file does not exist', fileName)
+        logError('file not exists', fileName)
         return nil
     end
 end
@@ -617,6 +617,7 @@ function loadComponent(name, fileName)
             addSearchPath(subdir)
         end
         local t = createComponent(name, parent)
+        t.componentFileName = fileName
 
         -- ugly hack to solve popups parent problem
         if ('panel' == name) and (nil == parent) then
@@ -1221,22 +1222,26 @@ function savePopupsPositions()
 end
 
 
--- call 'onAvionicsDone' function
-function doneComponent(component)
-    local handler = rawget(component, 'onAvionicsDone')
+-- call callback function
+function callCallback(name, component)
+    local handler = rawget(component, name)
     if handler then
-        return handler()
+        handler()
     end
     for i = #component.components, 1, -1 do
-        doneComponent(component.components[i])
+        callCallback(name, component.components[i])
     end
 end
 
+-- call callback for both panel and popups
+function callCallbackForAll(name)
+    callCallback(name, popups)
+    callCallback(name, panel)
+end
 
 -- called when avionics about to unload
 function doneAvionics()
-    doneComponent(popups)
-    doneComponent(panel)
+    callCallbackForAll("onAvionicsDone")
     savePopupsPositions()
 end
 
@@ -1326,4 +1331,43 @@ SOUND_EXTERNAL = 2
 
 -- play sound both inside and outside
 SOUND_EVERYWHERE = 3
+
+
+-- load object from file
+-- find file using the same rules as for textures
+function loadObject(fileName)
+    for _, v in ipairs(searchImagePath) do
+        local f = v .. '/' .. fileName
+        if isFileExists(f) then
+            return loadObjectFromFile(f)
+        end
+    end
+
+    if not isFileExists(fileName) then
+        logError("Can't find object", fileName)
+        return 0
+    end
+
+    local o = loadObjectFromFile(fileName)
+    if 0 == o then
+        logError("Can't load object", fileName)
+    end
+    return o
+end
+
+
+-- called whenever the user's plane is positioned at a new airport
+function onAirportLoaded()
+    callCallbackForAll("onAirportLoaded")
+end
+
+-- called whenever new scenery is loaded
+function onSceneryLoaded()
+    callCallbackForAll("onSceneryLoaded")
+end
+
+-- called whenever the user adjusts the number of X-Plane aircraft models
+function onAirplaneCountChanged()
+    callCallbackForAll("onAirplaneCountChanged")
+end
 

@@ -9,6 +9,7 @@ extern "C" {
 }
 
 #include "xpsdk.h"
+#include "xpobjects.h"
 
 using namespace xap;
 
@@ -335,58 +336,6 @@ static int reloadPlugins(lua_State *L)
 }
 
 
-// draw object API
-
-
-// load object from file
-static int loadObject(lua_State *L)
-{
-    if (lua_isnil(L, 1))
-        return 0;
-
-    XPLMObjectRef ref = XPLMLoadObject(lua_tostring(L, 1));
-    if (! ref)
-        return 0;
-    lua_pushlightuserdata(L, ref);
-    return 1;
-}
-
-
-// delete loaded object
-static int unloadObject(lua_State *L)
-{
-    if (lua_islightuserdata(L, 1))
-        return 0;
-    XPLMUnloadObject((XPLMObjectRef)lua_touserdata(L, 1));
-    return 0;
-}
-
-
-// draw loaded object
-static int drawObject(lua_State *L)
-{
-    if (9 != lua_gettop(L))
-        return 0;
-    XPLMDrawInfo_t loc;
-    XPLMObjectRef ref = (XPLMObjectRef)lua_touserdata(L, 1);
-    if (! ref)
-        return 0;
-
-    loc.structSize = sizeof(loc);
-    loc.x = lua_tonumber(L, 2);
-    loc.y = lua_tonumber(L, 3);
-    loc.z = lua_tonumber(L, 4);
-    loc.pitch = lua_tonumber(L, 5);
-    loc.heading = lua_tonumber(L, 6);
-    loc.roll = lua_tonumber(L, 7);
-    int lighting = lua_tonumber(L, 8);
-    int earthRelative = lua_tonumber(L, 9);
-
-    XPLMDrawObjects(ref, 1, &loc, lighting, earthRelative);
-
-    return 0;
-}
-
 
 // register functions
 
@@ -457,9 +406,7 @@ void xap::exportLuaFunctions(lua_State *L)
     lua_register(L, "reloadPlugins", reloadPlugins);
 
     // objects api
-    lua_register(L, "loadObject", loadObject);
-    lua_register(L, "unloadObject", unloadObject);
-    lua_register(L, "drawObject", drawObject);
+    exportObjectsFunctions(L);
 }
 
 
