@@ -1,6 +1,7 @@
 #include "xplua.h"
 #include <string>
 #include <stdio.h>
+#include <string.h>
 
 extern "C" {
 #include <lua.h>
@@ -336,6 +337,56 @@ static int reloadPlugins(lua_State *L)
 }
 
 
+// terratin probe API
+
+// pointer to terrain probe object
+static XPLMProbeRef terrainProbe = NULL;
+
+
+
+// do probe
+static int probeTerrain(lua_State *L)
+{
+    if (! terrainProbe)
+        terrainProbe = XPLMCreateProbe(xplm_ProbeY);
+
+    XPLMProbeInfo_t pi;
+    memset(&pi, 0, sizeof(pi));
+    pi.structSize = sizeof(pi);
+
+    XPLMProbeResult res = XPLMProbeTerrainXYZ(terrainProbe,
+        lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3),
+        &pi);
+
+    lua_pushnumber(L, res);
+    
+    if (xplm_ProbeHitTerrain != res)
+        return 1;
+        
+    lua_pushnumber(L, pi.locationX);
+    lua_pushnumber(L, pi.locationY);
+    lua_pushnumber(L, pi.locationZ);
+    lua_pushnumber(L, pi.normalX);
+    lua_pushnumber(L, pi.normalY);
+    lua_pushnumber(L, pi.normalZ);
+    lua_pushnumber(L, pi.velocityX);
+    lua_pushnumber(L, pi.velocityY);
+    lua_pushnumber(L, pi.velocityZ);
+    lua_pushboolean(L, pi.is_wet);
+
+    return 11;
+}
+
+
+// remove probe object if exists
+void xap::doneLuaFunctions()
+{
+    if (terrainProbe) {
+        XPLMDestroyProbe(terrainProbe);
+        terrainProbe = NULL;
+    }
+}
+
 
 // register functions
 
@@ -407,6 +458,12 @@ void xap::exportLuaFunctions(lua_State *L)
 
     // objects api
     exportObjectsFunctions(L);
+
+    // terrain API
+    lua_register(L, "probeTerrain", probeTerrain);
+    registerConst(L, "PROBE_HIT_TERRAIN", xplm_ProbeHitTerrain);
+    registerConst(L, "PROBE_ERROR", xplm_ProbeError);
+    registerConst(L, "PROBE_MISSED", xplm_ProbeMissed);
 }
 
 

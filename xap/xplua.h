@@ -12,6 +12,8 @@ namespace xap {
 /// register X-Plane specific functions in Lua
 void exportLuaFunctions(lua_State *L);
 
+/// deallocate allocated objects
+void doneLuaFunctions();
 
 };
 

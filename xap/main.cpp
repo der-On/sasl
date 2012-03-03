@@ -612,6 +612,7 @@ static void freeAvionics(bool keepProps)
             funcPropsDone(props);
         }
     }
+    doneLuaFunctions();
 }
 
 
@@ -712,9 +713,7 @@ void xap::reloadPanel(bool keepProps)
             sasl_log_info(sasl, "Avionics loaded");
         }
     } else {
-        if (sasl)
-            sasl_done(sasl);
-        sasl = NULL;
+        freeAvionics(keepProps);
         XPLMDebugString("SASL: Avionics not detected\n");
     }
 }
