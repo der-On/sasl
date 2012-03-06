@@ -1,6 +1,7 @@
 #include "xpobjects.h"
 
 #include <vector>
+#include <string.h>
 
 extern "C" {
 #include <lua.h>
@@ -43,7 +44,14 @@ static int loadObject(lua_State *L)
     if (lua_isnil(L, 1))
         return 0;
 
-    XPLMObjectRef ref = XPLMLoadObject(lua_tostring(L, 1));
+    // ugly hack
+    char xpPath[1024];
+    XPLMGetSystemPath(xpPath);
+    const char *objPath = lua_tostring(L, 1);
+    if (strlen(objPath) <= strlen(xpPath))
+        return 0;
+
+    XPLMObjectRef ref = XPLMLoadObject(objPath + strlen(xpPath));
     if (! ref)
         return 0;
     lua_pushlightuserdata(L, ref);
@@ -92,7 +100,7 @@ void xap::drawObjects()
 {
     if (objectsToDraw.size()) {
         for (std::vector<DrawCommand>::iterator i = objectsToDraw.begin();
-                i != objectsToDraw.begin(); i++)
+                i != objectsToDraw.end(); i++)
         {
             DrawCommand &c = *i;
             XPLMDrawObjects(c.object, 1, &c.location, c.lighting, 
