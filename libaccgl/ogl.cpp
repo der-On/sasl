@@ -16,7 +16,11 @@
 #include "math2d.h"
 
 #include <GL/gl.h>
+
+#ifndef WIN32
 #include <GL/glx.h>
+#else
+#endif
 
 
 
@@ -37,6 +41,26 @@ static DeleteFramebuffers glDeleteFramebuffers = NULL;
 typedef void (*GenerateMipmap)(GLenum target);
 static GenerateMipmap glGenerateMipmap = NULL;
 
+// opengl defines
+#ifndef GL_DRAW_FRAMEBUFFER_BINDING
+#define GL_DRAW_FRAMEBUFFER_BINDING       GL_FRAMEBUFFER_BINDING
+#endif
+
+#ifndef GL_FRAMEBUFFER_BINDING
+#define GL_FRAMEBUFFER_BINDING            0x8CA6
+#endif
+
+#ifndef GL_DRAW_FRAMEBUFFER
+#define GL_DRAW_FRAMEBUFFER               0x8CA9
+#endif
+
+#ifndef GL_COLOR_ATTACHMENT0
+#define GL_COLOR_ATTACHMENT0              0x8CE0
+#endif
+
+#ifndef GL_CLAMP_TO_EDGE
+#define GL_CLAMP_TO_EDGE                  0x812F
+#endif
 
 
 // graphics context
@@ -662,12 +686,20 @@ static void recreateTexture(struct SaslGraphicsCallbacks *canvas,
 typedef void (*Func)();
 static Func getProcAddress(const char *name)
 {
+#ifndef WIN32
     Func res = glXGetProcAddressARB((GLubyte*)name);
+#else
+    Func res = (Func)wglGetProcAddress(name);
+#endif
     if (! res) {
         char buf[250];
         strcpy(buf, name);
         strcat(buf, "EXT");
+#ifndef WIN32
         res = glXGetProcAddressARB((GLubyte*)buf);
+#else
+        res = (Func)wglGetProcAddress(buf);
+#endif
     }
     return res;
 }
