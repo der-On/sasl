@@ -1,6 +1,6 @@
 include ../common.mk
 
-TARGET=libalsasound.a
+TARGET=libalsound.a
 HEADERS=$(wildcard *.h)
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)

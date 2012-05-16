@@ -1,6 +1,7 @@
 #ifndef __TEXTURE_H__
 #define __TEXTURE_H__
 
+#include <list>
 #include <map>
 #include <string>
 #include "luna.h"
@@ -27,10 +28,16 @@ class Texture
         /// Height of texture
         int height;
  
+        /// True if texture managed by texture manager
+        bool managed;
+
         /// Reference to texture manager
         TextureManager *manager;
 
     private:
+        /// Create unmanaged texture object
+        Texture(int id, TextureManager *manager);
+
         /// Create texture object
         Texture(int id, int width, int height, TextureManager *manager);
 
@@ -47,6 +54,9 @@ class Texture
 
         /// Returns height of texture
         int getHeight() const { return height; }
+
+        /// Sets texture size in pixels
+        void setSize(int w, int h) { width = w; height = h; }
 };
 
 
@@ -97,10 +107,28 @@ class TextureManager
         typedef std::map<std::string, TexturePart*> TexturesParts;
 
         /// Textures parts cache
-        TexturesParts parts;
+        TexturesParts partsByName;
 
         /// Graphics funtions
         SaslGraphicsCallbacks *graphics;
+
+        /// texture loader buffer
+        unsigned char *buffer;
+
+        /// length of allocated buffer
+        int bufLength;
+        
+        /// Textures mapped by file name
+        typedef std::list<Texture*> TexturesList;
+
+        /// List of all loaded textures
+        TexturesList loaded;
+        
+        /// List of texture parts
+        typedef std::list<TexturePart*> PartsList;
+        
+        /// list of texture parts loaded
+        PartsList partsLoaded;
         
     public:
         /// Create texture manager
@@ -120,6 +148,25 @@ class TextureManager
         TexturePart* load(const std::string &path, double x, double y,
                 double width, double height);
 
+        /// Load entire texture from memory
+        TexturePart* load(const unsigned char *buffer, int length);
+        
+        /// Load center part of texture
+        TexturePart* load(const unsigned char *buffer, int length, 
+                double width, double height);
+        
+        /// Load part of texture
+        TexturePart* load(const unsigned char *buffer, int length, 
+                double x, double y, double width, double height);
+
+        /// Add external texture
+        TexturePart* addForeignTexture(int texId);
+
+        /// Unload texture from memory
+        /// It is completele removes texture from memory
+        /// Use it on your own risk!
+        void unload(TexturePart *texturePart);
+
         /// Unload all textures
         void unloadAll();
 
@@ -130,6 +177,9 @@ class TextureManager
         SaslGraphicsCallbacks* getGraphics() { return graphics; }
 
     private:
+        /// Load image from memory.
+        Texture* loadImage(const unsigned char *buffer, int length);
+
         /// Load image from file or return cached image if already loaded.
         Texture* loadImage(const std::string &fileName);
 
@@ -153,6 +203,10 @@ class TextureManager
         /// Returns texture and texture coords
         TexturePart* getTexturePart(const std::string &fileName, 
             Texture *texture, double x1, double y1, double x2, double y2);
+        
+        /// Returns texture and texture coords
+        TexturePart* getTexturePart(Texture *texture, 
+                double x1, double y1, double x2, double y2);
 };
 
 

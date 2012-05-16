@@ -180,7 +180,7 @@ typedef void (*sasl_draw_end)(struct SaslGraphicsCallbacks *canvas);
 /// Returns texture ID or -1 on failure.  On success returns texture width
 //  and height in pixels
 typedef int (*sasl_load_texture)(struct SaslGraphicsCallbacks *canvas,
-        const char *name, int *width, int *height);
+        const char *buffer, int length, int *width, int *height);
 
 // Unload texture from video memory.
 typedef void (*sasl_free_texture)(struct SaslGraphicsCallbacks *canvas, 
@@ -228,6 +228,26 @@ typedef void (*sasl_scale_transform)(struct SaslGraphicsCallbacks *canvas,
 typedef void (*sasl_rotate_transform)(struct SaslGraphicsCallbacks *canvas, 
         double angle);
 
+// find sasl texture in memory by size and marker color
+// pass NULL to exclude parameter from searching
+// returns texture id or -1 if not found
+typedef int (*sasl_find_texture)(struct SaslGraphicsCallbacks *canvas, 
+        int width, int height, int *r, int *g, int *b, int *a);
+
+
+// start rendering to texture
+// pass -1 as texture ID to restore default render target
+// return -1 on errors or zero on success
+typedef int (*sasl_set_render_target)(struct SaslGraphicsCallbacks *canvas, 
+        int textureId);
+
+// create new texture of specified size and store it under the same name 
+// as old texture
+// use it for textures used as render target
+typedef void (*sasl_recreate_texture)(struct SaslGraphicsCallbacks *canvas, 
+        int textureId, int width, int height);
+
+
 // grpahics callbacks
 struct SaslGraphicsCallbacks {
     sasl_draw_begin draw_begin;
@@ -244,6 +264,9 @@ struct SaslGraphicsCallbacks {
     sasl_translate_transform translate_transform;
     sasl_scale_transform scale_transform;
     sasl_rotate_transform rotate_transform;
+    sasl_find_texture find_texture;
+    sasl_set_render_target set_render_target;
+    sasl_recreate_texture recreate_texture;
 };
 
 

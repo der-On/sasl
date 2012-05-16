@@ -1,4 +1,4 @@
-#include "alsasound.h"
+#include "alsound.h"
 
 #include <string>
 #include <vector>
@@ -68,7 +68,7 @@ struct Source
 };
 
 // sound parameters
-struct SaslAlsaSound
+struct SaslAlSound
 {
     // xap sound api callbacks
     SaslSoundCallbacks callbacks;
@@ -282,7 +282,7 @@ static ALuint load_wave(SASL sasl, const char *file_name)
 // load sound from disk or reuses already loaded sound
 static int loadSound(struct SaslSoundCallbacks *callbacks, const char *fileName)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)callbacks;
+    SaslAlSound *sound = (SaslAlSound*)callbacks;
 
     if ((! sound) || (! fileName) || (! sound->device) || (! sound->context))
         return 0;
@@ -349,7 +349,7 @@ static int loadSound(struct SaslSoundCallbacks *callbacks, const char *fileName)
 
 
 // remove buffer with specified id
-static void deleteBuffer(SaslAlsaSound *sound, ALuint id)
+static void deleteBuffer(SaslAlSound *sound, ALuint id)
 {
     for (std::map<std::string, Buffer>::iterator i = sound->buffers.begin(); 
             i != sound->buffers.end(); i++)
@@ -365,7 +365,7 @@ static void deleteBuffer(SaslAlsaSound *sound, ALuint id)
 // unload sound
 static void unloadSound(struct SaslSoundCallbacks *s, int sampleId)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
 
     if ((! sound) || (! sound->device) || (! sound->context) || (! sampleId))
         return;
@@ -391,7 +391,7 @@ static void unloadSound(struct SaslSoundCallbacks *s, int sampleId)
 // warning!  it changes sound context
 static ALuint getSource(struct SaslSoundCallbacks *s, int sampleId)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
 
     if ((! sound) || (! sound->device) || (! sound->context) || (! sampleId))
         return (ALuint)-1;
@@ -409,7 +409,7 @@ static ALuint getSource(struct SaslSoundCallbacks *s, int sampleId)
 static void playSound(struct SaslSoundCallbacks *s, int sampleId, int loop)
 {
     alGetError();
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
     ALuint source = getSource(s, sampleId);
     if ((ALuint)-1 == source)
         return;
@@ -437,7 +437,7 @@ static void playSound(struct SaslSoundCallbacks *s, int sampleId, int loop)
 // stop sample playing
 static void stopSound(struct SaslSoundCallbacks *s, int sampleId)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
     ALuint source = getSource(s, sampleId);
     if ((ALuint)-1 == source)
         return;
@@ -450,7 +450,7 @@ static void stopSound(struct SaslSoundCallbacks *s, int sampleId)
 // set gain of sound
 static void setGain(struct SaslSoundCallbacks *s, int sampleId, int gain)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
     ALuint srcId = getSource(s, sampleId);
     if ((ALuint)-1 == srcId)
         return;
@@ -468,7 +468,7 @@ static void setGain(struct SaslSoundCallbacks *s, int sampleId, int gain)
 // set pitch of sound
 static void setPitch(struct SaslSoundCallbacks *s, int sampleId, int pitch)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
     ALuint source = getSource(s, sampleId);
     if ((ALuint)-1 == source)
         return;
@@ -481,7 +481,7 @@ static void setPitch(struct SaslSoundCallbacks *s, int sampleId, int pitch)
 /// Rewind sample to beginning
 static void rewindSound(struct SaslSoundCallbacks *s, int sampleId)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
     ALuint source = getSource(s, sampleId);
     if ((ALuint)-1 == source)
         return;
@@ -494,7 +494,7 @@ static void rewindSound(struct SaslSoundCallbacks *s, int sampleId)
 // Test if sample playing now
 static int isPlaying(struct SaslSoundCallbacks *s, int sampleId)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
     ALuint source = getSource(s, sampleId);
     if ((ALuint)-1 == source)
         return 0;
@@ -509,7 +509,7 @@ static int isPlaying(struct SaslSoundCallbacks *s, int sampleId)
 // set gain of all sound
 static void setMasterGain(struct SaslSoundCallbacks *s, int gain)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
     if ((! sound) || (! sound->device) || (! sound->context))
         return;
     ContextChanger changer(sound->context);
@@ -521,7 +521,7 @@ static void setMasterGain(struct SaslSoundCallbacks *s, int gain)
 // Set sample location, outside, inside or both
 static void setEnv(struct SaslSoundCallbacks *s, int sampleId, int scene)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
     ALuint srcId = getSource(s, sampleId);
     if ((ALuint)-1 == srcId)
         return;
@@ -540,7 +540,7 @@ static void setEnv(struct SaslSoundCallbacks *s, int sampleId, int scene)
 // Get sample location, outside, inside or both
 static int getEnv(struct SaslSoundCallbacks *s, int sampleId)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
     ALuint srcId = getSource(s, sampleId);
     if ((ALuint)-1 == srcId)
         return SOUND_EVERYWHERE;
@@ -554,7 +554,7 @@ static int getEnv(struct SaslSoundCallbacks *s, int sampleId)
 static void setPosition(struct SaslSoundCallbacks *s, 
         int sampleId, float x, float y, float z)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
     ALuint source = getSource(s, sampleId);
     if ((ALuint)-1 == source)
         return;
@@ -568,7 +568,7 @@ static void setPosition(struct SaslSoundCallbacks *s,
 static void getPosition(struct SaslSoundCallbacks *s, 
         int sampleId, float *x, float *y, float *z)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
     ALuint source = getSource(s, sampleId);
     if ((ALuint)-1 == source)
         return;
@@ -587,7 +587,7 @@ static void getPosition(struct SaslSoundCallbacks *s,
 static void setDirection(struct SaslSoundCallbacks *s, 
         int sampleId, float x, float y, float z)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
     ALuint source = getSource(s, sampleId);
     if ((ALuint)-1 == source)
         return;
@@ -601,7 +601,7 @@ static void setDirection(struct SaslSoundCallbacks *s,
 static void getDirection(struct SaslSoundCallbacks *s, 
         int sampleId, float *x, float *y, float *z)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
     ALuint source = getSource(s, sampleId);
     if ((ALuint)-1 == source)
         return;
@@ -620,7 +620,7 @@ static void getDirection(struct SaslSoundCallbacks *s,
 static void setMaxDistance(struct SaslSoundCallbacks *s, int sampleId, 
         float distance)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
     ALuint source = getSource(s, sampleId);
     if ((ALuint)-1 == source)
         return;
@@ -633,7 +633,7 @@ static void setMaxDistance(struct SaslSoundCallbacks *s, int sampleId,
 static void setRolloff(struct SaslSoundCallbacks *s, int sampleId, 
         float rolloff)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
     ALuint source = getSource(s, sampleId);
     if ((ALuint)-1 == source)
         return;
@@ -647,7 +647,7 @@ static void setRolloff(struct SaslSoundCallbacks *s, int sampleId,
 static void setRefDistance(struct SaslSoundCallbacks *s, int sampleId, 
         float distance)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
     ALuint source = getSource(s, sampleId);
     if ((ALuint)-1 == source)
         return;
@@ -660,7 +660,7 @@ static void setRefDistance(struct SaslSoundCallbacks *s, int sampleId,
 static void setCone(struct SaslSoundCallbacks *s, int sampleId, 
         float outerGain, float innerAngle, float outerAngle)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
     ALuint source = getSource(s, sampleId);
     if ((ALuint)-1 == source)
         return;
@@ -676,7 +676,7 @@ static void setCone(struct SaslSoundCallbacks *s, int sampleId,
 static void getCone(struct SaslSoundCallbacks *s, int sampleId, 
         float *outerGain, float *innerAngle, float *outerAngle)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
     ALuint source = getSource(s, sampleId);
     if ((ALuint)-1 == source)
         return;
@@ -695,7 +695,7 @@ static void getCone(struct SaslSoundCallbacks *s, int sampleId,
 static void setRelative(struct SaslSoundCallbacks *s, int sampleId, 
         int relative)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
     ALuint source = getSource(s, sampleId);
     if ((ALuint)-1 == source)
         return;
@@ -708,7 +708,7 @@ static void setRelative(struct SaslSoundCallbacks *s, int sampleId,
 // get sample relative listener flag
 static int getRelative(struct SaslSoundCallbacks *s, int sampleId)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
     ALuint source = getSource(s, sampleId);
     if ((ALuint)-1 == source)
         return 0;
@@ -723,7 +723,7 @@ static int getRelative(struct SaslSoundCallbacks *s, int sampleId)
 // set listener location, outside or inside
 static void setListenerEnv(struct SaslSoundCallbacks *s, int scene)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
     if ((! sound) || (! sound->device) || (! sound->context))
         return;
     if (sound->scene == scene)
@@ -748,7 +748,7 @@ static void setListenerEnv(struct SaslSoundCallbacks *s, int scene)
 static void setListenerPosition(struct SaslSoundCallbacks *s, 
         float x, float y, float z)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
     if ((! sound) || (! sound->device) || (! sound->context))
         return;
     ContextChanger changer(sound->context);
@@ -761,7 +761,7 @@ static void setListenerPosition(struct SaslSoundCallbacks *s,
 static void getListenerPosition(struct SaslSoundCallbacks *s, 
         float *x, float *y, float *z)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
     if ((! sound) || (! sound->device) || (! sound->context))
         return;
     ContextChanger changer(sound->context);
@@ -778,7 +778,7 @@ static void getListenerPosition(struct SaslSoundCallbacks *s,
 static void setListenerOrientation(struct SaslSoundCallbacks *s, 
         float x, float y, float z, float ux, float uy, float uz)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
     if ((! sound) || (! sound->device) || (! sound->context))
         return;
     ContextChanger changer(sound->context);
@@ -794,7 +794,7 @@ static void getListenerOrientation(struct SaslSoundCallbacks *s,
         float *x, float *y, float *z, 
         float *ux, float *uy, float *uz)
 {
-    SaslAlsaSound *sound = (SaslAlsaSound*)s;
+    SaslAlSound *sound = (SaslAlSound*)s;
     if ((! sound) || (! sound->device) || (! sound->context))
         return;
     ContextChanger changer(sound->context);
@@ -818,9 +818,9 @@ static void update(struct SaslSoundCallbacks *sound)
 
 
 // initialize sound engined
-SaslAlsaSound* sasl_init_alsa_sound(SASL sasl)
+SaslAlSound* sasl_init_al_sound(SASL sasl)
 {
-    SaslAlsaSound* sound = new SaslAlsaSound;
+    SaslAlSound* sound = new SaslAlSound;
 
     struct SaslSoundCallbacks cb = { loadSound, unloadSound, playSound, 
         stopSound, setGain, setPitch, rewindSound, isPlaying, 
@@ -846,7 +846,7 @@ SaslAlsaSound* sasl_init_alsa_sound(SASL sasl)
 
 
 // destroy sound engine
-void sasl_done_alsa_sound(SaslAlsaSound *sound)
+void sasl_done_al_sound(SaslAlSound *sound)
 {
     if ((! sound) || (! sound->device) || (! sound->context))
         return;

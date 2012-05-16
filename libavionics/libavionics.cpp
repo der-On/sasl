@@ -609,4 +609,9 @@ void sasl_log_error(SASL sasl, const char *message, ...)
     va_end(args);
 }
 
+void* sasl_import_texture(SASL sasl, int id)
+{
+    assert(sasl && sasl->avionics);
+    return sasl->avionics->getTextureManager()->addForeignTexture(id);
+}
 

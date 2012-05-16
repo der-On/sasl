@@ -11,14 +11,14 @@ extern "C" {
 
 
 // sound engine handler
-struct SaslAlsaSound;
+struct SaslAlSound;
 
 
 // initialize sound engine
-SaslAlsaSound* sasl_init_alsa_sound(SASL sasl);
+SaslAlSound* sasl_init_al_sound(SASL sasl);
 
 // destroy sound engine
-void sasl_done_alsa_sound(SaslAlsaSound *sound);
+void sasl_done_al_sound(SaslAlSound *sound);
 
 #if defined(__cplusplus)
 };

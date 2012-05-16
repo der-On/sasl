@@ -3,8 +3,8 @@ HEADERS=$(wildcard *.h)
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)
 
-SDKROOT=/Developer/SDKs/MacOSX10.5.sdk
-OSXC=-arch i386 -mmacosx-version-min=10.5 -isysroot $(SDKROOT)
+SDKROOT=/Developer/SDKs/MacOSX10.4u.sdk
+OSXC=-arch i386 -mmacosx-version-min=10.4 -isysroot $(SDKROOT)
 OSXL=-arch i386 -syslibroot=$(SDKROOT)
 
 DEFS= -DAPL=1 -fPIC -m32 -fno-stack-protector -ggdb
@@ -12,6 +12,7 @@ DEFS= -DAPL=1 -fPIC -m32 -fno-stack-protector -ggdb
 # By default Lua installs itself into /usr/local so we will look for it there too
 CXXFLAGS+=-DSNAPSHOT -Wall -I/usr/local/include $(DEFS) $(OSXC)
 # # XPLM is loaded dynamically on OS X hence the flag, -dynamiclib is used to get a .a instead of a .bundle
+# -undefined warning -flat_namespace -dynamiclib
 LNFLAGS+=-undefined warning -flat_namespace -dynamiclib -shared -rdynamic -nodefaultlibs -m32 -ggdb -L/usr/local/lib  $(OSXL)
 
 all: $(TARGET)

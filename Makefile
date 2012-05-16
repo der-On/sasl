@@ -1,6 +1,6 @@
 include conf.mk
 
-SUBDIRS=libavionics libaccgl alsasound
+SUBDIRS=libavionics libaccgl alsound
 
 ifeq ($(BUILD_XAP),yes)
 SUBDIRS+=xap

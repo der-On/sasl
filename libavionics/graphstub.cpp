@@ -18,7 +18,7 @@ static void drawEnd(struct SaslGraphicsCallbacks *canvas)
 /// Returns texture ID or -1 on failure.  On success returns texture width
 //  and height in pixels
 static int loadTexture(struct SaslGraphicsCallbacks *canvas,
-        const char *name, int *width, int *height)
+        const char *buf, int length, int *width, int *height)
 {
     return -1;
 }
@@ -99,10 +99,38 @@ static void rotateTransform(struct SaslGraphicsCallbacks *canvas,
 {
 }
 
+
+// find sasl texture in memory by size and marker color
+// returns texture id or -1 if not found
+static int findTexture(struct SaslGraphicsCallbacks *canvas, 
+        int width, int height, int *r, int *g, int *b, int *a)
+{
+    return -1;
+}
+
+// start rendering to texture
+// pass -1 as texture ID to restore default render target
+static int setRenderTarget(struct SaslGraphicsCallbacks *canvas, 
+        int textureId)
+{
+    return -1;
+}
+
+
+// create new texture of specified size and store it under the same name 
+// as old texture
+// use it for textures used as render target
+static void recreateTexture(struct SaslGraphicsCallbacks *canvas, 
+        int textureId, int width, int height)
+{
+}
+
+
 static struct SaslGraphicsCallbacks callbacks = { drawBegin, drawEnd,
     loadTexture, freeTexture, drawLine, drawTriangle, drawTexturedTriangle,
     setClipArea, resetClipArea, pushTransform, popTransform, 
-    translateTransform, scaleTransform, rotateTransform };
+    translateTransform, scaleTransform, rotateTransform, findTexture,
+    setRenderTarget, recreateTexture };
 
 
 SaslGraphicsCallbacks* xa::getGraphicsStub()

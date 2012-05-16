@@ -1,4 +1,5 @@
 #include "xplua.h"
+#include "main.h"
 #include <string>
 #include <stdio.h>
 #include <string.h>
@@ -378,6 +379,32 @@ static int probeTerrain(lua_State *L)
 }
 
 
+// rendering API
+
+
+static int importTexture(lua_State *L, int texId)
+{
+    void *t = sasl_import_texture(sasl, texId);
+    if (! t)
+        return 0;
+    else {
+        lua_pushlightuserdata(L, t);
+        return 1;
+    }
+}
+
+static int luaGetAircraftPaint(lua_State *L)
+{
+    return importTexture(L, xplm_Tex_AircraftPaint);
+}
+
+static int luaGetAircraftLiteMap(lua_State *L)
+{
+    return importTexture(L, xplm_Tex_AircraftLiteMap);
+}
+
+
+
 // remove probe object if exists
 void xap::doneLuaFunctions()
 {
@@ -386,6 +413,7 @@ void xap::doneLuaFunctions()
         terrainProbe = NULL;
     }
 }
+
 
 
 // register functions
@@ -464,6 +492,10 @@ void xap::exportLuaFunctions(lua_State *L)
     registerConst(L, "PROBE_HIT_TERRAIN", xplm_ProbeHitTerrain);
     registerConst(L, "PROBE_ERROR", xplm_ProbeError);
     registerConst(L, "PROBE_MISSED", xplm_ProbeMissed);
+    
+    // rendering API
+    lua_register(L, "getAircraftPaint", luaGetAircraftPaint);
+    lua_register(L, "getAircraftLiteMap", luaGetAircraftLiteMap);
 }
 
 

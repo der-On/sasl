@@ -438,6 +438,18 @@ void sasl_log_warning(SASL sasl, const char *message, ...);
 void sasl_log_error(SASL sasl, const char *message, ...);
 
 
+
+// Graphics API
+
+
+/// add texture to SASL texture manager
+/// Returns pointer to internal texture may be used as light user data in Lua
+/// \param sasl SASL handler.
+/// \param id texture ID as defined by low level graphics layer
+void* sasl_import_texture(SASL sasl, int id);
+
+
+
 #if defined(__cplusplus)
 }  /* extern "C" */
 #endif

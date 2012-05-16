@@ -15,7 +15,7 @@ cd /tmp/xap-parts
 # Build luajit enforcing the 32-bit architecture
 curl http://luajit.org/download/LuaJIT-2.0.0-beta5.tar.gz | tar xfz -
 cd LuaJIT-2.0.0-beta5
-export CFLAGS="-mmacosx-version-min=10.5 -isysroot /Developer/SDKs/MacOSX10.5.sdk -arch i386"
+export CFLAGS="-mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch i386"
 make
 sudo make install
 
@@ -24,7 +24,7 @@ sudo make install
 cd /tmp/xap-parts
 curl http://www.libsdl.org/release/SDL-1.2.14.tar.gz | tar xfz -
 cd SDL-1.2.14
-./configure CFLAGS="-mmacosx-version-min=10.5 -isysroot /Developer/SDKs/MacOSX10.5.sdk -arch i386" 
+./configure CFLAGS="-mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch i386" 
 make
 sudo make install
 
@@ -35,7 +35,7 @@ unzip soil.zip
 cd "Simple OpenGL Image Library/projects/makefile" # Obnoxious spaces in dirname
 mkdir obj # The author has forgotten
 # Now the same for SOIL - build for 10.4 and universal
-export CXXFLAGS="-mmacosx-version-min=10.5 -isysroot /Developer/SDKs/MacOSX10.5.sdk -arch i386" 
+export CXXFLAGS="-mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.4u.sdk -arch i386" 
 make
 sudo make install
 

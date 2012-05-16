@@ -5,6 +5,7 @@
 #else
 
 #include <list>
+#include <map>
 #include <vector>
 #include <stdlib.h>
 #include <stdio.h>
@@ -13,6 +14,29 @@
 #include <SOIL.h>
 #include "glheaders.h"
 #include "math2d.h"
+
+#include <GL/gl.h>
+#include <GL/glx.h>
+
+
+
+// OpenGL functions
+typedef void (*GenFramebuffers)(GLsizei n, GLuint *buffers);
+static GenFramebuffers glGenFramebuffers = NULL;
+
+typedef void (*BindFramebuffer)(GLenum target, GLuint framebuffer);
+static BindFramebuffer glBindFramebuffer = NULL;
+
+typedef void (*FramebufferTexture2D)(GLenum target, GLenum attachment, 
+        GLenum textarget, GLuint texture, GLint level);
+static FramebufferTexture2D glFramebufferTexture2D = NULL;
+
+typedef void (*DeleteFramebuffers)(GLsizei n, GLuint *buffers);
+static DeleteFramebuffers glDeleteFramebuffers = NULL;
+
+typedef void (*GenerateMipmap)(GLenum target);
+static GenerateMipmap glGenerateMipmap = NULL;
+
 
 
 // graphics context
@@ -77,6 +101,18 @@ struct OglCanvas
 
     // transformation stack
     std::vector<Matrix> transform;
+
+    // true if FBO functions allowed to use
+    bool fboAvailable;
+
+    // map of FBOs by texture IDs
+    std::map<int, GLuint> fboByTex;
+
+    // default fbo
+    GLuint defaultFbo;
+
+    // texture assigned to current fbo
+    int currentFboTex;
 };
 
 
@@ -245,7 +281,7 @@ static void setMode(OglCanvas *c, int mode)
 /// Returns texture ID or -1 on failure.  On success returns texture width
 //  and height in pixels
 static int loadTexture(struct SaslGraphicsCallbacks *canvas,
-        const char *name, int *width, int *height)
+        const char *buffer, int length, int *width, int *height)
 {
     OglCanvas *c = (OglCanvas*)canvas;
     if (! c)
@@ -255,7 +291,9 @@ static int loadTexture(struct SaslGraphicsCallbacks *canvas,
     if (c->genTexNameCallback)
         texId = c->genTexNameCallback();
 
-    unsigned id = SOIL_load_OGL_texture(name, 0, texId, SOIL_FLAG_POWER_OF_TWO);
+    unsigned id = SOIL_load_OGL_texture_from_memory(
+            (const unsigned char*)buffer, length, 
+            0, texId, SOIL_FLAG_POWER_OF_TWO);
     if (! id) 
         return -1;
  
@@ -440,6 +478,217 @@ static void rotateTransform(struct SaslGraphicsCallbacks *canvas,
 }
 
 
+// find sasl texture in memory by size and marker color
+// returns texture id or -1 if not found
+static int findTexture(struct SaslGraphicsCallbacks *canvas, 
+        int width, int height, int *r, int *g, int *b, int *a)
+{
+    OglCanvas *c = (OglCanvas*)canvas;
+    assert(canvas);
+
+    unsigned char *buf = new unsigned char[4*width*height];
+
+    for (GLuint i = 0; i < 2048; i++) {
+        if (glIsTexture(i)) {
+            GLint w, h;
+            glBindTexture(GL_TEXTURE_2D, i);
+            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
+            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
+            if ((w == width) && (h == height)) {
+                if (a && r && g && b) {
+                    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf);
+                    if ((10 > abs(*r - buf[0])) && (10 > abs(*g - buf[1])) && 
+                            (10 > abs(*b - buf[2])) && (10 > abs(*a - buf[3])))
+                    {
+                        if (c->currentTexture)
+                            glBindTexture(GL_TEXTURE_2D, c->currentTexture);
+                        delete[] buf;
+                        return i;
+                    }
+                } else {
+                    if (c->currentTexture)
+                        glBindTexture(GL_TEXTURE_2D, c->currentTexture);
+                    delete[] buf;
+                    return i;
+                }
+            }
+        }
+    }
+
+    if (c->currentTexture)
+        glBindTexture(GL_TEXTURE_2D, c->currentTexture);
+    delete[] buf;
+    
+    return -1;
+}
+
+
+
+// returns fbo currently binded
+static GLuint getCurrentFbo()
+{
+    GLuint oldFbo;
+    
+    glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, (GLint*)&oldFbo);
+
+    return oldFbo;
+}
+
+
+
+// find or allocate FBO object
+static GLuint getFbo(OglCanvas *c, int textureId)
+{
+    std::map<int, GLuint>::const_iterator i = c->fboByTex.find(textureId);
+    if (i == c->fboByTex.end()) {
+        GLuint fbo = -1;
+        glGenFramebuffers(1, &fbo);
+        GLuint oldFbo = getCurrentFbo();
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 
+                GL_TEXTURE_2D, textureId, 0);
+        // job done, switch to old fbo
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, oldFbo);
+        c->fboByTex[textureId] = fbo;
+        return fbo;
+    } else
+        return (*i).second;
+}
+
+// setup matrices
+static void prepareFbo(OglCanvas *c, int textureId, int width, int height)
+{
+    glClearColor(1.0, 0.0, 0.0, 1.0);
+    glViewport(0, 0, width, height);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0.0, width, 0.0, height, -1.0, 1.0); 
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    c->transform.push_back(Matrix::identity());
+}
+
+
+// start rendering to texture
+// pass -1 as texture ID to restore default render target
+static int setRenderTarget(struct SaslGraphicsCallbacks *canvas, 
+        int textureId)
+{
+    OglCanvas *c = (OglCanvas*)canvas;
+    assert(canvas);
+
+    dumpBuffers(c);
+
+    if (! c->fboAvailable)
+        return -1;
+
+    if (-1 != textureId) {
+        // save state
+        glMatrixMode(GL_PROJECTION);
+        glPushMatrix();
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+        glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
+
+        GLint w, h;
+        glBindTexture(GL_TEXTURE_2D, textureId);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
+
+        // enable fbo
+        c->defaultFbo = getCurrentFbo();
+        GLuint fbo = getFbo(c, textureId);
+        if ((GLuint)-1 == fbo)
+            return -1;
+        c->currentFboTex = textureId;
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 
+                GL_TEXTURE_2D, textureId, 0); 
+        
+        prepareFbo(c, textureId, w, h);
+    } else {
+        // restore default fbo
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, c->defaultFbo);
+        glBindTexture(GL_TEXTURE_2D, c->currentFboTex);
+        glGenerateMipmap(GL_TEXTURE);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        // restore x-plane state
+        glPopClientAttrib();
+        glPopAttrib();
+        glMatrixMode(GL_MODELVIEW);
+        glPopMatrix();
+        glMatrixMode(GL_PROJECTION);
+        glPopMatrix();
+        glMatrixMode(GL_MODELVIEW);
+    
+        if (c->currentTexture)
+            glBindTexture(GL_TEXTURE_2D, c->currentTexture);
+        
+        c->transform.pop_back();
+    }
+
+    return 0;
+}
+
+
+// create new texture of specified size and store it under the same name 
+// as old texture
+// use it for textures used as render target
+static void recreateTexture(struct SaslGraphicsCallbacks *canvas, 
+        int textureId, int width, int height)
+{
+    OglCanvas *c = (OglCanvas*)canvas;
+    assert(canvas);
+
+    glBindTexture(GL_TEXTURE_2D, textureId);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, 
+            GL_BYTE, NULL);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    
+    if (c->currentTexture)
+        glBindTexture(GL_TEXTURE_2D, c->currentTexture);
+}
+
+
+// returns address of OpenGL functions.  check EXT variants if normal not found
+typedef void (*Func)();
+static Func getProcAddress(const char *name)
+{
+    Func res = glXGetProcAddressARB((GLubyte*)name);
+    if (! res) {
+        char buf[250];
+        strcpy(buf, name);
+        strcat(buf, "EXT");
+        res = glXGetProcAddressARB((GLubyte*)buf);
+    }
+    return res;
+}
+
+
+// find pointers of OpenGL functions
+static bool initGlFunctions()
+{
+    glGenFramebuffers = (GenFramebuffers)getProcAddress("glGenFramebuffers");
+    glBindFramebuffer = (BindFramebuffer)getProcAddress("glBindFramebuffer");
+    glFramebufferTexture2D = (FramebufferTexture2D)getProcAddress("glFramebufferTexture2D");
+    glDeleteFramebuffers = (DeleteFramebuffers)getProcAddress("glDeleteFramebuffers");
+    glGenerateMipmap = (GenerateMipmap)getProcAddress("glGenerateMipmap");
+
+    return glGenFramebuffers && glBindFramebuffer && glFramebufferTexture2D &&
+        glDeleteFramebuffers && glGenerateMipmap;
+}
+
+
+
+
 // initializa canvas structure
 struct SaslGraphicsCallbacks* saslgl_init_graphics()
 {
@@ -459,9 +708,13 @@ struct SaslGraphicsCallbacks* saslgl_init_graphics()
     c->callbacks.translate_transform = translateTransform;
     c->callbacks.scale_transform = scaleTransform;
     c->callbacks.rotate_transform = rotateTransform;
+    c->callbacks.find_texture = findTexture;
+    c->callbacks.set_render_target = setRenderTarget;
+    c->callbacks.recreate_texture = recreateTexture;
     
     c->maxVertices = c->numVertices = 0;
     c->vertexBuffer = c->texBuffer = c->colorBuffer = NULL;
+    c->fboAvailable = initGlFunctions();
 
     return (struct SaslGraphicsCallbacks*)c;
 }
@@ -472,6 +725,12 @@ void saslgl_done_graphics(struct SaslGraphicsCallbacks *canvas)
 {
     OglCanvas *c = (OglCanvas*)canvas;
     if (c) {
+        if (c->fboByTex.size()) {
+            for (std::map<int, GLuint>::iterator i = c->fboByTex.begin();
+                    i != c->fboByTex.end(); i++)
+                glDeleteFramebuffers(1, &(*i).second);
+        }
+
         free(c->vertexBuffer);
         free(c->texBuffer);
         free(c->colorBuffer);

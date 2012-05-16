@@ -30,7 +30,7 @@ extern "C" {
 #include "options.h"
 #include "xplua.h"
 #include "ogl.h"
-#include "alsasound.h"
+#include "alsound.h"
 #include "listener.h"
 #include "xpobjects.h"
 
@@ -162,7 +162,7 @@ static bool disablePanelClicks = false;
 static SaslGraphicsCallbacks* graphics = NULL;
 
 // sound functions
-static struct SaslAlsaSound* sound = NULL;
+static struct SaslAlSound* sound = NULL;
 
 
 /// Write message to X-Plane log
@@ -600,7 +600,7 @@ static void freeAvionics(bool keepProps)
     doneGui();
     if (! sasl)
         return;
-    sasl_done_alsa_sound(sound);
+    sasl_done_al_sound(sound);
     sound = NULL;
     sasl_done(sasl);
     sasl = NULL;
@@ -679,7 +679,7 @@ void xap::reloadPanel(bool keepProps)
     if (fileDoesExist(panelPath)) {
         sasl_enable_click_emulator(sasl, 1);
         sasl_set_graphics_callbacks(sasl, graphics);
-        sound = sasl_init_alsa_sound(sasl);
+        sound = sasl_init_al_sound(sasl);
         registerCommandsApi(sasl);
 
         if (! props)

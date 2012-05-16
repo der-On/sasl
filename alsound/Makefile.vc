@@ -3,7 +3,7 @@
 OPENAL=c:/Program\ Files/OpenAL\ 1.1\ SDK
 
 
-TARGET=alsasound.lib
+TARGET=alsound.lib
 HEADERS=$(wildcard *.h)
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.obj)
