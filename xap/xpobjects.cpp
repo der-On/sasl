@@ -1,4 +1,22 @@
 #include "xpobjects.h"
+ 
+#if defined(__MACH__)
+#include <CoreFoundation/CoreFoundation.h>
+static int ConvertPath(const char * inPath, char * outPath, int outPathMaxLen)
+{
+    CFStringRef inStr = CFStringCreateWithCString(kCFAllocatorDefault, inPath ,kCFStringEncodingMacRoman);
+    if (inStr == NULL)
+        return -1;
+    CFURLRef url = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, inStr, kCFURLHFSPathStyle,0);
+    CFStringRef outStr = CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle);
+    if (!CFStringGetCString(outStr, outPath, outPathMaxLen, kCFURLPOSIXPathStyle))
+        return -1;
+    CFRelease(outStr);
+    CFRelease(url);
+    CFRelease(inStr);
+    return 0;
+}
+#endif
 
 #include <vector>
 #include <string.h>
@@ -47,11 +65,23 @@ static int loadObject(lua_State *L)
     // ugly hack
     char xpPath[1024];
     XPLMGetSystemPath(xpPath);
-    const char *objPath = lua_tostring(L, 1);
-    if (strlen(objPath) <= strlen(xpPath))
+    char path[1024];
+#if defined(__MACH__)
+    int result = ConvertPath(xpPath, path, 1024);
+    if (result != 0)
         return 0;
+#else
+    strncpy(path, xpPath, 1024);
+#endif
 
-    XPLMObjectRef ref = XPLMLoadObject(objPath + strlen(xpPath));
+    const char *objPath = lua_tostring(L, 1);
+    if (strlen(objPath) <= strlen(path))
+        return 0;
+#if IBM==1
+    XPLMObjectRef ref = XPLMLoadObject(objPath + strlen(path));
+#else
+    XPLMObjectRef ref = XPLMLoadObject(objPath + strlen(path) + 1);
+#endif
     if (! ref)
         return 0;
     lua_pushlightuserdata(L, ref);

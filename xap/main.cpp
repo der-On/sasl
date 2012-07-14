@@ -768,6 +768,10 @@ static float updateAvionics(float elapsedSinceLastCall,
                  float elapsedTimeSinceLastFlightLoop,  int counter,    
                  void *refcon)
 {
+	if (fakeWindow == 0)
+	{
+		 fakeWindow = createFakeWindow();
+	}
     if (sasl && (! disabled)) {
         int clickable = XPLMGetDatai(showClickable);
         if (clickable != lastShowClickable) {
@@ -915,9 +919,9 @@ PLUGIN_API int XPluginEnable(void)
         XPLMDebugString("SASL: Error registering draw callback at xplm_Phase_Gauges\n");
     if (! XPLMRegisterDrawCallback(drawPopups, xplm_Phase_Window, 0, NULL))
         XPLMDebugString("SASL: Error registering draw callback at xplm_Phase_Window\n");
-    if (! XPLMRegisterDrawCallback(drawScene, xplm_Phase_LastScene, 0, NULL))
-        XPLMDebugString("SASL: Error registering draw callback at xplm_Phase_LastScene\n");
-    fakeWindow = createFakeWindow();
+    if (! XPLMRegisterDrawCallback(drawScene, xplm_Phase_Objects, 0, NULL))
+        XPLMDebugString("SASL: Error registering draw callback at xplm_Phase_Objects\n");
+    fakeWindow = 0;
     
     reloadCommand = XPLMCreateCommand("sasl/reload", "Reload SASL avionics");
     XPLMRegisterCommandHandler(reloadCommand, reloadPanelCallback, 0, NULL);
