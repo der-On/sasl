@@ -7,7 +7,7 @@
 #include "utils.h"
 #include "luna.h"
 #include "avionics.h"
-
+#include "SOIL.h"
 
 using namespace xa;
 
@@ -332,6 +332,27 @@ void TextureManager::setGraphicsCallbacks(struct SaslGraphicsCallbacks *callback
     graphics = callbacks;
 }
 
+static int luaGetImageSize(lua_State *L)
+{
+    std::string fileName = lua_tostring(L, 1);
+
+    int w,h,ch;
+    unsigned char* foo = SOIL_load_image(fileName.c_str(), &w, &h, &ch, SOIL_LOAD_AUTO);
+    if (foo)
+    {
+        SOIL_free_image_data(foo);
+    }
+    else
+    {
+        w = 0;
+        h = 0;
+    }
+
+    lua_pushnumber(L, w);
+    lua_pushnumber(L, h);
+    return 2;
+}
+
 
 /// Lua wrapper for texture manager
 static int luaLoadImage(lua_State *L)
@@ -524,6 +545,7 @@ void xa::exportTextureToLua(Luna &lua)
 
     lua_register(L, "getGLTexture", luaLoadImage);
     lua_register(L, "getTextureSize", luaGetTextureSize);
+    lua_register(L, "getImageSize", luaGetImageSize);
     lua_register(L, "loadImageFromMemory", luaLoadImageFromMemory);
     lua_register(L, "unloadImage", luaUnloadImage);
     lua_register(L, "recreateImage", luaRecreateImage);
