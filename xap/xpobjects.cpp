@@ -77,7 +77,7 @@ static int loadObject(lua_State *L)
     const char *objPath = lua_tostring(L, 1);
     if (strlen(objPath) <= strlen(path))
         return 0;
-#if IBM==1
+#if IBM==1 or LIN==1
     XPLMObjectRef ref = XPLMLoadObject(objPath + strlen(path));
 #else
     XPLMObjectRef ref = XPLMLoadObject(objPath + strlen(path) + 1);
