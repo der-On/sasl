@@ -3,14 +3,14 @@ HEADERS=$(wildcard *.h)
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)
 
-SDKROOT=/Developer/SDKs/MacOSX10.4u.sdk
-OSXC=-arch i386 -mmacosx-version-min=10.4 -isysroot $(SDKROOT)
+SDKROOT=/Developer/SDKs/MacOSX10.6.sdk
+OSXC=-arch i386 -mmacosx-version-min=10.6 -isysroot $(SDKROOT)
 OSXL=-arch i386 -syslibroot=$(SDKROOT)
 
-DEFS= -DAPL=1 -fPIC -m32 -fno-stack-protector -O3 -ffast-math -march=i686 -msse -fno-rtti -fno-exceptions -fvisibility=default -DNDEBUG
+DEFS= -DAPL=1 -fPIC -m32 -fno-stack-protector -O3 -ffast-math -march=i686 -msse2 -fno-rtti -fno-exceptions -fvisibility=default -DNDEBUG
 
 # By default Lua installs itself into /usr/local so we will look for it there too
-CXXFLAGS+=-DSNAPSHOT=201126011 -Wall -I/usr/local/include $(DEFS) $(OSXC) -I../libavionics
+CXXFLAGS+=-DSNAPSHOT=20120714 -Wall -I/usr/local/include $(DEFS) $(OSXC) -I../libavionics
 # # XPLM is loaded dynamically on OS X hence the flag, -dynamiclib is used to get a .a instead of a .bundle
 # -undefined warning -flat_namespace -dynamiclib
 LNFLAGS+=-undefined warning -flat_namespace -dynamiclib -shared -rdynamic -nodefaultlibs -m32 -O3 -L/usr/local/lib  $(OSXL) -fno-rtti -fvisibility=default -s -fno-exceptions

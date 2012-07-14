@@ -6,14 +6,14 @@ HEADERS=$(wildcard *.h)
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)
 
-SDKROOT=/Developer/SDKs/MacOSX10.4u.sdk
-OSXC=-arch i386 -mmacosx-version-min=10.4 -isysroot $(SDKROOT)
+SDKROOT=/Developer/SDKs/MacOSX10.6.sdk
+OSXC=-arch i386 -mmacosx-version-min=10.6 -isysroot $(SDKROOT)
 OSXL=-arch i386 -syslibroot=$(SDKROOT)
 
-DEFS= -DAPL=1 -fPIC -m32 -fno-stack-protector -DXPLM200 
+DEFS= -DAPL=1 -DLIN=0 -DIBM=0 -fPIC -m32 -fno-stack-protector -DXPLM200 
 
 # By default Lua installs itself into /usr/local so we will look for it there too
-CXXFLAGS+=-DSNAPSHOT=201111191 -Wall -I$(SDK)/CHeaders/XPLM -I$(SDK)/CHeaders/Widgets -I/usr/local/include -I/usr/local/include/luajit-2.0 -I../libavionics -I../libogl -I../alsound $(DEFS) $(OSXC)  -O3 -ffast-math -fno-rtti -fno-exceptions -fvisibility=default -DNDEBUG
+CXXFLAGS+=-DSNAPSHOT=20120714 -Wall -I$(SDK)/CHeaders/XPLM -I$(SDK)/CHeaders/Widgets -I/usr/local/include -I/usr/local/include/luajit-2.0 -I../libavionics -I../libogl -I../alsound $(DEFS) $(OSXC)  -O3 -ffast-math -fno-rtti -fno-exceptions -fvisibility=default -DNDEBUG
 # # XPLM is loaded dynamically on OS X hence the flag, -dynamiclib is used to get a .a instead of a .bundle
 # -undefined warning -flat_namespace -dynamiclib
 LNFLAGS+=-undefined warning -flat_namespace  -L../libavionics  -L../libaccgl -L../alsound -dynamiclib -shared -rdynamic -nodefaultlibs -m32 -L/usr/local/lib  $(OSXL) -O3 -fno-rtti -fvisibility=default -s -fno-exceptions

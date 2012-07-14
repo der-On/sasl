@@ -1,8 +1,5 @@
 #include "ogl.h"
 
-#ifdef __APPLE__
-#include "mac.h"
-#else
 
 #include <list>
 #include <map>
@@ -15,15 +12,21 @@
 #include "glheaders.h"
 #include "math2d.h"
 
-#include <GL/gl.h>
 
-#ifndef WIN32
-#include <GL/glx.h>
+#if !defined(WIN32) && !defined(__APPLE__)
+	#include <GL/gl.h>
+	#include <GL/glx.h>
+#elif defined(__APPLE__)
+	#include <OpenGL/OpenGL.h>
+	#include <OpenGL/gl.h>
+	#include <OpenGL/glu.h>
+	#include <OpenGL/glext.h>
 #else
+	#include <GL/gl.h>
 #endif
 
 
-
+#ifndef __APPLE__
 // OpenGL functions
 typedef void (*GenFramebuffers)(GLsizei n, GLuint *buffers);
 static GenFramebuffers glGenFramebuffers = NULL;
@@ -62,6 +65,7 @@ static GenerateMipmap glGenerateMipmap = NULL;
 #define GL_CLAMP_TO_EDGE                  0x812F
 #endif
 
+#endif
 
 // graphics context
 struct OglCanvas
@@ -681,7 +685,7 @@ static void recreateTexture(struct SaslGraphicsCallbacks *canvas,
         glBindTexture(GL_TEXTURE_2D, c->currentTexture);
 }
 
-
+#ifndef __APPLE__
 // returns address of OpenGL functions.  check EXT variants if normal not found
 typedef void (*Func)();
 static Func getProcAddress(const char *name)
@@ -718,7 +722,14 @@ static bool initGlFunctions()
         glDeleteFramebuffers && glGenerateMipmap;
 }
 
+#else
 
+static bool initGlFunctions()
+{
+    return 1;
+}
+
+#endif
 
 
 // initializa canvas structure
@@ -790,6 +801,3 @@ void saslgl_set_gen_tex_name_callback(struct SaslGraphicsCallbacks *canvas,
         return;
     c->genTexNameCallback = generator;
 }
-
-#endif
-
