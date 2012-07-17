@@ -13,7 +13,7 @@ extern "C" {
     #include <lua.h>
     #include <lauxlib.h>
     #include <lualib.h>
-    
+
     #ifdef APL
         // for path translation
         #include <CoreFoundation/CFString.h>
@@ -50,6 +50,9 @@ SASL xap::sasl = NULL;
 // True for 2D panels
 static bool has2d = false;
 
+/// 0 for ATTR_COCKPIT , 1 for ATTR_COCKPIT_REGION albedo, 2 for ATTR_COCKPIT_REGION emissive
+static XPLMDataRef panelRenderPass;
+
 /// Reference to panel left in panel coordinates
 static XPLMDataRef panelLeft;
 
@@ -58,7 +61,7 @@ static XPLMDataRef panelBottom;
 
 /// Reference to panel left in window coordinates
 //static XPLMDataRef windowLeft;
-        
+
 /// Height of screen
 //static double offset2d;
 
@@ -191,23 +194,21 @@ static void printToLog(int level, const char *message)
 // Since Carbon is not available on other paltfornms we can safely bypass this
 static std::string carbonPathToPosixPath(const std::string &carbonPath)
 {
-#ifdef APL
+#if APL==1
     char outPathBuf[PATH_MAX]; //gothic
-    
-    CFStringRef urlString_CF, resultString_CF;
-    CFURLRef url;
-    
-    urlString_CF = CFStringCreateWithCStringNoCopy(NULL, carbonPath.c_str(), kCFStringEncodingMacRoman, NULL);
-    url = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, urlString_CF, kCFURLHFSPathStyle, 1);
-    
-    resultString_CF = CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle);
-    CFStringGetCString(resultString_CF, outPathBuf, PATH_MAX, kCFStringEncodingUTF8);
-    
-    CFRelease(urlString_CF);
-    CFRelease(resultString_CF);
+    CFStringRef inStr = CFStringCreateWithCString(kCFAllocatorDefault, carbonPath.c_str() ,kCFStringEncodingMacRoman);
+    if (inStr == NULL)
+        return "";
+    CFURLRef url = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, inStr, kCFURLHFSPathStyle,0);
+    CFStringRef outStr = CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle);
+    if (!CFStringGetCString(outStr, outPathBuf, PATH_MAX, kCFURLPOSIXPathStyle))
+        return "";
+    CFRelease(outStr);
     CFRelease(url);
-    
+    CFRelease(inStr);
+
     return std::string(outPathBuf);
+
 #else
     return carbonPath;
 #endif
@@ -229,10 +230,10 @@ static std::string getDirSeparator()
 static std::string getConfigFileName()
 {
     char path[600], translatedPath[600 + 9];
-    
+
     XPLMGetPrefsPath(path);
     XPLMExtractFileAndPath(path);
-    
+
     strcpy(translatedPath, carbonPathToPosixPath(std::string(path)).c_str());
     strcat(translatedPath, getDirSeparator().c_str());
     strcat(translatedPath, "sasl.prf");
@@ -256,8 +257,8 @@ static std::string getAircraftDir()
     char model[512], path[512];
     XPLMGetNthAircraftModel(0, model, path);
     XPLMExtractFileAndPath(path);
-    
-    std::string dir = carbonPathToPosixPath(std::string(path)) + getDirSeparator(); 
+
+    std::string dir = carbonPathToPosixPath(std::string(path)) + getDirSeparator();
     return dir;
 }
 
@@ -358,7 +359,7 @@ static void updatePanelSize()
 
     if ((! has2d) || (has2d && (! is2dPanelView())))
         setPanelSize(panelWidth3d, panelHeight3d);
-    else 
+    else
         setPanelSize(panelWidth2d, panelHeight2d);
 }
 
@@ -379,15 +380,15 @@ static void updatePopupSize()
 /// draws gauges
 static int drawGauges(XPLMDrawingPhase phase, int isBefore, void *refcon)
 {
-    if (sasl) {
+    if (sasl && XPLMGetDatai(panelRenderPass) == 2) {
         updatePanelSize();
 
         glPushMatrix();
-        
+
         glTranslatef(XPLMGetDataf(panelLeft), XPLMGetDataf(panelBottom), 0);
         XPLMSetGraphicsState(0, 1, 0, 0, 1, 0, 0);
         sasl_draw_panel(sasl, STAGE_GAUGES);
-    
+
         glPopMatrix();
     }
 
@@ -422,21 +423,21 @@ static void notDrawWindow(XPLMWindowID inWindowID, void *inRefcon)
 }
 
 /// Do nothing.  It is here to keep x-plane happy
-static void notHandleKey(XPLMWindowID inWindowID, char inKey, 
-        XPLMKeyFlags inFlags, char inVirtualKey, void *inRefcon, 
+static void notHandleKey(XPLMWindowID inWindowID, char inKey,
+        XPLMKeyFlags inFlags, char inVirtualKey, void *inRefcon,
         int losingFocus)
 {
 }
 
 
 
-static int handleMouseLayerClick(int x, int y, XPLMMouseStatus status, 
+static int handleMouseLayerClick(int x, int y, XPLMMouseStatus status,
         int layer)
 {
     switch (status) {
-        case xplm_MouseDown: 
+        case xplm_MouseDown:
             return sasl_mouse_button_down(sasl, x, y, 1, layer);
-        case xplm_MouseUp: 
+        case xplm_MouseUp:
             return sasl_mouse_button_up(sasl, x, y, 1, layer);
     }
     return 0;
@@ -518,7 +519,7 @@ static int handleMouseClick(XPLMWindowID window, int panelX, int panelY,
         return 0;
 }
 
-static XPLMCursorStatus handleCursor(XPLMWindowID inWindowID, int x, int y, 
+static XPLMCursorStatus handleCursor(XPLMWindowID inWindowID, int x, int y,
         void* inRefcon)
 {
     if (! sasl)
@@ -584,10 +585,10 @@ static std::string getDataDir()
 {
     char buf[512];
     XPLMGetSystemPath(buf);
-    
+
     std::string sep = getDirSeparator();
     std::string path = carbonPathToPosixPath(std::string(buf));
-    
+
     return path +  "Resources" + sep +
         "plugins" + sep + "sasl" + sep + "data";
 }
@@ -650,7 +651,7 @@ static int getGlobalPanelValue(const char *name, int dflt)
 void xap::reloadPanel(bool keepProps)
 {
     freeAvionics(keepProps);
-        
+
     lastShowClickable = -1;
 
     std::string dir = getAircraftDir();
@@ -659,7 +660,7 @@ void xap::reloadPanel(bool keepProps)
     XPLMDebugString("SASL: Path to panel: ");
     XPLMDebugString(panelPath.c_str());
     XPLMDebugString("\n");
-    
+
     XPLMDebugString("SASL: Loading avionics...\n");
     panelViewInitialized = false;
 
@@ -675,7 +676,7 @@ void xap::reloadPanel(bool keepProps)
         return;
     }
     sasl_set_log_callback(sasl, printToLog, NULL);
-    
+
     if (fileDoesExist(panelPath)) {
         sasl_enable_click_emulator(sasl, 1);
         sasl_set_graphics_callbacks(sasl, graphics);
@@ -691,8 +692,8 @@ void xap::reloadPanel(bool keepProps)
 
         if (options.isAutoStartServer()) {
             sasl_log_info(sasl, "Starting server");
-            if (sasl_start_netprop_server(sasl, options.getPort(), 
-                        options.getSecret().c_str())) 
+            if (sasl_start_netprop_server(sasl, options.getPort(),
+                        options.getSecret().c_str()))
                 sasl_log_error(sasl, "Can't start server");
         }
 
@@ -709,7 +710,7 @@ void xap::reloadPanel(bool keepProps)
             panelHeight3d = getGlobalPanelValue("panelHeight3d", 0);
             lastPanelWidth = lastPanelHeight = 0;
             popupWidth = popupHeight = 0;
-    
+
             sasl_log_info(sasl, "Avionics loaded");
         }
     } else {
@@ -741,7 +742,7 @@ static bool isViewTheSame()
 
     bool same = true;
 
-    if ((fabs(lastViewX - XPLMGetDataf(viewX)) > 0.01) || 
+    if ((fabs(lastViewX - XPLMGetDataf(viewX)) > 0.01) ||
             (fabs(lastViewY - XPLMGetDataf(viewY)) > 0.01) ||
             (fabs(lastViewZ - XPLMGetDataf(viewZ)) > 0.01) ||
             (fabs(lastViewPitch - XPLMGetDataf(viewPitch)) > 0.01) ||
@@ -764,26 +765,26 @@ static bool isViewTheSame()
 }
 
 
-static float updateAvionics(float elapsedSinceLastCall,    
-                 float elapsedTimeSinceLastFlightLoop,  int counter,    
+static float updateAvionics(float elapsedSinceLastCall,
+                 float elapsedTimeSinceLastFlightLoop,  int counter,
                  void *refcon)
 {
-	if (fakeWindow == 0)
-	{
-		 fakeWindow = createFakeWindow();
-	}
+    if (fakeWindow == 0)
+    {
+         fakeWindow = createFakeWindow();
+    }
     if (sasl && (! disabled)) {
         int clickable = XPLMGetDatai(showClickable);
         if (clickable != lastShowClickable) {
             sasl_set_show_clickable(sasl, clickable);
             lastShowClickable = clickable;
         }
-        
-        sasl_set_background_color(sasl, XPLMGetDataf(cockpitRed), 
+
+        sasl_set_background_color(sasl, XPLMGetDataf(cockpitRed),
                 XPLMGetDataf(cockpitGreen), XPLMGetDataf(cockpitBlue),
                 XPLMGetDatai(cockpitTransparent) ? 0.5f : 1.0f);
 
-        // if camera position changed make 'virtual' mouse move to reset 
+        // if camera position changed make 'virtual' mouse move to reset
         // cursor shape
         if (! isViewTheSame()) {
             lastMouseX = -10;
@@ -793,7 +794,7 @@ static float updateAvionics(float elapsedSinceLastCall,
         updateListenerPosition(sasl);
         sasl_update(sasl);
     }
-    
+
     return -1;
 }
 
@@ -803,7 +804,7 @@ static void callCallback(const char *name)
 {
     if (! sasl)
         return;
-    
+
     lua_State *L = sasl_get_lua(sasl);
     lua_getglobal(L, name);
     lua_pcall(L, 0, 0, 0);
@@ -815,13 +816,13 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc)
 {
     XPLMDebugString("SASL: Starting...\n");
     const char *pluginSignature = "1-sim.sasl";
-    
+
     // Mac-specific: it IS possible to have SASL installed twice, once in the ACF folder
     // and once in the X-System folder. Probably due to namespace mangling on OS X
-    // the system will NOT crash the app when the plugin gets loaded twice. 
+    // the system will NOT crash the app when the plugin gets loaded twice.
     // Thus, we query the enabled plugins for the defined signatures
     // and DO NOT activate should the other plugin already be plugged in
-    
+
     XPLMPluginID other_sasl_id = XPLMFindPluginBySignature(pluginSignature);
     if(-1 != other_sasl_id) {
         // Figure out where the other plugin came from
@@ -839,27 +840,28 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc)
 #ifdef SNAPSHOT
 #define xstr(s) str(s)
 #define str(s) #s
-    sprintf(outDesc, "X-Plane scriptable avionics library plugin snapshot %i.%i.%i %s", 
+    sprintf(outDesc, "X-Plane scriptable avionics library plugin snapshot %i.%i.%i %s",
             VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, xstr(SNAPSHOT));
 #undef str
 #undef xstr
 #else
-    sprintf(outDesc, "X-Plane scriptable avionics library plugin v%i.%i.%i", 
+    sprintf(outDesc, "X-Plane scriptable avionics library plugin v%i.%i.%i",
             VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
 #endif
     XPLMDebugString(outDesc);
     XPLMDebugString("\n");
 
+    panelRenderPass =  XPLMFindDataRef("sim/graphics/view/panel_render_type");
     viewType = XPLMFindDataRef("sim/graphics/view/view_type");
     //windowLeft = XPLMFindDataRef("sim/graphics/view/panel_total_win_l");
     panelLeft = XPLMFindDataRef("sim/graphics/view/panel_total_pnl_l");
     panelBottom = XPLMFindDataRef("sim/graphics/view/panel_total_pnl_b");
-    
+
     panelWinB = XPLMFindDataRef("sim/graphics/view/panel_total_win_b");
     panelWinT = XPLMFindDataRef("sim/graphics/view/panel_total_win_t");
     panelWinL = XPLMFindDataRef("sim/graphics/view/panel_total_win_l");
     panelWinR = XPLMFindDataRef("sim/graphics/view/panel_total_win_r");
-    
+
     screenWidth = XPLMFindDataRef("sim/graphics/view/window_width");
     screenHeight = XPLMFindDataRef("sim/graphics/view/window_height");
 
@@ -922,12 +924,12 @@ PLUGIN_API int XPluginEnable(void)
     if (! XPLMRegisterDrawCallback(drawScene, xplm_Phase_Objects, 0, NULL))
         XPLMDebugString("SASL: Error registering draw callback at xplm_Phase_Objects\n");
     fakeWindow = 0;
-    
+
     reloadCommand = XPLMCreateCommand("sasl/reload", "Reload SASL avionics");
     XPLMRegisterCommandHandler(reloadCommand, reloadPanelCallback, 0, NULL);
 
     XPLMRegisterKeySniffer(handleKeyboardEvent, 0, NULL);
-    
+
     reloadPanel(false);
 
     XPLMRegisterFlightLoopCallback(updateAvionics, -1, NULL);
@@ -936,10 +938,10 @@ PLUGIN_API int XPluginEnable(void)
 }
 
 
-PLUGIN_API void XPluginReceiveMessage(XPLMPluginID fromWho, 
+PLUGIN_API void XPluginReceiveMessage(XPLMPluginID fromWho,
         long message, void *param)
 {
-    if ((XPLM_MSG_PLANE_CRASHED == message) || 
+    if ((XPLM_MSG_PLANE_CRASHED == message) ||
             ((XPLM_MSG_PLANE_LOADED == message) && (! param)))
         reloadPanel(false);
     else {
