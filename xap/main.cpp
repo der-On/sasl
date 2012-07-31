@@ -380,7 +380,7 @@ static void updatePopupSize()
 /// draws gauges
 static int drawGauges(XPLMDrawingPhase phase, int isBefore, void *refcon)
 {
-    if (sasl && XPLMGetDatai(panelRenderPass) == 2) {
+    if (sasl && XPLMGetDatai(panelRenderPass) == 0) {
         updatePanelSize();
 
         glPushMatrix();
