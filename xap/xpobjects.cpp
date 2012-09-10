@@ -46,6 +46,10 @@ struct DrawCommand
 
     // draw relative earth
     int earthRelative;
+    
+    // Parameters to control in which HDR/shadow phase objects are drawn
+    int startPhase;
+    int numPhases;
 };
 
 // list of objects to draw
@@ -101,7 +105,7 @@ static int unloadObject(lua_State *L)
 // draw loaded object
 static int drawObject(lua_State *L)
 {
-    if (9 != lua_gettop(L))
+    if (9 != lua_gettop(L) && 11 != lua_gettop(L))
         return 0;
 
     DrawCommand c;
@@ -118,6 +122,15 @@ static int drawObject(lua_State *L)
     c.location.roll = lua_tonumber(L, 7);
     c.lighting = lua_tonumber(L, 8);
     c.earthRelative = lua_tonumber(L, 9);
+    if (11 == lua_gettop(L))
+    {
+        c.startPhase = lua_tonumber(L, 10);
+        c.numPhases = lua_tonumber(L, 11);
+    } else 
+    {
+        c.startPhase = 0;
+        c.numPhases = 999;
+    }
 
     objectsToDraw.push_back(c);
 
@@ -133,7 +146,7 @@ void xap::drawObjects()
         {
             DrawCommand &c = *i;
             // This was suggested by Ben Supnik
-            if (xap::phase_ >= 0 && xap::phase_ < 999)
+            if (xap::phase_ >= c.startPhase && xap::phase_ < c.startPhase+ c.numPhases)
                 XPLMDrawObjects(c.object, 1, &c.location, c.lighting, 
                                 c.earthRelative);
         }
