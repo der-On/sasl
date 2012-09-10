@@ -32,7 +32,6 @@ extern "C" {
 
 using namespace xap;
 
-
 // delayed draw call
 struct DrawCommand
 {
@@ -133,10 +132,13 @@ void xap::drawObjects()
                 i != objectsToDraw.end(); i++)
         {
             DrawCommand &c = *i;
-            XPLMDrawObjects(c.object, 1, &c.location, c.lighting, 
-                    c.earthRelative);
+            // This was suggested by Ben Supnik
+            if (xap::phase_ >= 0 && xap::phase_ < 999)
+                XPLMDrawObjects(c.object, 1, &c.location, c.lighting, 
+                                c.earthRelative);
         }
-        objectsToDraw.clear();
+        
+        // Note deletion happens in frameFinished() function
     }
     
     if (objectsToDelete.size()) {
@@ -145,6 +147,13 @@ void xap::drawObjects()
             XPLMUnloadObject(*i);
         objectsToDelete.clear();
     }
+    phase_++;
+}
+
+void xap::frameFinished()
+{
+    xap::phase_ = 0;
+    objectsToDraw.clear();
 }
 
 

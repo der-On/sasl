@@ -416,6 +416,13 @@ static int drawScene(XPLMDrawingPhase phase, int isBefore, void *refcon)
     return 1;
 }
 
+// reset draw phase
+static int drawLast2d(XPLMDrawingPhase phase, int isBefore, void *refcon)
+{
+    frameFinished();
+    return 1;
+}
+
 
 /// Do nothing.  It is here to keep x-plane happy
 static void notDrawWindow(XPLMWindowID inWindowID, void *inRefcon)
@@ -923,6 +930,8 @@ PLUGIN_API int XPluginEnable(void)
         XPLMDebugString("SASL: Error registering draw callback at xplm_Phase_Window\n");
     if (! XPLMRegisterDrawCallback(drawScene, xplm_Phase_Objects, 0, NULL))
         XPLMDebugString("SASL: Error registering draw callback at xplm_Phase_Objects\n");
+    if (! XPLMRegisterDrawCallback(drawLast2d, xplm_Phase_Window, 0, NULL))
+        XPLMDebugString("SASL: Error registering draw callback at xplm_Phase_Window (last 2d)t\n");
     fakeWindow = 0;
 
     reloadCommand = XPLMCreateCommand("sasl/reload", "Reload SASL avionics");
