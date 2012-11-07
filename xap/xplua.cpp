@@ -193,7 +193,7 @@ static int getFMSEntryInfo(lua_State *L)
     XPLMNavType type=0;
     char id[256];
     XPLMNavRef navRef=-1;
-    long alt=0;
+    int alt=0;
     float lat=0, lon=0;
 
     id[0] = 0;

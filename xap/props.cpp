@@ -837,7 +837,7 @@ static SaslPropRef createDoubleProp(XPlaneProps *props, const char *name)
 
 
 /// Returns value of custom string property
-static long readString(void *refcon, void *value, int offset, long maxSize)
+static int readString(void *refcon, void *value, int offset, int maxSize)
 {
     CustomProperty *p = (CustomProperty*)refcon;
     if (p) {
@@ -855,7 +855,7 @@ static long readString(void *refcon, void *value, int offset, long maxSize)
 
 
 /// Set value of custom string property
-static void writeString(void *refcon, void *value, int offset, long size)
+static void writeString(void *refcon, void *value, int offset, int size)
 {
     CustomProperty *p = (CustomProperty*)refcon;
     if (p) {
@@ -997,7 +997,7 @@ static void setDoubleCallback(void *refcon, double value)
 
 
 /// Returns value of string callback property
-static long getStringCallback(void *refcon, void *buf, int offset, long maxLen)
+static int getStringCallback(void *refcon, void *buf, int offset, int maxLen)
 {
     FuncProperty *p = (FuncProperty*)refcon;
     if (p && p->getter) {
@@ -1025,7 +1025,7 @@ static long getStringCallback(void *refcon, void *buf, int offset, long maxLen)
 }
 
 /// Set value of double callback property
-static void setStringCallback(void *refcon, void *value, int offset, long len)
+static void setStringCallback(void *refcon, void *value, int offset, int len)
 {
     FuncProperty *p = (FuncProperty*)refcon;
     if (p && p->setter) {
