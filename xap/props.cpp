@@ -206,11 +206,11 @@ void xap::funcPropsDone(SaslProps props)
 /// e.g. if name is "array[5]", name will be "array" and index will be 5
 static void cutArrayIndex(std::string &name, int &index)
 {
-    unsigned int firstIdx = name.find_first_of('[');
+    size_t firstIdx = name.find_first_of('[');
     if (std::string::npos == firstIdx)
         return;
     
-    unsigned int lastIdx = name.find_first_of('[', firstIdx);
+    size_t lastIdx = name.find_first_of('[', firstIdx);
     if (std::string::npos == lastIdx)
         return; // invalid index
 

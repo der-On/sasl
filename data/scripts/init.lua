@@ -231,6 +231,11 @@ function createComponent(name, parent)
         onMouseMove = defaultOnMouseMove,
         onKeyDown = defaultOnKeyDown,
         onKeyUp = defaultOnKeyUp,
+	logInfo = function(...) logInfo('"' .. name .. '"', ...); end,
+	logError = function(...) logError('"' .. name .. '"', ...); end,
+	logDebug = function(...) logDebug('"' .. name .. '"', ...); end,
+	logWarning = function(...) logWarning('"' .. name .. '"', ...); end,
+	print = function(...) print('"' .. name .. '"', ...); end,
     }
     data._C = data
     if parent then

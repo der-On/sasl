@@ -8,8 +8,6 @@ extern "C" {
 
 namespace xap {
 
-    static int phase_=0;
-
 /// register X-Plane objects functions in Lua
 void exportObjectsFunctions(lua_State *L);
 

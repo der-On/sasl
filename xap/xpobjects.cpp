@@ -1,5 +1,8 @@
 #include "xpobjects.h"
- 
+
+
+static int phase_;
+
 #if defined(__MACH__)
 #include <CoreFoundation/CoreFoundation.h>
 static int ConvertPath(const char * inPath, char * outPath, int outPathMaxLen)
@@ -31,6 +34,7 @@ extern "C" {
 
 
 using namespace xap;
+
 
 // delayed draw call
 struct DrawCommand
@@ -146,7 +150,7 @@ void xap::drawObjects()
         {
             DrawCommand &c = *i;
             // This was suggested by Ben Supnik
-            if (xap::phase_ >= c.startPhase && xap::phase_ < c.startPhase+ c.numPhases)
+            if (phase_ >= c.startPhase && phase_ < c.startPhase+ c.numPhases)
                 XPLMDrawObjects(c.object, 1, &c.location, c.lighting, 
                                 c.earthRelative);
         }
@@ -165,7 +169,7 @@ void xap::drawObjects()
 
 void xap::frameFinished()
 {
-    xap::phase_ = 0;
+    phase_ = 0;
     objectsToDraw.clear();
 }
 

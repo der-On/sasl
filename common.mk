@@ -1,8 +1,13 @@
 TOPDIR ?= ..
 include $(TOPDIR)/conf.mk
 
-CXXFLAGS+=$(EXTRA_CXXFLAGS) -m32 -Wall -fPIC -fno-stack-protector
-LNFLAGS+=$(EXTRA_LNFLAGS) -m32 -L/usr/lib32
+CXXFLAGS+=$(EXTRA_CXXFLAGS) -Wall -fPIC -fno-stack-protector
+LNFLAGS+=$(EXTRA_LNFLAGS)
+
+ifneq ($(BUILD_64),yes)
+CXXFLAGS+=-m32
+LNFLAGS+=-m32 -L/usr/lib32
+endif
 
 ifeq ($(BUILD_RELEASE),yes)
 CXXFLAGS+=$(RELEASE_CXXFLAGS)
