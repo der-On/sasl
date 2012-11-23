@@ -35,8 +35,12 @@ Log::Log()
 
 void Log::log(int level, const char *message, va_list args)
 {
-	va_list cp;
-	va_copy(cp, args);
+    va_list cp;
+#ifdef WINDOWS
+    cp = args;
+#else
+    va_copy(cp, args);
+#endif
     int msgLen = vsnprintf(NULL, 0, message, cp);
     va_end(cp);
     char *buf = (char*)alloca(msgLen + 1);
@@ -103,7 +107,7 @@ sasl_log_callback Log::getLogger(void **refPtr)
 static std::string getArgs(lua_State *L)
 {
     std::string str;
-    
+
     int n = lua_gettop(L);
     lua_getglobal(L, "tostring");
     for (int i = 1; i <= n; i++) {
