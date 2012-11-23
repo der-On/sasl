@@ -35,7 +35,10 @@ Log::Log()
 
 void Log::log(int level, const char *message, va_list args)
 {
-    int msgLen = vsnprintf(NULL, 0, message, args);
+	va_list cp;
+	va_copy(cp, args);
+    int msgLen = vsnprintf(NULL, 0, message, cp);
+    va_end(cp);
     char *buf = (char*)alloca(msgLen + 1);
     vsnprintf(buf, msgLen + 1, message, args);
     callback(level, buf);
