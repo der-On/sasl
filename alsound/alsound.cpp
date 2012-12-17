@@ -5,6 +5,7 @@
 #include <map>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #if APL
 	#include <Carbon/Carbon.h>
@@ -109,30 +110,30 @@ struct SaslAlSound
 // Macros to swap endian-values.
 
 #define SWAP_32(value)                 \
-        (((((unsigned short)value)<<8) & 0xFF00)   | \
-         ((((unsigned short)value)>>8) & 0x00FF))
+        (((((uint16_t)value)<<8) & 0xFF00)   | \
+         ((((uint16_t)value)>>8) & 0x00FF))
 
 #define SWAP_16(value)                     \
-        (((((unsigned int)value)<<24) & 0xFF000000)  | \
-         ((((unsigned int)value)<< 8) & 0x00FF0000)  | \
-         ((((unsigned int)value)>> 8) & 0x0000FF00)  | \
-         ((((unsigned int)value)>>24) & 0x000000FF))
+        (((((uint32_t)value)<<24) & 0xFF000000)  | \
+         ((((uint32_t)value)<< 8) & 0x00FF0000)  | \
+         ((((uint32_t)value)>> 8) & 0x0000FF00)  | \
+         ((((uint32_t)value)>>24) & 0x000000FF))
 
 // Wave files are RIFF files, which are "chunky" - each section has an ID and a length.  This lets us skip
 // things we can't understand to find the parts we want.  This header is common to all RIFF chunks.
 struct chunk_header { 
-    int	id;
-    int	size;
+    int32_t	id;
+    int32_t	size;
 };
 
 // WAVE file format info.  We pass this through to OpenAL so we can support mono/stereo, 8/16/bit, etc.
 struct format_info {
-    short format;				// PCM = 1, not sure what other values are legal.
-    short num_channels;
-    int sample_rate;
-    int byte_rate;
-    short block_align;
-    short bits_per_sample;
+    int16_t format;				// PCM = 1, not sure what other values are legal.
+    int16_t num_channels;
+    int32_t sample_rate;
+    int32_t byte_rate;
+    int16_t block_align;
+    int16_t bits_per_sample;
 };
 
 // This utility returns the start of data for a chunk given a range of bytes it might be within.  Pass 1 for
@@ -146,7 +147,7 @@ static char* find_chunk(char *file_begin, char *file_end,
             return file_begin + sizeof(chunk_header);
         if (h->id == SWAP_32(desired_id) && swapped)
             return file_begin + sizeof(chunk_header);
-        int chunk_size = swapped ? SWAP_32(h->size) : h->size;
+        int32_t chunk_size = swapped ? SWAP_32(h->size) : h->size;
         char *next = file_begin + chunk_size + sizeof(chunk_header);
         if(next > file_end || next <= file_begin)
             return NULL;
@@ -179,7 +180,7 @@ static ALuint load_wave(SASL sasl, const char *file_name)
         return 0;
     }
     fseek(fi, 0, SEEK_END);
-    int file_size = ftell(fi);
+    int32_t file_size = ftell(fi);
     fseek(fi, 0, SEEK_SET);
     char *mem = (char*)malloc(file_size);
     if (! mem) {
@@ -200,7 +201,7 @@ static ALuint load_wave(SASL sasl, const char *file_name)
     // and reversed, we can automatically determine the endian swap situation for
     // this file regardless of what machine we are on.
     
-    int swapped = 0;
+    int32_t swapped = 0;
     char *riff = find_chunk(mem, mem_end, RIFF_ID, 0);
     if (! riff) {
         riff = find_chunk(mem, mem_end, RIFF_ID, 1);
@@ -245,16 +246,16 @@ static ALuint load_wave(SASL sasl, const char *file_name)
     if (! data)
         FAIL("I could not find the DATA chunk.\n")
     
-    int sample_size = fmt->num_channels * fmt->bits_per_sample / 8;
-    int data_bytes = chunk_end(data,swapped) - data;
-    int data_samples = data_bytes / sample_size;
+    int32_t sample_size = fmt->num_channels * fmt->bits_per_sample / 8;
+    int32_t data_bytes = chunk_end(data,swapped) - data;
+    int32_t data_samples = data_bytes / sample_size;
     
     // If the file is swapped and we have 16-bit audio, we need to endian-swap the audio too or we'll 
     // get something that sounds just astoundingly bad!
     
     if (fmt->bits_per_sample == 16 && swapped) {
-        short *ptr = (short*) data;
-        int words = data_samples * fmt->num_channels;
+        int16_t *ptr = (short*) data;
+        int32_t words = data_samples * fmt->num_channels;
         while (words--) {
             *ptr = SWAP_16(*ptr);
             ++ptr;
