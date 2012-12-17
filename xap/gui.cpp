@@ -44,7 +44,7 @@ static XPWidgetID okButton;
 
 // called on login dialog events
 static int optionsWindowHandler(XPWidgetMessage message, XPWidgetID widget,
-        long param1, long param2)
+        intptr_t param1, intptr_t param2)
 {
     switch (message) {
         case xpMessage_CloseButtonPushed:
