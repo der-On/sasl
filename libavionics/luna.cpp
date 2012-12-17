@@ -3,6 +3,9 @@
 #include <sys/types.h>
 #ifndef WINDOWS
 #include <dirent.h>
+#if USE_EXTERNAL_ALLOCATOR
+#include "custom_alloc.h"
+#endif    
 #else
 #include <windows.h>
 #endif
@@ -128,20 +131,39 @@ static int luaListFiles(lua_State *L)
 
 Luna::Luna()
 {
-    lua = luaL_newstate();
-    luaL_openlibs(lua);
-    lua_register(lua, "bitand", luaBitAnd);
-    lua_register(lua, "bitor", luaBitOr);
-    lua_register(lua, "bitxor", luaBitXor);
-    lua_register(lua, "listFiles", luaListFiles);
+    #if USE_EXTERNAL_ALLOCATOR
+		struct lua_alloc_request_t r = { 0 };
+		XPLMSendMessageToPlugin(XPLM_PLUGIN_XPLANE, ALLOC_OPEN,&r);
+		ud = r.ud;
+		printf("Got allocator: %p\n", ud);
+		lua = lua_newstate(lj_alloc_f, ud);
+		printf("Got Lua: %p\n", lua);
+	#else	
+		lua = luaL_newstate();
+	#endif
+    if (lua)
+    {
+        luaL_openlibs(lua);
+        lua_register(lua, "bitand", luaBitAnd);
+        lua_register(lua, "bitor", luaBitOr);
+        lua_register(lua, "bitxor", luaBitXor);
+        lua_register(lua, "listFiles", luaListFiles);
 
-    lua_newtable(lua);
-    lua_setfield(lua, LUA_REGISTRYINDEX, "xavionics");
+        lua_newtable(lua);
+        lua_setfield(lua, LUA_REGISTRYINDEX, "xavionics");
+    } else {
+        std::abort();
+    }
 }
 
 Luna::~Luna()
 {
     lua_close(lua);
+    #if USE_EXTERNAL_ALLOCATOR
+        struct lua_alloc_request_t r = { 0 };
+        r.ud = ud;
+        XPLMSendMessageToPlugin(XPLM_PLUGIN_XPLANE, ALLOC_CLOSE,&r);
+    #endif
 }
 
 bool Luna::runScript(const std::string &fileName)

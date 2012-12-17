@@ -5,11 +5,11 @@ HEADERS=$(wildcard *.h)
 SOURCES=$(wildcard *.cpp)
 OBJECTS=$(SOURCES:.cpp=.o)
 
-OSXC=-mmacosx-version-min=10.7 -arch i386
-OSXL=-mmacosx-version-min=10.7 -arch i386 -lobjc -framework Cocoa -framework OpenGL 
+OSXC=-mmacosx-version-min=10.7 -arch x86_64
+OSXL=-mmacosx-version-min=10.7 -arch x86_64 -lobjc -framework Cocoa -framework OpenGL 
 
-DEFS=-ffast-math -msse -fno-rtti -fno-exceptions -fvisibility=hidden -DNDEBUG -I$(SDK)/CHeaders/XPLM
-DEFS_DEBUG=-g -fvisibility=hidden -I$(SDK)/CHeaders/XPLM
+DEFS=-ffast-math -msse -fno-rtti -fno-exceptions -fvisibility=hidden -DNDEBUG -DUSE_EXTERNAL_ALLOCATOR=1 -I$(SDK)/CHeaders/XPLM
+DEFS_DEBUG=-g -fvisibility=hidden -DUSE_EXTERNAL_ALLOCATOR=1 -I$(SDK)/CHeaders/XPLM
 
 CXXFLAGS+=-Wall -I../utils/encrypt -I/usr/local/include -I/usr/local/include/luajit-2.0 -DAPL=1 -fPIC -fno-stack-protector $(DEFS) $(OSXC)
 LNFLAGS+=-L/usr/local/lib $(OSXL) -fno-rtti -fvisibility=hidden -fno-exceptions

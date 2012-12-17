@@ -24,7 +24,10 @@ class Luna
     private:
         /// Lua virtual machine
         lua_State *lua;
-
+        #if USE_EXTERNAL_ALLOCATOR
+            void *ud;
+        #endif
+        
     public:
         /// Create LUA instance
         Luna();
