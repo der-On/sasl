@@ -118,8 +118,8 @@ end
 
 -- default mouse down handler
 function defaultOnMouseDown(comp, x, y, button, parentX, parentY)
-    if (1 == button) and get(comp.resizeble) and 
-                isInRect(comp.resizeRect, x, y) 
+    if (1 == button) and get(comp.resizeble) and
+                isInRect(comp.resizeRect, x, y)
     then
         local pos = get(comp.position)
         comp.resizing = true;
@@ -211,12 +211,13 @@ end
 
 -- create basic component
 function createComponent(name, parent)
-    local data = { 
+    local data = {
         components = { },
         componentsByName = { },
         size = { 100, 100 },
         position = createProperty { 0, 0, 100, 100 },
-        draw = function (comp) drawAll(comp.components); end,
+        clip = createProperty(false),
+		draw = function (comp) drawAll(comp.components); end,
         update = function (comp) updateAll(comp.components); end,
         name = name,
         visible = createProperty(true),
@@ -457,7 +458,20 @@ function drawComponent(v)
         saveGraphicsContext()
         local pos = get(v.position)
         setTranslation(pos[1], pos[2], pos[3], pos[4], v.size[1], v.size[2])
-        v:draw()
+		local clip = get(v.clip)
+
+		if toboolean(clip) then
+			setClipArea(clip[1], clip[2], clip[3], clip[4])
+		else
+			resetClipArea()
+		end
+
+		v:draw()
+
+		if toboolean(clip) then
+			resetClipArea()
+		end
+
         restoreGraphicsContext()
     end
 end
@@ -477,8 +491,8 @@ function compIndex(table, key)
     local comp = table
     while nil ~= comp do
         local v = rawget(comp, key)
-        if nil ~= v then 
-            return v 
+        if nil ~= v then
+            return v
         else
             comp = rawget(comp, '_P')
         end
@@ -574,7 +588,7 @@ end
 function setupComponent(component, args)
     mergeTables(component, argumentsToProperties(args))
     setmetatable(component, { __index = compIndex })
-    
+
     component.defineProperty = function(name, dflt)
         if not rawget(component, name) then
             component[name] = createProperty(dflt)
@@ -735,7 +749,7 @@ end
 -- load texture image
 -- loads image and sets texture coords.  It can be called in forms of:
 -- loadImage(fileName) -- sets texture coords to entire texture
--- loadImage(fileName, width, height) -- sets texture coords to show 
+-- loadImage(fileName, width, height) -- sets texture coords to show
 --    center part of image.  width and height sets size of image part
 -- loadImage(fileName, x, y, width, height) - loads specified part of image
 function loadImage(fileName, x, y, width, height)
@@ -771,7 +785,7 @@ function loadFont(fileName)
 end
 
 
--- check if coord lay inside rectangle.  rectangle is array of 
+-- check if coord lay inside rectangle.  rectangle is array of
 -- { x, y, width, height }
 function isInRect(rect, x, y)
     local x1 = rect[1]
@@ -938,7 +952,7 @@ end
 -- draw cursor shape
 function drawCursor()
     if cursor.shape and cursor.shape.shape then
-        drawTexture(cursor.shape.shape, 
+        drawTexture(cursor.shape.shape,
                 cursor.shape.x + cursor.x, cursor.y - cursor.shape.y,
                 cursor.shape.width, cursor.shape.height,
                 1, 1, 1, 1)
@@ -1004,7 +1018,7 @@ end
 -- Called when mouse button was released
 function onMouseUp(x, y, button, layer)
     if pressedComponentPath then
-        local res = runPressedHandler(pressedComponentPath, "onMouseUp", 
+        local res = runPressedHandler(pressedComponentPath, "onMouseUp",
                 x, y, button)
         pressedButton = 0
         setPressedPath(nil)
@@ -1018,7 +1032,7 @@ end
 function onMouseClick(x, y, button, layer)
     if pressedComponentPath then
         setCursor(x, y, cursor.shape, layer)
-        return runPressedHandler(pressedComponentPath, "onMouseClick", 
+        return runPressedHandler(pressedComponentPath, "onMouseClick",
                 x, y, button)
     else
         pressedButton = button
@@ -1043,8 +1057,8 @@ function onMouseMove(x, y, layer)
             local my = (y - position[2]) * size[2] / position[4]
             for i = #popups.components, 1, -1 do
                 local v = popups.components[i]
-                if toboolean(get(v.visible)) and 
-                        isInRect(get(v.position), mx, my) 
+                if toboolean(get(v.visible)) and
+                        isInRect(get(v.position), mx, my)
                 then
                     cursorArrow = true
                     break
@@ -1054,7 +1068,7 @@ function onMouseMove(x, y, layer)
     end
     if pressedComponentPath then
         setCursor(x, y, cursor.shape, layer)
-        local res = runPressedHandler(pressedComponentPath, "onMouseMove", 
+        local res = runPressedHandler(pressedComponentPath, "onMouseMove",
                 x, y, pressedButton)
     else
         local cursor = getTopCursorShape(layer, x, y)
@@ -1085,6 +1099,7 @@ function subpanel(tbl)
     end
     local c = createComponent(name, popups)
     set(c.position, tbl.position)
+	set(c.clip, tbl.clip)
     c.size = { tbl.position[3], tbl.position[4] }
     c.onMouseClick = function (comp, x, y, button, parentX, parentY)
         defaultOnMouseClick(comp, x, y, button, parentX, parentY)
@@ -1111,7 +1126,7 @@ function subpanel(tbl)
         if not rectangle then
             rectangle = loadComponent('rectangle')
         end
-    
+
         table.insert(c.components, 1,
             rectangle { position = { 0, 0, c.size[1], c.size[2] } } )
     end
@@ -1125,8 +1140,8 @@ function subpanel(tbl)
             button = loadComponent('button')
         end
 
-        c.component('closeButton', button { 
-            position = { c.size[1] - btnWidth, c.size[2] - btnHeight, 
+        c.component('closeButton', button {
+            position = { c.size[1] - btnWidth, c.size[2] - btnHeight,
                 btnWidth, btnHeight };
             image = loadImage('close.png');
             onMouseClick = function()
@@ -1141,30 +1156,30 @@ function subpanel(tbl)
         local pos = get(c.position)
         c.resizeWidth = c.size[1] / pos[3] * 10
         c.resizeHeight = c.size[2] / pos[4] * 10
-        
+
         if not rectangle then
             rectangle = loadComponent('rectangle')
         end
-        
-        c.resizeRect = { c.size[1] - c.resizeWidth, 0, 
+
+        c.resizeRect = { c.size[1] - c.resizeWidth, 0,
                 c.resizeWidth, c.resizeHeight };
 
-        c.component('resizeButton', rectangle { 
+        c.component('resizeButton', rectangle {
             position = c.resizeRect;
             color = { 0.10, 0.10, 0.10, 1.0 };
         });
-        
+
         if not clickable then
             clickable = loadComponent('clickable')
         end
 
         c.component('resizeClickable', clickable {
             position = c.resizeRect;
-            cursor = { 
-                x = 8, 
-                y = 26, 
-                width = 16, 
-                height = 16, 
+            cursor = {
+                x = 8,
+                y = 26,
+                width = 16,
+                height = 16,
                 shape = loadImage("clickable.png")
             }
         });
@@ -1190,7 +1205,7 @@ function subpanel(tbl)
         -- register created commandhandler
         registerCommandHandler(command, 0, commandHandler)
     end
-    
+
     if panelsPositions and get(c.savePosition) and ('subpanel' ~= name) then
         local pos = panelsPositions[name]
         if pos then
@@ -1296,7 +1311,7 @@ function include(component, name)
         if subdir then
             addSearchPath(subdir)
         end
-            
+
         setfenv(f, component)
         f()
 

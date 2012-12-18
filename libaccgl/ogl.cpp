@@ -34,7 +34,7 @@ static GenFramebuffers glGenFramebuffers = NULL;
 typedef void (*BindFramebuffer)(GLenum target, GLuint framebuffer);
 static BindFramebuffer glBindFramebuffer = NULL;
 
-typedef void (*FramebufferTexture2D)(GLenum target, GLenum attachment, 
+typedef void (*FramebufferTexture2D)(GLenum target, GLenum attachment,
         GLenum textarget, GLuint texture, GLint level);
 static FramebufferTexture2D glFramebufferTexture2D = NULL;
 
@@ -96,13 +96,13 @@ struct OglCanvas
 
     // number of batches because of texture changed
     int batchTex;
-    
+
     // number of batches because of translations
     int batchTrans;
-    
+
     // number of batches because of untextured geometry
     int batchNoTex;
-    
+
     // number of batches because of switch to lines
     int batchLines;
 
@@ -120,10 +120,10 @@ struct OglCanvas
 
     /// vertices buffer
     GLfloat *vertexBuffer;
-    
+
     /// texture coords buffer
     GLfloat *texBuffer;
-    
+
     /// vertex colors buffer
     GLfloat *colorBuffer;
 
@@ -143,6 +143,8 @@ struct OglCanvas
     int currentFboTex;
 };
 
+// stores last clip area (x1,y1,width,height)
+GLint  lastClipArea[4];
 
 
 /// initialize graphics before frame start
@@ -176,7 +178,7 @@ static void drawBegin(struct SaslGraphicsCallbacks *canvas)
     c->batchTrans = 0;
     c->batchNoTex = 0;
     c->batchLines = 0;
-    
+
     c->numVertices = 0;
     c->currentTexture = 0;
     c->currentMode = GL_TRIANGLES;
@@ -196,7 +198,7 @@ static void reserveSpace(OglCanvas *c, int qty)
         c->vertexBuffer = (GLfloat*)realloc(c->vertexBuffer, 2 * s);
         c->texBuffer = (GLfloat*)realloc(c->texBuffer, 2 * s);
         c->colorBuffer = (GLfloat*)realloc(c->colorBuffer, 4 * s);
-        
+
         glVertexPointer(2, GL_FLOAT, 0, c->vertexBuffer);
         glTexCoordPointer(2, GL_FLOAT, 0, c->texBuffer);
         glColorPointer(4, GL_FLOAT, 0, c->colorBuffer);
@@ -205,7 +207,7 @@ static void reserveSpace(OglCanvas *c, int qty)
 
 
 /// Add vertex to buffers
-static void addVertex(OglCanvas *c, GLfloat x, GLfloat y, 
+static void addVertex(OglCanvas *c, GLfloat x, GLfloat y,
         GLfloat r, GLfloat g, GLfloat b, GLfloat a,
         GLfloat u, GLfloat v)
 {
@@ -227,7 +229,7 @@ static void addVertex(OglCanvas *c, GLfloat x, GLfloat y,
     c->colorBuffer[i + 1] = g;
     c->colorBuffer[i + 2] = b;
     c->colorBuffer[i + 3] = a;
- 
+
     c->numVertices++;
 }
 
@@ -253,11 +255,11 @@ static void drawEnd(struct SaslGraphicsCallbacks *canvas)
 
     glPopAttrib();
     glPopClientAttrib();
-/*    printf("textures: %i (%i Kb) triangles: %i lines: %i  batches: %i\n", 
+/*    printf("textures: %i (%i Kb) triangles: %i lines: %i  batches: %i\n",
             c->textures, c->texturesSize / 1024, c->triangles, c->lines,
             c->batches);
     printf("batches reasons: textures: %i  translation: %i  notex: %i  "
-            "lines: %i\n", c->batchTex, c->batchTrans, c->batchNoTex, 
+            "lines: %i\n", c->batchTex, c->batchTrans, c->batchNoTex,
             c->batchLines);*/
 }
 
@@ -320,11 +322,11 @@ static int loadTexture(struct SaslGraphicsCallbacks *canvas,
         texId = c->genTexNameCallback();
 
     unsigned id = SOIL_load_OGL_texture_from_memory(
-            (const unsigned char*)buffer, length, 
+            (const unsigned char*)buffer, length,
             0, texId, SOIL_FLAG_POWER_OF_TWO);
-    if (! id) 
+    if (! id)
         return -1;
- 
+
     texId = id;
 
     // because of SOIL issue
@@ -376,7 +378,7 @@ static void drawLine(struct SaslGraphicsCallbacks *canvas, double x1,
 
 
 // draw untextured triangle.
-static void drawTriangle(struct SaslGraphicsCallbacks *canvas, 
+static void drawTriangle(struct SaslGraphicsCallbacks *canvas,
         double x1, double y1, double r1, double g1, double b1, double a1,
         double x2, double y2, double r2, double g2, double b2, double a2,
         double x3, double y3, double r3, double g3, double b3, double a3)
@@ -396,7 +398,7 @@ static void drawTriangle(struct SaslGraphicsCallbacks *canvas,
 
 
 // draw textured triangle.
-static void drawTexturedTriangle(struct SaslGraphicsCallbacks *canvas, 
+static void drawTexturedTriangle(struct SaslGraphicsCallbacks *canvas,
         int textureId,
         double x1, double y1, double u1, double v1, double r1, double g1, double b1, double a1,
         double x2, double y2, double u2, double v2, double r2, double g2, double b2, double a2,
@@ -405,7 +407,7 @@ static void drawTexturedTriangle(struct SaslGraphicsCallbacks *canvas,
     OglCanvas *c = (OglCanvas*)canvas;
     if (! c)
         return;
-    
+
     c->triangles++;
 
     setTexture(c, textureId);
@@ -418,11 +420,18 @@ static void drawTexturedTriangle(struct SaslGraphicsCallbacks *canvas,
 
 
 // enable clipping to rectangle
-static void setClipArea(struct SaslGraphicsCallbacks *canvas, 
-        double x1, double y1, double x2, double y2)
+static void setClipArea(struct SaslGraphicsCallbacks *canvas,
+        double x, double y, double width, double height)
 {
     OglCanvas *c = (OglCanvas*)canvas;
     assert(canvas);
+
+    // store viewport
+    glGetIntegerv(GL_VIEWPORT, lastClipArea);
+
+    glEnable(GL_SCISSOR_TEST);
+    glScissor(x ,y , width, height);
+
     dumpBuffers(c);
 }
 
@@ -430,9 +439,12 @@ static void setClipArea(struct SaslGraphicsCallbacks *canvas,
 // disable clipping.
 static void resetClipArea(struct SaslGraphicsCallbacks *canvas)
 {
-    OglCanvas *c = (OglCanvas*)canvas;
+    //OglCanvas *c = (OglCanvas*)canvas;
     assert(canvas);
-    dumpBuffers(c);
+
+    glDisable(GL_SCISSOR_TEST);
+
+    glScissor(lastClipArea[0],lastClipArea[1],lastClipArea[2],lastClipArea[3]);
 }
 
 
@@ -466,7 +478,7 @@ static void popTransform(struct SaslGraphicsCallbacks *canvas)
 
 
 // apply move transform to current state
-static void translateTransform(struct SaslGraphicsCallbacks *canvas, 
+static void translateTransform(struct SaslGraphicsCallbacks *canvas,
         double x, double y)
 {
     OglCanvas *c = (OglCanvas*)canvas;
@@ -480,7 +492,7 @@ static void translateTransform(struct SaslGraphicsCallbacks *canvas,
 
 
 // apply scale transform to current state
-static void scaleTransform(struct SaslGraphicsCallbacks *canvas, 
+static void scaleTransform(struct SaslGraphicsCallbacks *canvas,
         double x, double y)
 {
     OglCanvas *c = (OglCanvas*)canvas;
@@ -493,7 +505,7 @@ static void scaleTransform(struct SaslGraphicsCallbacks *canvas,
 }
 
 // apply rotate transform to current state
-static void rotateTransform(struct SaslGraphicsCallbacks *canvas, 
+static void rotateTransform(struct SaslGraphicsCallbacks *canvas,
         double angle)
 {
     OglCanvas *c = (OglCanvas*)canvas;
@@ -508,7 +520,7 @@ static void rotateTransform(struct SaslGraphicsCallbacks *canvas,
 
 // find sasl texture in memory by size and marker color
 // returns texture id or -1 if not found
-static int findTexture(struct SaslGraphicsCallbacks *canvas, 
+static int findTexture(struct SaslGraphicsCallbacks *canvas,
         int width, int height, int *r, int *g, int *b, int *a)
 {
     OglCanvas *c = (OglCanvas*)canvas;
@@ -525,7 +537,7 @@ static int findTexture(struct SaslGraphicsCallbacks *canvas,
             if ((w == width) && (h == height)) {
                 if (a && r && g && b) {
                     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, buf);
-                    if ((10 > abs(*r - buf[0])) && (10 > abs(*g - buf[1])) && 
+                    if ((10 > abs(*r - buf[0])) && (10 > abs(*g - buf[1])) &&
                             (10 > abs(*b - buf[2])) && (10 > abs(*a - buf[3])))
                     {
                         if (c->currentTexture)
@@ -546,7 +558,7 @@ static int findTexture(struct SaslGraphicsCallbacks *canvas,
     if (c->currentTexture)
         glBindTexture(GL_TEXTURE_2D, c->currentTexture);
     delete[] buf;
-    
+
     return -1;
 }
 
@@ -556,7 +568,7 @@ static int findTexture(struct SaslGraphicsCallbacks *canvas,
 static GLuint getCurrentFbo()
 {
     GLuint oldFbo;
-    
+
     glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, (GLint*)&oldFbo);
 
     return oldFbo;
@@ -573,7 +585,7 @@ static GLuint getFbo(OglCanvas *c, int textureId)
         glGenFramebuffers(1, &fbo);
         GLuint oldFbo = getCurrentFbo();
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                 GL_TEXTURE_2D, textureId, 0);
         // job done, switch to old fbo
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, oldFbo);
@@ -590,7 +602,7 @@ static void prepareFbo(OglCanvas *c, int textureId, int width, int height)
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0.0, width, 0.0, height, -1.0, 1.0); 
+    glOrtho(0.0, width, 0.0, height, -1.0, 1.0);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
@@ -600,7 +612,7 @@ static void prepareFbo(OglCanvas *c, int textureId, int width, int height)
 
 // start rendering to texture
 // pass -1 as texture ID to restore default render target
-static int setRenderTarget(struct SaslGraphicsCallbacks *canvas, 
+static int setRenderTarget(struct SaslGraphicsCallbacks *canvas,
         int textureId)
 {
     OglCanvas *c = (OglCanvas*)canvas;
@@ -633,9 +645,9 @@ static int setRenderTarget(struct SaslGraphicsCallbacks *canvas,
         c->currentFboTex = textureId;
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
         glBindTexture(GL_TEXTURE_2D, 0);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, 
-                GL_TEXTURE_2D, textureId, 0); 
-        
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                GL_TEXTURE_2D, textureId, 0);
+
         prepareFbo(c, textureId, w, h);
     } else {
         // restore default fbo
@@ -652,10 +664,10 @@ static int setRenderTarget(struct SaslGraphicsCallbacks *canvas,
         glMatrixMode(GL_PROJECTION);
         glPopMatrix();
         glMatrixMode(GL_MODELVIEW);
-    
+
         if (c->currentTexture)
             glBindTexture(GL_TEXTURE_2D, c->currentTexture);
-        
+
         c->transform.pop_back();
     }
 
@@ -663,10 +675,10 @@ static int setRenderTarget(struct SaslGraphicsCallbacks *canvas,
 }
 
 
-// create new texture of specified size and store it under the same name 
+// create new texture of specified size and store it under the same name
 // as old texture
 // use it for textures used as render target
-static void recreateTexture(struct SaslGraphicsCallbacks *canvas, 
+static void recreateTexture(struct SaslGraphicsCallbacks *canvas,
         int textureId, int width, int height)
 {
     OglCanvas *c = (OglCanvas*)canvas;
@@ -677,10 +689,10 @@ static void recreateTexture(struct SaslGraphicsCallbacks *canvas,
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, 
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA,
             GL_BYTE, NULL);
     glGenerateMipmap(GL_TEXTURE_2D);
-    
+
     if (c->currentTexture)
         glBindTexture(GL_TEXTURE_2D, c->currentTexture);
 }
@@ -754,7 +766,7 @@ struct SaslGraphicsCallbacks* saslgl_init_graphics()
     c->callbacks.find_texture = findTexture;
     c->callbacks.set_render_target = setRenderTarget;
     c->callbacks.recreate_texture = recreateTexture;
-    
+
     c->maxVertices = c->numVertices = 0;
     c->vertexBuffer = c->texBuffer = c->colorBuffer = NULL;
     c->fboAvailable = initGlFunctions();
@@ -781,7 +793,7 @@ void saslgl_done_graphics(struct SaslGraphicsCallbacks *canvas)
     }
 }
 
-void saslgl_set_texture2d_binder_callback(struct SaslGraphicsCallbacks *canvas, 
+void saslgl_set_texture2d_binder_callback(struct SaslGraphicsCallbacks *canvas,
         saslgl_bind_texture_2d_callback binder)
 {
     OglCanvas *c = (OglCanvas*)canvas;
@@ -793,7 +805,7 @@ void saslgl_set_texture2d_binder_callback(struct SaslGraphicsCallbacks *canvas,
 /// Setup texture name generator function.
 /// \param canvas graphics canvas.
 /// \param generator ID generator. if NULL default OpenGL function will be used
-void saslgl_set_gen_tex_name_callback(struct SaslGraphicsCallbacks *canvas, 
+void saslgl_set_gen_tex_name_callback(struct SaslGraphicsCallbacks *canvas,
         saslgl_gen_tex_name_callback generator)
 {
     OglCanvas *c = (OglCanvas*)canvas;

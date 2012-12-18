@@ -3,10 +3,12 @@
 #include <sys/types.h>
 #ifndef WINDOWS
 #include <dirent.h>
+#if USE_EXTERNAL_ALLOCATOR
+#include "custom_alloc.h"
+#endif    
 #else
 #include <windows.h>
 #endif
-#include <cstdlib>
 
 
 using namespace xa;

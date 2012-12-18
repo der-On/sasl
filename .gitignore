@@ -1,0 +1,6 @@
+*.o
+*.a
+*.xpl
+slava/slava
+plugin/
+conf.mk

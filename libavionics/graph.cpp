@@ -9,7 +9,7 @@
 using namespace xa;
 
 
-static void setupMatrix(Avionics *avionics, double x, double y, 
+static void setupMatrix(Avionics *avionics, double x, double y,
         double width, double height,
         double originalWidth, double originalHeight)
 {
@@ -17,15 +17,15 @@ static void setupMatrix(Avionics *avionics, double x, double y,
     assert(graphics);
 
     graphics->translate_transform(graphics, x, y);
-    graphics->scale_transform(graphics, 
+    graphics->scale_transform(graphics,
             width / originalWidth, height / originalHeight);
 }
 
 /// Lua wrapper for setupMatrix
 static int luaSetupMatrix(lua_State *L)
 {
-    setupMatrix(getAvionics(L), lua_tonumber(L, 1), lua_tonumber(L, 2), 
-            lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), 
+    setupMatrix(getAvionics(L), lua_tonumber(L, 1), lua_tonumber(L, 2),
+            lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5),
             lua_tonumber(L, 6));
     return 0;
 }
@@ -61,7 +61,7 @@ static int luaRestoreContext(lua_State *L)
 
 
 /// Draw white frame (for debugging)
-static void drawFrame(Avionics *avionics, double x, double y, 
+static void drawFrame(Avionics *avionics, double x, double y,
         double width, double height)
 {
     SaslGraphicsCallbacks *graphics = avionics->getGraphics();
@@ -76,24 +76,24 @@ static void drawFrame(Avionics *avionics, double x, double y,
 /// Lua wrapper for drawFrame
 static int luaDrawFrame(lua_State *L)
 {
-    drawFrame(getAvionics(L), lua_tonumber(L, 1), lua_tonumber(L, 2), 
+    drawFrame(getAvionics(L), lua_tonumber(L, 1), lua_tonumber(L, 2),
             lua_tonumber(L, 3), lua_tonumber(L, 4));
     return 0;
 }
 
 /// Draw non-filled rectangle
-static void drawRectangle(Avionics *avionics, double x, double y, 
+static void drawRectangle(Avionics *avionics, double x, double y,
         double width, double height,
         double r, double g, double b, double a)
 {
     SaslGraphicsCallbacks *graphics = avionics->getGraphics();
     assert(graphics);
 
-    graphics->draw_triangle(graphics, 
+    graphics->draw_triangle(graphics,
             x, y + height, r, g, b, a,
             x + width, y + height, r, g, b, a,
             x + width, y, r, g, b, a);
-    graphics->draw_triangle(graphics, 
+    graphics->draw_triangle(graphics,
             x, y + height, r, g, b, a,
             x + width, y, r, g, b, a,
             x, y, r, g, b, a);
@@ -102,8 +102,8 @@ static void drawRectangle(Avionics *avionics, double x, double y,
 /// Lua wrapper for drawRectangle
 static int luaDrawRectangle(lua_State *L)
 {
-    drawRectangle(getAvionics(L), lua_tonumber(L, 1), lua_tonumber(L, 2), 
-            lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), 
+    drawRectangle(getAvionics(L), lua_tonumber(L, 1), lua_tonumber(L, 2),
+            lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5),
             lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8));
     return 0;
 }
@@ -116,7 +116,7 @@ static void drawTriangle(Avionics *avionics, double x1, double y1, double x2, do
     SaslGraphicsCallbacks *graphics = avionics->getGraphics();
     assert(graphics);
 
-    graphics->draw_triangle(graphics, 
+    graphics->draw_triangle(graphics,
             x1, y1, r, g, b, a,
             x2, y2, r, g, b, a,
             x3, y3, r, g, b, a);
@@ -125,16 +125,16 @@ static void drawTriangle(Avionics *avionics, double x1, double y1, double x2, do
 /// Lua wrapper for drawTriangle
 static int luaDrawTriangle(lua_State *L)
 {
-    drawTriangle(getAvionics(L), lua_tonumber(L, 1), lua_tonumber(L, 2), 
-            lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), 
-            lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8), 
+    drawTriangle(getAvionics(L), lua_tonumber(L, 1), lua_tonumber(L, 2),
+            lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5),
+            lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8),
             lua_tonumber(L, 9), lua_tonumber(L, 10));
     return 0;
 }
 
 
 /// Draw line
-static void drawLine(Avionics *avionics, double x1, double y1, 
+static void drawLine(Avionics *avionics, double x1, double y1,
         double x2, double y2, double r, double g, double b, double a)
 {
     SaslGraphicsCallbacks *graphics = avionics->getGraphics();
@@ -146,8 +146,8 @@ static void drawLine(Avionics *avionics, double x1, double y1,
 /// Lua wrapper for drawLine
 static int luaDrawLine(lua_State *L)
 {
-    drawLine(getAvionics(L), lua_tonumber(L, 1), lua_tonumber(L, 2), 
-            lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), 
+    drawLine(getAvionics(L), lua_tonumber(L, 1), lua_tonumber(L, 2),
+            lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5),
             lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8));
     return 0;
 }
@@ -200,7 +200,7 @@ static int luaDrawTexture(lua_State *L)
     avionics->getBackgroundColor(r, g, b, a);
     rgbaFromLua(L, 6, r, g, b, a);
 
-    drawTexture(avionics, tex, lua_tonumber(L, 2), lua_tonumber(L, 3), 
+    drawTexture(avionics, tex, lua_tonumber(L, 2), lua_tonumber(L, 3),
             lua_tonumber(L, 4), lua_tonumber(L, 5), r, g, b, a);
 
     return 0;
@@ -208,8 +208,8 @@ static int luaDrawTexture(lua_State *L)
 
 
 /// draw texture with ability to set texture coords
-static void drawTexturePart(Avionics *avionics, TexturePart *tex, 
-        double x, double y, double width, double height, 
+static void drawTexturePart(Avionics *avionics, TexturePart *tex,
+        double x, double y, double width, double height,
         double tx, double ty, double tw, double th,
         float r, float g, float b, float a)
 {
@@ -243,14 +243,14 @@ static int luaDrawTexturePart(lua_State *L)
 
     TexturePart *tex = (TexturePart*)lua_touserdata(L, 1);
     Avionics *avionics = getAvionics(L);
-    
+
     float r, g, b, a;
     avionics->getBackgroundColor(r, g, b, a);
     rgbaFromLua(L, 10, r, g, b, a);
 
-    drawTexturePart(avionics, tex, lua_tonumber(L, 2), lua_tonumber(L, 3), 
+    drawTexturePart(avionics, tex, lua_tonumber(L, 2), lua_tonumber(L, 3),
             lua_tonumber(L, 4), lua_tonumber(L, 5),
-            lua_tonumber(L, 6), lua_tonumber(L, 7), 
+            lua_tonumber(L, 6), lua_tonumber(L, 7),
             lua_tonumber(L, 8), lua_tonumber(L, 9),
             r, g, b, a);
 
@@ -258,7 +258,7 @@ static int luaDrawTexturePart(lua_State *L)
 }
 
 
-static void drawRotatedTexture(Avionics *avionics, TexturePart *tex, 
+static void drawRotatedTexture(Avionics *avionics, TexturePart *tex,
         double angle, double x, double y, double width, double height,
         float r, float g, float b, float a)
 {
@@ -287,20 +287,20 @@ static int luaDrawRotatedTexture(lua_State *L)
 
     TexturePart *tex = (TexturePart*)lua_touserdata(L, 1);
     Avionics *avionics = getAvionics(L);
-    
+
     float r, g, b, a;
     avionics->getBackgroundColor(r, g, b, a);
     rgbaFromLua(L, 7, r, g, b, a);
 
-    drawRotatedTexture(avionics, tex, lua_tonumber(L, 2), 
-            lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), 
+    drawRotatedTexture(avionics, tex, lua_tonumber(L, 2),
+            lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5),
             lua_tonumber(L, 6), r, g, b, a);
 
     return 0;
 }
 
 
-static void drawRotatedTexturePart(Avionics *avionics, TexturePart *tex, 
+static void drawRotatedTexturePart(Avionics *avionics, TexturePart *tex,
         double angle, double x, double y, double width, double height,
         double tx, double ty, double tw, double th,
         float r, float g, float b, float a)
@@ -330,14 +330,14 @@ static int luaDrawRotatedTexturePart(lua_State *L)
 
     TexturePart *tex = (TexturePart*)lua_touserdata(L, 1);
     Avionics *avionics = getAvionics(L);
-    
+
     float r, g, b, a;
     avionics->getBackgroundColor(r, g, b, a);
     rgbaFromLua(L, 11, r, g, b, a);
 
-    drawRotatedTexturePart(avionics, tex, lua_tonumber(L, 2), 
-            lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), 
-            lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8), 
+    drawRotatedTexturePart(avionics, tex, lua_tonumber(L, 2),
+            lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5),
+            lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8),
             lua_tonumber(L, 9), lua_tonumber(L, 10),
             r, g, b, a);
 
@@ -359,18 +359,18 @@ static int luaDrawFont(lua_State *L)
     float r, g, b, a;
     avionics->getBackgroundColor(r, g, b, a);
     rgbaFromLua(L, 5, r, g, b, a);
-    
+
     SaslGraphicsCallbacks *graphics = avionics->getGraphics();
     assert(graphics);
 
-    drawFont(font, graphics, lua_tonumber(L, 2), lua_tonumber(L, 3), 
+    drawFont(font, graphics, lua_tonumber(L, 2), lua_tonumber(L, 3),
             lua_tostring(L, 4), r, g, b, a);
 
     return 0;
 }
 
 
-static void rotatePoint(double &x, double &y, double ox, double oy, 
+static void rotatePoint(double &x, double &y, double ox, double oy,
         double centerX, double centerY, double angle, TexturePart *tex)
 {
     double pw = tex->getX2() - tex->getX1();
@@ -389,8 +389,8 @@ static void rotatePoint(double &x, double &y, double ox, double oy,
 /// can't find good name for this
 /// draw rectangle textured in strange way: texture coordinates are rotated
 /// by specified angle
-static void drawIntricatelyTexturedRectangle(Avionics *avionics, 
-        TexturePart *tex, double angle, double x, double y, double width, 
+static void drawIntricatelyTexturedRectangle(Avionics *avionics,
+        TexturePart *tex, double angle, double x, double y, double width,
         double height, double tx, double ty, double tw, double th,
         float r, float g, float b, float a)
 {
@@ -413,7 +413,7 @@ static void drawIntricatelyTexturedRectangle(Avionics *avionics,
     rotatePoint(c3x, c3y, tx2, ty2, tcx, tcy, angle, tex);
     double c4x, c4y;
     rotatePoint(c4x, c4y, tx1, ty2, tcx, tcy, angle, tex);
-    
+
     graphics->draw_textured_triangle(graphics, tex->getTexture()->getId(),
             x, y + height, c1x, c1y, r, g, b, a,
             x + width, y + height, c2x, c2y, r, g, b, a,
@@ -433,17 +433,50 @@ static int luaDrawIntricatelyTexturedRectangle(lua_State *L)
 
     TexturePart *tex = (TexturePart*)lua_touserdata(L, 1);
     Avionics *avionics = getAvionics(L);
-    
+
     float r, g, b, a;
     avionics->getBackgroundColor(r, g, b, a);
     rgbaFromLua(L, 11, r, g, b, a);
 
-    drawIntricatelyTexturedRectangle(avionics, tex, lua_tonumber(L, 2), 
-            lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), 
-            lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8), 
+    drawIntricatelyTexturedRectangle(avionics, tex, lua_tonumber(L, 2),
+            lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5),
+            lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8),
             lua_tonumber(L, 9), lua_tonumber(L, 10),
             r, g, b, a);
 
+    return 0;
+}
+
+static void setClipArea(Avionics *avionics, double x1, double y1, double width, double height)
+{
+    double x2 = x1 + width;
+    double y2 = y1 + height;
+
+    SaslGraphicsCallbacks *graphics = avionics->getGraphics();
+    assert(graphics);
+
+    graphics->set_clip_area(graphics,x1 ,y1 ,x2 ,y2);
+}
+
+static int luaSetClipArea(lua_State *L)
+{
+    Avionics *avionics = getAvionics(L);
+    setClipArea(avionics,lua_tonumber(L, 1),lua_tonumber(L, 2),lua_tonumber(L, 3),lua_tonumber(L, 4));
+    return 0;
+}
+
+static void resetClipArea(Avionics *avionics)
+{
+    SaslGraphicsCallbacks *graphics = avionics->getGraphics();
+    assert(graphics);
+
+    graphics->reset_clip_area(graphics);
+}
+
+static int luaResetClipArea(lua_State *L)
+{
+    Avionics *avionics = getAvionics(L);
+    resetClipArea(avionics);
     return 0;
 }
 
@@ -464,5 +497,7 @@ void xa::exportGraphToLua(Luna &lua)
     lua_register(L, "drawLine", luaDrawLine);
     lua_register(L, "drawText", luaDrawFont);
     lua_register(L, "drawTexturedRect", luaDrawIntricatelyTexturedRectangle);
+    lua_register(L, "setClipArea", luaSetClipArea);
+    lua_register(L, "resetClipArea", luaResetClipArea);
 }
 
