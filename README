@@ -41,9 +41,9 @@ EXTRA_CXXFLAGS=-I/usr/include/SOIL/
 /usr/include/SOIL/ is the path to the libsoil include files. They might be somewhere else on your system.
 
 You can use a shell script to compile it:
-
-This one also creates zip-files under distr/ containing sasl, xap and the example aircraft:
 $ ./mkdistr.sh
+This one also creates zip-files under distr/ containing sasl, xap and the example aircraft.
 
 Or you can simply type:
 $ make
+This will create files under plugin/. What you need for your aicraft to include sasl is plugin/sasl.
