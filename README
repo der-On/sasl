@@ -5,8 +5,8 @@ Scriptable avionics modeling suite for flight simulators.
 SASL features scriptable component model and flight simulation abstraction layer. Simulated avionics can be connected to virtually any flight simulator. Current version has networked X-Plane connector and X-Plane plugin which integrates SASL avionics and X-Plane aircrafts.
 
 
-Compilation on Ubuntu/Linux 32bit
----------------------------------
+Compilation on Ubuntu/Linux
+---------------------------
 
 First you need to install all nesseccary packages:
 
