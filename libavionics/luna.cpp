@@ -5,7 +5,7 @@
 #include <dirent.h>
 #if USE_EXTERNAL_ALLOCATOR
 #include "custom_alloc.h"
-#endif    
+#endif
 #else
 #include <windows.h>
 #endif
@@ -15,33 +15,33 @@ using namespace xa;
 
 
 /// bitwise and
-static int luaBitAnd(lua_State *L) 
+static int luaBitAnd(lua_State *L)
 {
     int n = lua_gettop(L);
     int res = 0;
-    if (2 == n) 
+    if (2 == n)
         res = lua_tointeger(L, 1) & lua_tointeger(L, 2);
     lua_pushinteger(L, res);
     return 1;
 }
 
 /// bitwise or
-static int luaBitOr(lua_State *L) 
+static int luaBitOr(lua_State *L)
 {
     int n = lua_gettop(L);
     int res = 0;
-    if (2 == n) 
+    if (2 == n)
         res = lua_tointeger(L, 1) | lua_tointeger(L, 2);
     lua_pushinteger(L, res);
     return 1;
 }
 
 /// bitwise xor
-static int luaBitXor(lua_State *L) 
+static int luaBitXor(lua_State *L)
 {
     int n = lua_gettop(L);
     int res = 0;
-    if (2 == n) 
+    if (2 == n)
         res = lua_tointeger(L, 1) ^ lua_tointeger(L, 2);
     lua_pushinteger(L, res);
     return 1;
@@ -52,7 +52,7 @@ static int luaBitXor(lua_State *L)
 
 
 /// enumerate files in directory
-static int luaListFiles(lua_State *L) 
+static int luaListFiles(lua_State *L)
 {
     const char *name = lua_tostring(L, 1);
     if (! name)
@@ -66,7 +66,7 @@ static int luaListFiles(lua_State *L)
     WIN32_FIND_DATA de;
     HANDLE dir = FindFirstFile(mask.c_str(), &de);
 
-    if (dir == INVALID_HANDLE_VALUE) 
+    if (dir == INVALID_HANDLE_VALUE)
         return 1;
 
     int i = 1;
@@ -77,7 +77,7 @@ static int luaListFiles(lua_State *L)
         lua_pushstring(L, de.cFileName);
         lua_settable(L, -3);
         lua_pushstring(L, "type");
-        lua_pushstring(L, de.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? 
+        lua_pushstring(L, de.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ?
                 "dir" : "file");
         lua_settable(L, -3);
         lua_settable(L, -3);
@@ -92,7 +92,7 @@ static int luaListFiles(lua_State *L)
 
 
 /// enumerate files in directory
-static int luaListFiles(lua_State *L) 
+static int luaListFiles(lua_State *L)
 {
     const char *name = lua_tostring(L, 1);
     if (! name)
@@ -107,7 +107,7 @@ static int luaListFiles(lua_State *L)
 
     int i = 1;
     for (struct dirent *de = readdir(dir); de; de = readdir(dir)) {
-        if ((DT_DIR == de->d_type) || (DT_LNK == de->d_type) || 
+        if ((DT_DIR == de->d_type) || (DT_LNK == de->d_type) ||
                 (DT_REG == de->d_type))
         {
             lua_pushnumber(L, i);
@@ -138,7 +138,7 @@ Luna::Luna()
 		printf("Got allocator: %p\n", ud);
 		lua = lua_newstate(lj_alloc_f, ud);
 		printf("Got Lua: %p\n", lua);
-	#else	
+	#else
 		lua = luaL_newstate();
 	#endif
     if (lua)
@@ -152,7 +152,7 @@ Luna::Luna()
         lua_newtable(lua);
         lua_setfield(lua, LUA_REGISTRYINDEX, "xavionics");
     } else {
-        std::abort();
+        //std::abort();
     }
 }
 

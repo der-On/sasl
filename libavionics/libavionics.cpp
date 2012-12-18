@@ -172,7 +172,7 @@ int sasl_enable_click_emulator(SASL sasl, int enable)
     return -1;
 }
 
-void sasl_set_graphics_callbacks(SASL sasl, 
+void sasl_set_graphics_callbacks(SASL sasl,
         struct SaslGraphicsCallbacks *callbacks)
 {
     TRY
@@ -313,7 +313,7 @@ void sasl_set_commands(SASL sasl, struct SaslCommandCallbacks *callbacks, void *
     CATCH("setting commands callbacks")
 }
 
-int sasl_connect_to_server(SASL sasl, const char *host, int port, 
+int sasl_connect_to_server(SASL sasl, const char *host, int port,
         const char *secret)
 {
     TRY
@@ -418,7 +418,7 @@ int sasl_sample_get_env(SASL sasl, int sampleId)
 }
 
 
-void sasl_sample_set_position(SASL sasl, int sampleId, 
+void sasl_sample_set_position(SASL sasl, int sampleId,
         float x, float y, float z)
 {
     TRY
@@ -426,7 +426,7 @@ void sasl_sample_set_position(SASL sasl, int sampleId,
     CATCH("setting sound position")
 }
 
-void sasl_sample_get_position(SASL sasl, int sampleId, 
+void sasl_sample_get_position(SASL sasl, int sampleId,
         float *x, float *y, float *z)
 {
     TRY
@@ -435,7 +435,7 @@ void sasl_sample_get_position(SASL sasl, int sampleId,
 }
 
 
-void sasl_sample_set_direction(SASL sasl, int sampleId, 
+void sasl_sample_set_direction(SASL sasl, int sampleId,
         float x, float y, float z)
 {
     TRY
@@ -444,7 +444,7 @@ void sasl_sample_set_direction(SASL sasl, int sampleId,
 }
 
 
-void sasl_sample_get_direction(SASL sasl, int sampleId, 
+void sasl_sample_get_direction(SASL sasl, int sampleId,
         float *x, float *y, float *z)
 {
     TRY
@@ -481,21 +481,21 @@ void sasl_sample_set_ref_distance(SASL sasl, int sampleId, float distance)
 }
 
 
-void sasl_sample_set_cone(SASL sasl, int sampleId, float outer_gain, 
+void sasl_sample_set_cone(SASL sasl, int sampleId, float outer_gain,
         float inner_angle, float outer_angle)
 {
     TRY
-        sasl->avionics->getSound().setSampleCone(sampleId, outer_gain, 
+        sasl->avionics->getSound().setSampleCone(sampleId, outer_gain,
                 inner_angle, outer_angle);
     CATCH("setting sound cone properties")
 }
 
 
-void sasl_sample_get_cone(SASL sasl, int sampleId, float *outer_gain, 
+void sasl_sample_get_cone(SASL sasl, int sampleId, float *outer_gain,
         float *inner_angle, float *outer_angle)
 {
     TRY
-        sasl->avionics->getSound().getSampleCone(sampleId, *outer_gain, 
+        sasl->avionics->getSound().getSampleCone(sampleId, *outer_gain,
                 *inner_angle, *outer_angle);
     CATCH("getting sound cone properties")
 }
@@ -541,7 +541,7 @@ void sasl_listener_get_position(SASL sasl, float *x, float *y, float *z)
 }
 
 
-void sasl_listener_set_orientation(SASL sasl, float x, float y, float z, 
+void sasl_listener_set_orientation(SASL sasl, float x, float y, float z,
         float ux, float uy, float uz)
 {
     TRY
@@ -550,11 +550,11 @@ void sasl_listener_set_orientation(SASL sasl, float x, float y, float z,
 }
 
 
-void sasl_listener_get_orientation(SASL sasl, float *x, float *y, float *z, 
+void sasl_listener_get_orientation(SASL sasl, float *x, float *y, float *z,
         float *ux, float *uy, float *uz)
 {
     TRY
-        sasl->avionics->getSound().getListenerOrientation(*x, *y, *z, 
+        sasl->avionics->getSound().getListenerOrientation(*x, *y, *z,
                 *ux, *uy, *uz);
     CATCH("getting listener orientation")
 }

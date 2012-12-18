@@ -49,15 +49,16 @@ struct OglCanvas
 
     /// vertices buffer
     float *vertexBuffer;
-    
+
     /// texture coords buffer
     float *texBuffer;
-    
+
     /// vertex colors buffer
     float *colorBuffer;
 };
 
-
+// stores last clip area (x1,y1,width,height)
+GLint  lastClipArea[4];
 
 /// initialize graphics before frame start
 static void drawBegin(struct SaslGraphicsCallbacks *canvas)
@@ -83,7 +84,7 @@ static void drawBegin(struct SaslGraphicsCallbacks *canvas)
     c->triangles = 0;
     c->lines = 0;
     c->batches = 0;
-    
+
     c->numVertices = 0;
     c->currentTexture = 0;
     c->currentMode = GL_TRIANGLES;
@@ -100,7 +101,7 @@ static void reserveSpace(OglCanvas *c, int qty)
         c->vertexBuffer = (float*)realloc(c->vertexBuffer, 2 * s);
         c->texBuffer = (float*)realloc(c->texBuffer, 2 * s);
         c->colorBuffer = (float*)realloc(c->colorBuffer, 4 * s);
-        
+
         glVertexPointer(2, GL_FLOAT, 0, c->vertexBuffer);
         glTexCoordPointer(2, GL_FLOAT, 0, c->texBuffer);
         glColorPointer(4, GL_FLOAT, 0, c->colorBuffer);
@@ -109,7 +110,7 @@ static void reserveSpace(OglCanvas *c, int qty)
 
 
 /// Add vertex to buffers
-static void addVertex(OglCanvas *c, double x, double y, 
+static void addVertex(OglCanvas *c, double x, double y,
         double r, double g, double b, double a,
         double u, double v)
 {
@@ -127,7 +128,7 @@ static void addVertex(OglCanvas *c, double x, double y,
     c->colorBuffer[i + 1] = g;
     c->colorBuffer[i + 2] = b;
     c->colorBuffer[i + 3] = a;
- 
+
     c->numVertices++;
 }
 
@@ -153,7 +154,7 @@ static void drawEnd(struct SaslGraphicsCallbacks *canvas)
 
     glPopAttrib();
     glPopClientAttrib();
-/*    printf("textures: %i (%i Kb) triangles: %i lines: %i  batches: %i\n", 
+/*    printf("textures: %i (%i Kb) triangles: %i lines: %i  batches: %i\n",
             c->textures, c->texturesSize / 1024, c->triangles, c->lines,
             c->batches);*/
 }
@@ -211,9 +212,9 @@ static int loadTexture(struct SaslGraphicsCallbacks *canvas,
         texId = c->genTexNameCallback();
 
     unsigned id = SOIL_load_OGL_texture(name, 0, texId, SOIL_FLAG_POWER_OF_TWO);
-    if (! id) 
+    if (! id)
         return -1;
- 
+
     texId = id;
 
     // because of SOIL issue
@@ -265,7 +266,7 @@ static void drawLine(struct SaslGraphicsCallbacks *canvas, double x1,
 
 
 // draw untextured triangle.
-static void drawTriangle(struct SaslGraphicsCallbacks *canvas, 
+static void drawTriangle(struct SaslGraphicsCallbacks *canvas,
         double x1, double y1, double r1, double g1, double b1, double a1,
         double x2, double y2, double r2, double g2, double b2, double a2,
         double x3, double y3, double r3, double g3, double b3, double a3)
@@ -285,7 +286,7 @@ static void drawTriangle(struct SaslGraphicsCallbacks *canvas,
 
 
 // draw textured triangle.
-static void drawTexturedTriangle(struct SaslGraphicsCallbacks *canvas, 
+static void drawTexturedTriangle(struct SaslGraphicsCallbacks *canvas,
         int textureId,
         double x1, double y1, double u1, double v1, double r1, double g1, double b1, double a1,
         double x2, double y2, double u2, double v2, double r2, double g2, double b2, double a2,
@@ -294,7 +295,7 @@ static void drawTexturedTriangle(struct SaslGraphicsCallbacks *canvas,
     OglCanvas *c = (OglCanvas*)canvas;
     if (! c)
         return;
-    
+
     c->triangles++;
 
     setTexture(c, textureId);
@@ -307,11 +308,18 @@ static void drawTexturedTriangle(struct SaslGraphicsCallbacks *canvas,
 
 
 // enable clipping to rectangle
-static void setClipArea(struct SaslGraphicsCallbacks *canvas, 
-        double x1, double y1, double x2, double y2)
+static void setClipArea(struct SaslGraphicsCallbacks *canvas,
+        double x, double y, double width, double height)
 {
     OglCanvas *c = (OglCanvas*)canvas;
     assert(canvas);
+
+    // store viewport
+    glGetIntegerv(GL_VIEWPORT, lastClipArea);
+
+    glEnable(GL_SCISSOR_TEST);
+    glScissor(x ,y , width, height);
+
     dumpBuffers(c);
 }
 
@@ -319,9 +327,12 @@ static void setClipArea(struct SaslGraphicsCallbacks *canvas,
 // disable clipping.
 static void resetClipArea(struct SaslGraphicsCallbacks *canvas)
 {
-    OglCanvas *c = (OglCanvas*)canvas;
+    //OglCanvas *c = (OglCanvas*)canvas;
     assert(canvas);
-    dumpBuffers(c);
+
+    glDisable(GL_SCISSOR_TEST);
+
+    glScissor(lastClipArea[0],lastClipArea[1],lastClipArea[2],lastClipArea[3]);
 }
 
 
@@ -345,7 +356,7 @@ static void popTransform(struct SaslGraphicsCallbacks *canvas)
 
 
 // apply move transform to current state
-static void translateTransform(struct SaslGraphicsCallbacks *canvas, 
+static void translateTransform(struct SaslGraphicsCallbacks *canvas,
         double x, double y)
 {
     OglCanvas *c = (OglCanvas*)canvas;
@@ -356,7 +367,7 @@ static void translateTransform(struct SaslGraphicsCallbacks *canvas,
 
 
 // apply scale transform to current state
-static void scaleTransform(struct SaslGraphicsCallbacks *canvas, 
+static void scaleTransform(struct SaslGraphicsCallbacks *canvas,
         double x, double y)
 {
     OglCanvas *c = (OglCanvas*)canvas;
@@ -366,7 +377,7 @@ static void scaleTransform(struct SaslGraphicsCallbacks *canvas,
 }
 
 // apply rotate transform to current state
-static void rotateTransform(struct SaslGraphicsCallbacks *canvas, 
+static void rotateTransform(struct SaslGraphicsCallbacks *canvas,
         double angle)
 {
     OglCanvas *c = (OglCanvas*)canvas;
@@ -397,7 +408,7 @@ struct SaslGraphicsCallbacks* saslgl_init_graphics()
     c->callbacks.translate_transform = translateTransform;
     c->callbacks.scale_transform = scaleTransform;
     c->callbacks.rotate_transform = rotateTransform;
-    
+
     c->maxVertices = 1024;
     c->vertexBuffer = (float*)malloc(sizeof(float) * 2 * c->maxVertices);
     c->texBuffer = (float*)malloc(sizeof(float) * 2 * c->maxVertices);
@@ -419,7 +430,7 @@ void saslgl_done_graphics(struct SaslGraphicsCallbacks *canvas)
     }
 }
 
-void saslgl_set_texture2d_binder_callback(struct SaslGraphicsCallbacks *canvas, 
+void saslgl_set_texture2d_binder_callback(struct SaslGraphicsCallbacks *canvas,
         saslgl_bind_texture_2d_callback binder)
 {
     OglCanvas *c = (OglCanvas*)canvas;
@@ -431,7 +442,7 @@ void saslgl_set_texture2d_binder_callback(struct SaslGraphicsCallbacks *canvas,
 /// Setup texture name generator function.
 /// \param canvas graphics canvas.
 /// \param generator ID generator. if NULL default OpenGL function will be used
-void saslgl_set_gen_tex_name_callback(struct SaslGraphicsCallbacks *canvas, 
+void saslgl_set_gen_tex_name_callback(struct SaslGraphicsCallbacks *canvas,
         saslgl_gen_tex_name_callback generator)
 {
     OglCanvas *c = (OglCanvas*)canvas;
