@@ -1,4 +1,4 @@
-
+#include <cstddef>
 #include "XPLMPlugin.h"
 
 struct lua_alloc_request_t {
