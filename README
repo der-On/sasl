@@ -1,0 +1,49 @@
+This is a fork of http://code.google.com/p/sasl/
+
+Scriptable avionics modeling suite for flight simulators.
+
+SASL features scriptable component model and flight simulation abstraction layer. Simulated avionics can be connected to virtually any flight simulator. Current version has networked X-Plane connector and X-Plane plugin which integrates SASL avionics and X-Plane aircrafts.
+
+
+Compilation on Ubuntu/Linux 32bit
+---------------------------------
+
+First you need to install all nesseccary packages:
+
+$ sudo apt-get install zip build-essential g++ luajit libluajit-5.1-2 libluajit-5.1-dev libsdl1.2debian libsdl1.2-dev libopenal1 libopenal-dev libgl1-mesa-glx libgl1-mesa-dev libsoil1 libsoil-dev
+
+You need to download and compile luajit to be able to link it statically.
+First download and extract the sources of luajit somewhere outside of your sasl source directory:
+
+$ wget http://luajit.org/download/LuaJIT-2.0.0-beta10.tar.gz
+$ tar -xf LuaJIT-2.0.0-beta10.tar.gz
+$ cd LuaJIT-2.0.0-beta10/
+$ make
+
+If everything went fine, you now should have a libluajit.a within LuaJIT-2.0.0-beta10/src/
+
+
+Now we need to make our own conf.mk file:
+
+$ cp conf-dist.mk conf.mk
+
+in the conf.mk change:
+XPSDK=[path to X-Plane SDK]
+LUAJIT=/usr
+LUAJIT_STATIC=[path to previously compiled libluajit.a]
+
+if you are buiding on 64bit:
+BUILD_64=yes
+
+If you get errors stating that SOIL.h could not be found you can try to change the following in conf.mk:
+EXTRA_CXXFLAGS=-I/usr/include/SOIL/
+
+/usr/include/SOIL/ is the path to the libsoil include files. They might be somewhere else on your system.
+
+You can use a shell script to compile it:
+
+This one also creates zip-files under distr/ containing sasl, xap and the example aircraft:
+$ ./mkdistr.sh
+
+Or you can simply type:
+$ make
