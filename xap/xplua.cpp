@@ -512,6 +512,7 @@ void xap::exportLuaFunctions(lua_State *L)
 lua_State* xap::luaCreatorCallback()
 {
 #if USE_EXTERNAL_ALLOCATOR
+	lua_State *lua = 0;
     struct lua_alloc_request_t r = { 0 };
     XPLMSendMessageToPlugin(XPLM_PLUGIN_XPLANE, ALLOC_OPEN,&r);
     ud = r.ud;
