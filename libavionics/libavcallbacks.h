@@ -5,7 +5,10 @@
 extern "C" {
 #endif
 
-    
+
+struct lua_State;
+
+
 // properties related callbacks
 
 // Points to internal properties structures
@@ -483,6 +486,17 @@ struct SaslSoundCallbacks {
 /// \param level log message level, from LOG_DEBUG till LOG_ERROR
 /// \param message text to log
 typedef void (*sasl_log_callback)(int level, const char *message);
+
+
+// lua allocator callbacks
+
+
+/// Create new Lua state (with custom allocator)
+typedef lua_State* (*sasl_lua_creator_callback)();
+
+/// Remoev Lua state created by Lua creator callback
+/// \param lua state to remove
+typedef void (*sasl_lua_destroyer_callback)(lua_State *lua);
 
 #if defined(__cplusplus)
 }  /* extern "C" */

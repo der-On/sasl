@@ -13,7 +13,16 @@ extern "C" {
 #include "xpsdk.h"
 #include "xpobjects.h"
 
+#if USE_EXTERNAL_ALLOCATOR
+#include "custom_alloc.h"
+#endif    
+
 using namespace xap;
+
+
+#if USE_EXTERNAL_ALLOCATOR
+static void *ud;  // TODO: need better name
+#endif
 
 
 /// reload scenery
@@ -498,4 +507,32 @@ void xap::exportLuaFunctions(lua_State *L)
     lua_register(L, "getAircraftLiteMap", luaGetAircraftLiteMap);
 }
 
+
+// create new Lua state with custom allocator
+lua_State* xap::luaCreatorCallback()
+{
+#if USE_EXTERNAL_ALLOCATOR
+    struct lua_alloc_request_t r = { 0 };
+    XPLMSendMessageToPlugin(XPLM_PLUGIN_XPLANE, ALLOC_OPEN,&r);
+    ud = r.ud;
+    printf("Got allocator: %p\n", ud);
+    lua = lua_newstate(lj_alloc_f, ud);
+    printf("Got Lua: %p\n", lua);
+#else   
+    lua_State *lua = luaL_newstate();
+#endif
+    return lua;
+}
+
+
+// destroy lua state with external allocator
+void xap::luaDestroyerCallback(lua_State *lua)
+{
+    lua_close(lua);
+#if USE_EXTERNAL_ALLOCATOR
+    struct lua_alloc_request_t r = { 0 };
+    r.ud = ud;
+    XPLMSendMessageToPlugin(XPLM_PLUGIN_XPLANE, ALLOC_CLOSE,&r);
+#endif
+}
 

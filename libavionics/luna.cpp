@@ -3,12 +3,10 @@
 #include <sys/types.h>
 #ifndef WINDOWS
 #include <dirent.h>
-#if USE_EXTERNAL_ALLOCATOR
-#include "custom_alloc.h"
-#endif    
 #else
 #include <windows.h>
 #endif
+#include <cstdlib>
 
 
 using namespace xa;
@@ -129,18 +127,16 @@ static int luaListFiles(lua_State *L)
 #endif
 
 
-Luna::Luna()
+Luna::Luna(sasl_lua_creator_callback luaCreator,
+                sasl_lua_destroyer_callback luaDestroyer)
 {
-    #if USE_EXTERNAL_ALLOCATOR
-		struct lua_alloc_request_t r = { 0 };
-		XPLMSendMessageToPlugin(XPLM_PLUGIN_XPLANE, ALLOC_OPEN,&r);
-		ud = r.ud;
-		printf("Got allocator: %p\n", ud);
-		lua = lua_newstate(lj_alloc_f, ud);
-		printf("Got Lua: %p\n", lua);
-	#else	
-		lua = luaL_newstate();
-	#endif
+    this->luaDestroyer = luaDestroyer;
+
+    if (luaCreator)
+        lua = luaCreator();
+    else
+        lua = luaL_newstate();
+
     if (lua)
     {
         luaL_openlibs(lua);
@@ -158,12 +154,10 @@ Luna::Luna()
 
 Luna::~Luna()
 {
-    lua_close(lua);
-    #if USE_EXTERNAL_ALLOCATOR
-        struct lua_alloc_request_t r = { 0 };
-        r.ud = ud;
-        XPLMSendMessageToPlugin(XPLM_PLUGIN_XPLANE, ALLOC_CLOSE,&r);
-    #endif
+    if (luaDestroyer)
+        luaDestroyer(lua);
+    else
+        lua_close(lua);
 }
 
 bool Luna::runScript(const std::string &fileName)

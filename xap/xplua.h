@@ -15,6 +15,12 @@ void exportLuaFunctions(lua_State *L);
 /// deallocate allocated objects
 void doneLuaFunctions();
 
+// create new Lua state with custom allocator
+lua_State* luaCreatorCallback();
+
+// destroy lua state with external allocator
+void luaDestroyerCallback(lua_State *lua);
+
 };
 
 #endif

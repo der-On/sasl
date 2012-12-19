@@ -107,7 +107,7 @@ sasl_log_callback Log::getLogger(void **refPtr)
 static std::string getArgs(lua_State *L)
 {
     std::string str;
-
+    
     int n = lua_gettop(L);
     lua_getglobal(L, "tostring");
     for (int i = 1; i <= n; i++) {

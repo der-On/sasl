@@ -82,7 +82,9 @@ class Avionics
 
     public:
         /// Initialize avionics internal data
-        Avionics(const std::string &path);
+        Avionics(const std::string &path, 
+            sasl_lua_creator_callback luaCreator, 
+            sasl_lua_destroyer_callback luaDestroyer);
 
         /// Destroy avionics
         ~Avionics();

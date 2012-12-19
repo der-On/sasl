@@ -27,7 +27,8 @@ struct lua_State;
 /// It loads all internal scripts and components definitions.
 /// Returns SASL handler to use in other functions.
 /// \param path SASL root directory.
-SASL sasl_init(const char *path);
+SASL sasl_init(const char *path, sasl_lua_creator_callback luaCreator,
+        sasl_lua_destroyer_callback luaDestroyer);
 
 /// Unload SASL.
 /// \param sasl SASL handler.

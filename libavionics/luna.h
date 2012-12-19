@@ -3,6 +3,7 @@
 
 
 #include <string>
+#include "libavcallbacks.h"
 
 
 extern "C" {
@@ -24,13 +25,14 @@ class Luna
     private:
         /// Lua virtual machine
         lua_State *lua;
-        #if USE_EXTERNAL_ALLOCATOR
-            void *ud;
-        #endif
-        
+
+        // lua destroyer callback
+        sasl_lua_destroyer_callback luaDestroyer;
+
     public:
         /// Create LUA instance
-        Luna();
+        Luna(sasl_lua_creator_callback luaCreator,
+                sasl_lua_destroyer_callback luaDestroyer);
 
         /// Destroy LUA virtual machine
         ~Luna();

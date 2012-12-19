@@ -2,7 +2,7 @@
 
 #include "graph.h"
 #include "texture.h"
-#include "libavconsts.h"
+#include "libavionics.h"
 #include "propsserv.h"
 #include "utils.h"
 #include "graphstub.h"
@@ -12,7 +12,10 @@
 using namespace xa;
 
 
-Avionics::Avionics(const std::string &path): path(path), clickEmulator(timer),
+Avionics::Avionics(const std::string &path, 
+        sasl_lua_creator_callback luaCreator, 
+        sasl_lua_destroyer_callback luaDestroyer): path(path), 
+    lua(luaCreator, luaDestroyer), clickEmulator(timer),
     fontManager(textureManager), properties(lua), server(log, properties), 
     commands(lua)
 {

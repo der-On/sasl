@@ -42,11 +42,12 @@ struct Sasl {
 #define CATCH(msg)
 #define CATCH_ERR(err, msg)
 
-SASL sasl_init(const char *path)
+SASL sasl_init(const char *path, sasl_lua_creator_callback luaCreator,
+        sasl_lua_destroyer_callback luaDestroyer)
 {
 //    try {
         SASL sasl = (SASL)malloc(sizeof(Sasl));
-        sasl->avionics = new Avionics(path);
+        sasl->avionics = new Avionics(path, luaCreator, luaDestroyer);
         if (sasl->avionics->initLua()) {
             delete sasl->avionics;
             delete sasl;
