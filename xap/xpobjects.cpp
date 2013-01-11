@@ -50,7 +50,7 @@ struct DrawCommand
 
     // draw relative earth
     int earthRelative;
-    
+
     // Parameters to control in which HDR/shadow phase objects are drawn
     int startPhase;
     int numPhases;
@@ -130,7 +130,7 @@ static int drawObject(lua_State *L)
     {
         c.startPhase = lua_tonumber(L, 10);
         c.numPhases = lua_tonumber(L, 11);
-    } else 
+    } else
     {
         c.startPhase = 0;
         c.numPhases = 999;
@@ -151,13 +151,13 @@ void xap::drawObjects()
             DrawCommand &c = *i;
             // This was suggested by Ben Supnik
             if (phase_ >= c.startPhase && phase_ < c.startPhase+ c.numPhases)
-                XPLMDrawObjects(c.object, 1, &c.location, c.lighting, 
+                XPLMDrawObjects(c.object, 1, &c.location, c.lighting,
                                 c.earthRelative);
         }
-        
+
         // Note deletion happens in frameFinished() function
     }
-    
+
     if (objectsToDelete.size()) {
         for (std::vector<XPLMObjectRef>::iterator i = objectsToDelete.begin();
                 i != objectsToDelete.end(); i++)

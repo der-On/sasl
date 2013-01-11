@@ -12,13 +12,14 @@ extern "C" {
 
 #include "xpsdk.h"
 #include "xpobjects.h"
+#include "xpdraw3d.h"
 
 #if USE_EXTERNAL_ALLOCATOR
 #include "custom_alloc.h"
 #endif    
 
 using namespace xap;
-
+using namespace xap3d;
 
 #if USE_EXTERNAL_ALLOCATOR
 static void *ud;  // TODO: need better name
@@ -118,8 +119,8 @@ static int findNavAid(lua_State *L)
     float lon = lua_tonumber(L, 4);
     int freq = lua_tonumber(L, 5);
     int type = lua_tonumber(L, 6);
-    
-    lua_pushnumber(L, XPLMFindNavAid(nameFragment, idFragment, 
+
+    lua_pushnumber(L, XPLMFindNavAid(nameFragment, idFragment,
                 lua_isnil(L, 3) ? NULL : &lat, lua_isnil(L, 4) ? NULL : &lon,
                 lua_isnil(L, 5) ? NULL : &freq, type));
     return 1;
@@ -222,7 +223,7 @@ static int getFMSEntryInfo(lua_State *L)
 // lua wrapper for XPLMSetFMSEntryInfo
 static int setFMSEntryInfo(lua_State *L)
 {
-    XPLMSetFMSEntryInfo(lua_tonumber(L, 1), lua_tonumber(L, 2), 
+    XPLMSetFMSEntryInfo(lua_tonumber(L, 1), lua_tonumber(L, 2),
             lua_tonumber(L, 3));
     return 0;
 }
@@ -230,7 +231,7 @@ static int setFMSEntryInfo(lua_State *L)
 // lua wrapper for XPLMSetFMSEntryInfoLatLon
 static int setFMSEntryLatLon(lua_State *L)
 {
-    XPLMSetFMSEntryLatLon(lua_tonumber(L, 1), lua_tonumber(L, 2), 
+    XPLMSetFMSEntryLatLon(lua_tonumber(L, 1), lua_tonumber(L, 2),
             lua_tonumber(L, 3), lua_tonumber(L, 4));
     return 0;
 }
@@ -369,10 +370,10 @@ static int probeTerrain(lua_State *L)
         &pi);
 
     lua_pushnumber(L, res);
-    
+
     if (xplm_ProbeHitTerrain != res)
         return 1;
-        
+
     lua_pushnumber(L, pi.locationX);
     lua_pushnumber(L, pi.locationY);
     lua_pushnumber(L, pi.locationZ);
@@ -441,7 +442,7 @@ void xap::exportLuaFunctions(lua_State *L)
     lua_register(L, "reloadScenery", reloadScenery);
     lua_register(L, "worldToLocal", worldToLocal);
     lua_register(L, "localToWorld", localToWorld);
- 
+
     // navaid api
 
     registerConst(L, "NAV_UNKNOWN", 0);
@@ -496,12 +497,15 @@ void xap::exportLuaFunctions(lua_State *L)
     // objects api
     exportObjectsFunctions(L);
 
+    // draw3d api
+    exportDraw3dFunctions(L);
+
     // terrain API
     lua_register(L, "probeTerrain", probeTerrain);
     registerConst(L, "PROBE_HIT_TERRAIN", xplm_ProbeHitTerrain);
     registerConst(L, "PROBE_ERROR", xplm_ProbeError);
     registerConst(L, "PROBE_MISSED", xplm_ProbeMissed);
-    
+
     // rendering API
     lua_register(L, "getAircraftPaint", luaGetAircraftPaint);
     lua_register(L, "getAircraftLiteMap", luaGetAircraftLiteMap);

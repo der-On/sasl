@@ -23,7 +23,7 @@ all: $(TARGET)
 
 .cpp.o:
 	$(CXX) $(CXXFLAGS) -c $<
-	
+
 $(TARGET): $(OBJECTS) ../libavionics/libavionics.a ../libaccgl/libaccgl.a ../alsound/libalsound.a
 	$(CXX) -o $(TARGET) $(LNFLAGS) $(OBJECTS) $(LIBS)
 
