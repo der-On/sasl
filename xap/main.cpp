@@ -410,6 +410,7 @@ static int drawPopups(XPLMDrawingPhase phase, int isBefore, void *refcon)
     return 1;
 }
 
+
 // draw objects
 static int drawScene(XPLMDrawingPhase phase, int isBefore, void *refcon)
 {
@@ -442,6 +443,7 @@ static int drawLast2d(XPLMDrawingPhase phase, int isBefore, void *refcon)
     xap3d::frameFinished();
     return 1;
 }
+
 
 /// Do nothing.  It is here to keep x-plane happy
 static void notDrawWindow(XPLMWindowID inWindowID, void *inRefcon)

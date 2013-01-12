@@ -21,6 +21,7 @@ extern "C" {
 using namespace xap;
 using namespace xap3d;
 
+
 #if USE_EXTERNAL_ALLOCATOR
 static void *ud;  // TODO: need better name
 #endif

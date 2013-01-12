@@ -60,6 +60,7 @@ struct OglCanvas
 // stores last clip area (x1,y1,width,height)
 GLint  lastClipArea[4];
 
+
 /// initialize graphics before frame start
 static void drawBegin(struct SaslGraphicsCallbacks *canvas)
 {
