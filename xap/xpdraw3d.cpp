@@ -260,7 +260,7 @@ struct BillboardCommand
 };
 
 // list of billboards to draw
-static std::vector<BillboardCommand> billboardsToDraw;
+static std::map<int, std::vector<BillboardCommand> > billboardsToDraw;
 
 // draw billboard
 static int luaDrawBillboard(lua_State *L)
@@ -279,6 +279,11 @@ static int luaDrawBillboard(lua_State *L)
 
     if (! c.texId)
         return 0;
+
+    if (billboardsToDraw.count(c.texId) == 0) {
+        std::vector<BillboardCommand> vector;
+        billboardsToDraw[c.texId] = vector;
+    }
 
     int texWidth = tex->getTexture()->getWidth();
     int texHeight = tex->getTexture()->getHeight();
@@ -327,15 +332,15 @@ static int luaDrawBillboard(lua_State *L)
     c.u2 = tx2;
     c.v2 = ty2;
 
-    billboardsToDraw.push_back(c);
+    billboardsToDraw[c.texId].push_back(c);
 
     return 0;
 }
 
+// TODO: store billboards in a vertex buffers, sorted by texture before rendering
 void drawBillboards()
 {
     if (billboardsToDraw.size()) {
-
         // set correct graphic states
         XPLMSetGraphicsState(1,1,1,0,1,1,0);
         glEnable(GL_TEXTURE_2D);
@@ -343,21 +348,38 @@ void drawBillboards()
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        for (std::vector<BillboardCommand>::iterator i = billboardsToDraw.begin();
-                i != billboardsToDraw.end(); i++)
-        {
-            BillboardCommand &c = *i;
+        glEnableClientState( GL_VERTEX_ARRAY );
+        glEnableClientState( GL_TEXTURE_COORD_ARRAY );
+        glEnableClientState( GL_COLOR_ARRAY );
 
-            drawTexturedBillboard(c.texId, c.width, c.height,
-                                  c.x, c.y, c.z,
-                                  c.r, c.g, c.b, c.alpha,
-                                  c.u1, c.v1, c.u2, c.v2);
+        for (std::map<int, std::vector<BillboardCommand> >::iterator iter = billboardsToDraw.begin(); iter != billboardsToDraw.end(); ++iter) {
+            std::vector <BillboardCommand> vector = (*iter).second;
+
+            for (std::vector<BillboardCommand>::iterator i = vector.begin();
+                    i != vector.end(); i++)
+            {
+                BillboardCommand &c = *i;
+
+                drawTexturedBillboard(c.texId, c.width, c.height,
+                                      c.x, c.y, c.z,
+                                      c.r, c.g, c.b, c.alpha,
+                                      c.u1, c.v1, c.u2, c.v2);
+            }
+
+            /*glVertexPointer( 3, GL_FLOAT, sizeof(Vertex), &(m_VertexBuffer[0].m_Pos) );
+            glTexCoordPointer( 2, GL_FLOAT, sizeof(Vertex), &(m_VertexBuffer[0].m_Tex0) );
+            glColorPointer( 4, GL_FLOAT, sizeof(Vertex), &(m_VertexBuffer[0].m_Diffuse) );*/
+
+            //glDrawArrays( GL_QUADS, 0, m_VertexBuffer.size() );
         }
+
+        glDisableClientState( GL_VERTEX_ARRAY );
+        glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+        glDisableClientState( GL_COLOR_ARRAY );
 
         glDepthMask( GL_TRUE );
         glPopAttrib();
     }
-
 }
 
 
