@@ -16,7 +16,7 @@ DEFS_DEBUG= -DAPL=1 -DLIN=0 -DIBM=0 -fPIC -fno-stack-protector -DXPLM200 -fvisib
 CXXFLAGS+=-DSNAPSHOT=20121217 -Wall -I$(SDK)/CHeaders/XPLM -I$(SDK)/CHeaders/Widgets -I/usr/local/include -I/usr/local/include/luajit-2.0 -I../libavionics -I../libogl -I../alsound $(DEFS) $(OSXC) 
 # # XPLM is loaded dynamically on OS X hence the flag, -dynamiclib is used to get a .a instead of a .bundle
 # -undefined warning -flat_namespace -dynamiclib
-LNFLAGS+=-undefined warning -flat_namespace  -L../libavionics  -L../libaccgl -L../alsound -dynamiclib -shared -rdynamic -nodefaultlibs -L/usr/local/lib32  $(OSXL) -fno-rtti -fvisibility=hidden -s -fno-exceptions -Wl,-exported_symbols_list -Wl,linkscript.mac
+LNFLAGS+=-F$(SDK)/Libraries/Mac/ -framework XPWidgets -framework XPLM -framework OpenGL -framework OpenAL -framework CoreFoundation -L../libavionics  -L../libaccgl -L../alsound -dynamiclib -shared -rdynamic -L/usr/local/lib32  $(OSXL) -fno-rtti -fvisibility=hidden -s -fno-exceptions -Wl,-exported_symbols_list -Wl,linkscript.mac
 LIBS+=-lavionics -laccgl -lalsound -lluajit -lSOIL
 
 all: $(TARGET)
