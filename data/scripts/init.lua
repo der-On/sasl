@@ -460,17 +460,12 @@ function drawComponent(v)
         setTranslation(pos[1], pos[2], pos[3], pos[4], v.size[1], v.size[2])
 		local clip = get(v.clip)
 
-		if toboolean(clip) then
-			setClipArea(clip[1], clip[2], clip[3], clip[4])
-		else
-			resetClipArea()
-		end
-
 		v:draw()
 
-		if toboolean(clip) then
-			resetClipArea()
-		end
+        if toboolean(clip) then
+            setClipArea(clip[1], clip[2], clip[3], clip[4])
+            resetClipArea()
+        end
 
         restoreGraphicsContext()
     end
