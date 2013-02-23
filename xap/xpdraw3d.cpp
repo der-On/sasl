@@ -322,8 +322,9 @@ void drawTexturedBillboard(int texId, float width, float height,
     // perform the rotation. The if statement is used for stability reasons
     // if the lookAt and objToCamProj vectors are too close together then
     // |angleCosine| could be bigger than 1 due to lack of precision
-    if ((angleCosine < 0.99990) && (angleCosine > -0.9999))
+    //if ((angleCosine < 0.99990) && (angleCosine > -0.9999)) {
         glRotatef(acos(angleCosine)*180/M_PI,upAux.x, upAux.y, upAux.z);
+    //}
 
     // so far it is just like the cylindrical billboard. The code for the
     // second rotation comes now
@@ -348,12 +349,12 @@ void drawTexturedBillboard(int texId, float width, float height,
     // when objToCam and objToCamProj have a very small
     // angle between them
 
-    if ((angleCosine < 0.99990) && (angleCosine > -0.9999)) {
+    //if ((angleCosine < 0.99990) && (angleCosine > -0.9999)) {
         if (objToCam[1] < 0)
             glRotatef(acos(angleCosine)*180/M_PI,1,0,0);
         else
             glRotatef(acos(angleCosine)*180/M_PI,-1,0,0);
-    }
+    //}
 
     glBegin(GL_QUADS);
         glColor4f(r,g,b,alpha);
