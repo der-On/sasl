@@ -215,7 +215,7 @@ class Quat
 #define M_PI 3.1415926535
 #endif
 
-typedef std::vector<Vertex> VertexBuffer;
+//typedef std::vector<Vertex> VertexBuffer;
 
 };
 

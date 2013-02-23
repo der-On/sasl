@@ -51,6 +51,12 @@ double lastViewHeading;
 
 //static int viewType3dCockpit = 1026;
 
+// current OpenGL matrixes
+float projectionMatrix[16];
+float modelMatrix[16];
+float clipMatrix[16];
+float frustum[6][4];
+
 void xap3d::initDraw3d()
 {
     viewX = XPLMFindDataRef("sim/graphics/view/view_x");
@@ -109,12 +115,140 @@ void setTexture(int texId)
     }
 }
 
+
+void extractMatrixes()
+{
+    float   t;
+
+    /* Get the current PROJECTION matrix from OpenGL */
+    glGetFloatv( GL_PROJECTION_MATRIX, projectionMatrix );
+
+    /* Get the current MODELVIEW matrix from OpenGL */
+    glGetFloatv( GL_MODELVIEW_MATRIX, modelMatrix );
+
+    /* Combine the two matrices (multiply projection by modelview) */
+    clipMatrix[ 0] = modelMatrix[ 0] * projectionMatrix[ 0] + modelMatrix[ 1] * projectionMatrix[ 4] + modelMatrix[ 2] * projectionMatrix[ 8] + modelMatrix[ 3] * projectionMatrix[12];
+    clipMatrix[ 1] = modelMatrix[ 0] * projectionMatrix[ 1] + modelMatrix[ 1] * projectionMatrix[ 5] + modelMatrix[ 2] * projectionMatrix[ 9] + modelMatrix[ 3] * projectionMatrix[13];
+    clipMatrix[ 2] = modelMatrix[ 0] * projectionMatrix[ 2] + modelMatrix[ 1] * projectionMatrix[ 6] + modelMatrix[ 2] * projectionMatrix[10] + modelMatrix[ 3] * projectionMatrix[14];
+    clipMatrix[ 3] = modelMatrix[ 0] * projectionMatrix[ 3] + modelMatrix[ 1] * projectionMatrix[ 7] + modelMatrix[ 2] * projectionMatrix[11] + modelMatrix[ 3] * projectionMatrix[15];
+
+    clipMatrix[ 4] = modelMatrix[ 4] * projectionMatrix[ 0] + modelMatrix[ 5] * projectionMatrix[ 4] + modelMatrix[ 6] * projectionMatrix[ 8] + modelMatrix[ 7] * projectionMatrix[12];
+    clipMatrix[ 5] = modelMatrix[ 4] * projectionMatrix[ 1] + modelMatrix[ 5] * projectionMatrix[ 5] + modelMatrix[ 6] * projectionMatrix[ 9] + modelMatrix[ 7] * projectionMatrix[13];
+    clipMatrix[ 6] = modelMatrix[ 4] * projectionMatrix[ 2] + modelMatrix[ 5] * projectionMatrix[ 6] + modelMatrix[ 6] * projectionMatrix[10] + modelMatrix[ 7] * projectionMatrix[14];
+    clipMatrix[ 7] = modelMatrix[ 4] * projectionMatrix[ 3] + modelMatrix[ 5] * projectionMatrix[ 7] + modelMatrix[ 6] * projectionMatrix[11] + modelMatrix[ 7] * projectionMatrix[15];
+
+    clipMatrix[ 8] = modelMatrix[ 8] * projectionMatrix[ 0] + modelMatrix[ 9] * projectionMatrix[ 4] + modelMatrix[10] * projectionMatrix[ 8] + modelMatrix[11] * projectionMatrix[12];
+    clipMatrix[ 9] = modelMatrix[ 8] * projectionMatrix[ 1] + modelMatrix[ 9] * projectionMatrix[ 5] + modelMatrix[10] * projectionMatrix[ 9] + modelMatrix[11] * projectionMatrix[13];
+    clipMatrix[10] = modelMatrix[ 8] * projectionMatrix[ 2] + modelMatrix[ 9] * projectionMatrix[ 6] + modelMatrix[10] * projectionMatrix[10] + modelMatrix[11] * projectionMatrix[14];
+    clipMatrix[11] = modelMatrix[ 8] * projectionMatrix[ 3] + modelMatrix[ 9] * projectionMatrix[ 7] + modelMatrix[10] * projectionMatrix[11] + modelMatrix[11] * projectionMatrix[15];
+
+    clipMatrix[12] = modelMatrix[12] * projectionMatrix[ 0] + modelMatrix[13] * projectionMatrix[ 4] + modelMatrix[14] * projectionMatrix[ 8] + modelMatrix[15] * projectionMatrix[12];
+    clipMatrix[13] = modelMatrix[12] * projectionMatrix[ 1] + modelMatrix[13] * projectionMatrix[ 5] + modelMatrix[14] * projectionMatrix[ 9] + modelMatrix[15] * projectionMatrix[13];
+    clipMatrix[14] = modelMatrix[12] * projectionMatrix[ 2] + modelMatrix[13] * projectionMatrix[ 6] + modelMatrix[14] * projectionMatrix[10] + modelMatrix[15] * projectionMatrix[14];
+    clipMatrix[15] = modelMatrix[12] * projectionMatrix[ 3] + modelMatrix[13] * projectionMatrix[ 7] + modelMatrix[14] * projectionMatrix[11] + modelMatrix[15] * projectionMatrix[15];
+
+    /* Extract the numbers for the RIGHT plane */
+    frustum[0][0] = clipMatrix[ 3] - clipMatrix[ 0];
+    frustum[0][1] = clipMatrix[ 7] - clipMatrix[ 4];
+    frustum[0][2] = clipMatrix[11] - clipMatrix[ 8];
+    frustum[0][3] = clipMatrix[15] - clipMatrix[12];
+
+    /* Normalize the result */
+    t = sqrt( frustum[0][0] * frustum[0][0] + frustum[0][1] * frustum[0][1] + frustum[0][2] * frustum[0][2] );
+    frustum[0][0] /= t;
+    frustum[0][1] /= t;
+    frustum[0][2] /= t;
+    frustum[0][3] /= t;
+
+    /* Extract the numbers for the LEFT plane */
+    frustum[1][0] = clipMatrix[ 3] + clipMatrix[ 0];
+    frustum[1][1] = clipMatrix[ 7] + clipMatrix[ 4];
+    frustum[1][2] = clipMatrix[11] + clipMatrix[ 8];
+    frustum[1][3] = clipMatrix[15] + clipMatrix[12];
+
+    /* Normalize the result */
+    t = sqrt( frustum[1][0] * frustum[1][0] + frustum[1][1] * frustum[1][1] + frustum[1][2] * frustum[1][2] );
+    frustum[1][0] /= t;
+    frustum[1][1] /= t;
+    frustum[1][2] /= t;
+    frustum[1][3] /= t;
+
+    /* Extract the BOTTOM plane */
+    frustum[2][0] = clipMatrix[ 3] + clipMatrix[ 1];
+    frustum[2][1] = clipMatrix[ 7] + clipMatrix[ 5];
+    frustum[2][2] = clipMatrix[11] + clipMatrix[ 9];
+    frustum[2][3] = clipMatrix[15] + clipMatrix[13];
+
+    /* Normalize the result */
+    t = sqrt( frustum[2][0] * frustum[2][0] + frustum[2][1] * frustum[2][1] + frustum[2][2] * frustum[2][2] );
+    frustum[2][0] /= t;
+    frustum[2][1] /= t;
+    frustum[2][2] /= t;
+    frustum[2][3] /= t;
+
+    /* Extract the TOP plane */
+    frustum[3][0] = clipMatrix[ 3] - clipMatrix[ 1];
+    frustum[3][1] = clipMatrix[ 7] - clipMatrix[ 5];
+    frustum[3][2] = clipMatrix[11] - clipMatrix[ 9];
+    frustum[3][3] = clipMatrix[15] - clipMatrix[13];
+
+    /* Normalize the result */
+    t = sqrt( frustum[3][0] * frustum[3][0] + frustum[3][1] * frustum[3][1] + frustum[3][2] * frustum[3][2] );
+    frustum[3][0] /= t;
+    frustum[3][1] /= t;
+    frustum[3][2] /= t;
+    frustum[3][3] /= t;
+
+    /* Extract the FAR plane */
+    frustum[4][0] = clipMatrix[ 3] - clipMatrix[ 2];
+    frustum[4][1] = clipMatrix[ 7] - clipMatrix[ 6];
+    frustum[4][2] = clipMatrix[11] - clipMatrix[10];
+    frustum[4][3] = clipMatrix[15] - clipMatrix[14];
+
+    /* Normalize the result */
+    t = sqrt( frustum[4][0] * frustum[4][0] + frustum[4][1] * frustum[4][1] + frustum[4][2] * frustum[4][2] );
+    frustum[4][0] /= t;
+    frustum[4][1] /= t;
+    frustum[4][2] /= t;
+    frustum[4][3] /= t;
+
+    /* Extract the NEAR plane */
+    frustum[5][0] = clipMatrix[ 3] + clipMatrix[ 2];
+    frustum[5][1] = clipMatrix[ 7] + clipMatrix[ 6];
+    frustum[5][2] = clipMatrix[11] + clipMatrix[10];
+    frustum[5][3] = clipMatrix[15] + clipMatrix[14];
+
+    /* Normalize the result */
+    t = sqrt( frustum[5][0] * frustum[5][0] + frustum[5][1] * frustum[5][1] + frustum[5][2] * frustum[5][2] );
+    frustum[5][0] /= t;
+    frustum[5][1] /= t;
+    frustum[5][2] /= t;
+    frustum[5][3] /= t;
+}
+
+bool isSphereInFrustum(double x, double y, double z, double r)
+{
+    int p;
+
+    for( p = 0; p < 6; p++) {
+        if ( frustum[p][0] * x + frustum[p][1] * y + frustum[p][2] * z + frustum[p][3] <= -r) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void drawTexturedQuad(int texId, float size,
-                            double x, double y, double z,
-                            float angleX, float angleY, float angleZ,
-                            float u1, float v1, float u2, float v2)
+                        double x, double y, double z,
+                        float angleX, float angleY, float angleZ,
+                        float u1, float v1, float u2, float v2)
 {
     float size_half = size / 2;
+
+    // exit if this quad is not in viewing frustum
+    if (!isSphereInFrustum(x,y,z, size_half)) {
+        return;
+    }
 
     setTexture(texId);
 
@@ -150,6 +284,11 @@ void drawTexturedBillboard(int texId, float width, float height,
     float height_half = height / 2;
     Vector objToCamProj,lookAt,upAux,objToCam;
     double angleCosine;
+
+    // exit if this billboard is not in viewing frustum
+    if (!isSphereInFrustum(x,y,z, std::max(width_half,height_half))) {
+        return;
+    }
 
     setTexture(texId);
 
@@ -214,7 +353,7 @@ void drawTexturedBillboard(int texId, float width, float height,
             glRotatef(acos(angleCosine)*180/M_PI,1,0,0);
         else
             glRotatef(acos(angleCosine)*180/M_PI,-1,0,0);
-     }
+    }
 
     glBegin(GL_QUADS);
         glColor4f(r,g,b,alpha);
@@ -348,9 +487,9 @@ void drawBillboards()
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        glEnableClientState( GL_VERTEX_ARRAY );
+        /*glEnableClientState( GL_VERTEX_ARRAY );
         glEnableClientState( GL_TEXTURE_COORD_ARRAY );
-        glEnableClientState( GL_COLOR_ARRAY );
+        glEnableClientState( GL_COLOR_ARRAY );*/
 
         for (std::map<int, std::vector<BillboardCommand> >::iterator iter = billboardsToDraw.begin(); iter != billboardsToDraw.end(); ++iter) {
             std::vector <BillboardCommand> vector = (*iter).second;
@@ -373,15 +512,14 @@ void drawBillboards()
             //glDrawArrays( GL_QUADS, 0, m_VertexBuffer.size() );
         }
 
-        glDisableClientState( GL_VERTEX_ARRAY );
+        /*glDisableClientState( GL_VERTEX_ARRAY );
         glDisableClientState( GL_TEXTURE_COORD_ARRAY );
-        glDisableClientState( GL_COLOR_ARRAY );
+        glDisableClientState( GL_COLOR_ARRAY );*/
 
         glDepthMask( GL_TRUE );
         glPopAttrib();
     }
 }
-
 
 void xap3d::draw3d(XPLMDrawingPhase phase)
 {
@@ -395,6 +533,9 @@ void xap3d::draw3d(XPLMDrawingPhase phase)
         lastViewX = XPLMGetDataf(viewX);
         lastViewY = XPLMGetDataf(viewY);
         lastViewZ = XPLMGetDataf(viewZ);
+
+        // extract current OpenGL matrixes
+        extractMatrixes();
 
         drawBillboards();
     }
