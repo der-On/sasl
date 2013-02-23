@@ -14,17 +14,14 @@ extern "C" {
 #include "xpobjects.h"
 #include "xpdraw3d.h"
 
-#if USE_EXTERNAL_ALLOCATOR
 #include "custom_alloc.h"
-#endif    
 
 using namespace xap;
 using namespace xap3d;
 
 
-#if USE_EXTERNAL_ALLOCATOR
-static void *ud;  // TODO: need better name
-#endif
+static void *ud = NULL;  // TODO: need better name
+bool xplane_wants_allocator = false;
 
 
 /// reload scenery
@@ -516,17 +513,23 @@ void xap::exportLuaFunctions(lua_State *L)
 // create new Lua state with custom allocator
 lua_State* xap::luaCreatorCallback()
 {
-#if USE_EXTERNAL_ALLOCATOR
 	lua_State *lua = 0;
-    struct lua_alloc_request_t r = { 0 };
-    XPLMSendMessageToPlugin(XPLM_PLUGIN_XPLANE, ALLOC_OPEN,&r);
-    ud = r.ud;
-    printf("Got allocator: %p\n", ud);
-    lua = lua_newstate(lj_alloc_f, ud);
-    printf("Got Lua: %p\n", lua);
-#else   
-    lua_State *lua = luaL_newstate();
-#endif
+    XPLMDataRef use_custom_allocator = XPLMFindDataRef("sim/operation/prefs/misc/has_lua_alloc");
+    if (use_custom_allocator && XPLMGetDatai(use_custom_allocator))
+    {
+
+	    struct lua_alloc_request_t r = { 0 };
+    	XPLMSendMessageToPlugin(XPLM_PLUGIN_XPLANE, ALLOC_OPEN,&r);
+    	ud = r.ud;
+    	printf("Got allocator: %p\n", ud);
+    	lua = lua_newstate(lj_alloc_f, ud);
+    	printf("Got Lua: %p\n", lua);
+    	xplane_wants_allocator = true;
+    }
+    else
+    {
+    	lua = luaL_newstate();
+    }
     return lua;
 }
 
@@ -535,10 +538,11 @@ lua_State* xap::luaCreatorCallback()
 void xap::luaDestroyerCallback(lua_State *lua)
 {
     lua_close(lua);
-#if USE_EXTERNAL_ALLOCATOR
-    struct lua_alloc_request_t r = { 0 };
-    r.ud = ud;
-    XPLMSendMessageToPlugin(XPLM_PLUGIN_XPLANE, ALLOC_CLOSE,&r);
-#endif
+    if (xplane_wants_allocator)
+    {
+    	struct lua_alloc_request_t r = { 0 };
+	    r.ud = ud;
+    	XPLMSendMessageToPlugin(XPLM_PLUGIN_XPLANE, ALLOC_CLOSE,&r);
+    }
 }
 
